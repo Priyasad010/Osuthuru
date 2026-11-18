@@ -1,0 +1,94 @@
+/* Suwoda HerbHub V2 Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap');
+
+:root {
+    --suwoda-primary: #198754;
+    --suwoda-dark: #146c43;
+    --suwoda-deep: #0f5132;
+    --suwoda-light: #d1e7dd;
+    --suwoda-accent: #ffc107;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans Sinhala', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding-top: 90px;
+    background-color: #f8f9fa;
+    color: #212529;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+/* Custom Header Navbar */
+.navbar-custom {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-brand img {
+    transition: transform 0.3s ease;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.08);
+}
+
+.nav-link {
+    transition: all 0.25s ease;
+    border-radius: 6px;
+    margin: 0 3px;
+    padding: 6px 12px !important;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.25);
+    font-weight: 500;
+}
+
+.btn-suwoda {
+    background-color: #198754;
+    border-color: #198754;
+    color: #ffffff;
+}
+
+.btn-suwoda:hover {
+    background-color: #146c43;
+    border-color: #146c43;
+    color: #ffffff;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #0f5132;
+    color: #e9ecef;
+    margin-top: auto;
+}
+
+footer a {
+    color: #d1e7dd;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.disclaimer-box {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-left: 4px solid #ffc107;
+    font-size: 0.85rem;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
