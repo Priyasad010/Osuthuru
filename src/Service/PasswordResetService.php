@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Service;
+
+use App\Core\Database;
+use App\Core\Mailer;
+use PDO;
+use Throwable;
+
+class PasswordResetService
+{
+    public static function requestReset(string $email): array
+    {
+        $cleanEmail = strtolower(trim($email));
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT user_id, name, email FROM `user` WHERE LOWER(email) = :email LIMIT 1");
+        $stmt->execute([':email' => $cleanEmail]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            // For security, do not reveal if the email exists
+            return [
+                'ok' => true,
+                'message' => 'If this email is registered, you will receive a password reset link shortly.'
+            ];
+        }
+
+        // Generate raw token and hash
+        $rawToken = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $rawToken);
+
+        try {
+            // Invalidate any prior unused tokens for this user
+            $del = $pdo->prepare("DELETE FROM password_resets WHERE user_id = :user_id AND used_at IS NULL");
+            $del->execute([':user_id' => $user['user_id']]);
+
+            // Insert new reset token valid for 30 minutes
+            $ins = $pdo->prepare("
+                INSERT INTO password_resets (user_id, token_hash, expires_at, created_at)
+                VALUES (:user_id, :token_hash, (NOW() + INTERVAL 30 MINUTE), NOW())
+            ");
+            $ins->execute([
+                ':user_id' => $user['user_id'],
+                ':token_hash' => $tokenHash
+            ]);
+
+            // Send reset email
+            Mailer::sendPasswordReset($user['email'], $user['name'] ?? 'Customer', $rawToken);
+
+            return [
+                'ok' => true,
+                'message' => 'If this email is registered, you will receive a password reset link shortly.'
+            ];
+        } catch (Throwable $e) {
+            return ['ok' => false, 'error' => 'An error occurred while generating your reset link.'];
+        }
+    }
+
+    public static function validateToken(string $rawToken): array
+    {
+        if (empty($rawToken)) {
+            return ['ok' => false, 'error' => 'Missing reset token.'];
+        }
+
+        $tokenHash = hash('sha256', $rawToken);
+        $pdo = Database::getConnection();
+
+        $stmt = $pdo->prepare("
+            SELECT pr.*, u.email, u.name 
+            FROM password_resets pr
+            JOIN `user` u ON u.user_id = pr.user_id
+            WHERE pr.token_hash = :token_hash
+            LIMIT 1
+        ");
+        $stmt->execute([':token_hash' => $tokenHash]);
+        $reset = $stmt->fetch();
+
+        if (!$reset) {
+            return ['ok' => false, 'error' => 'This password reset link is invalid or has expired.'];
+        }
+
+        if (!empty($reset['used_at'])) {
+            return ['ok' => false, 'error' => 'This password reset link has already been used.'];
+        }
+
+        if (strtotime($reset['expires_at']) < time()) {
+            return ['ok' => false, 'error' => 'This password reset link has expired.'];
+        }
+
+        return ['ok' => true, 'reset' => $reset];
+    }
+
+    public static function resetPassword(string $rawToken, string $newPassword): array
+    {
+        $validation = self::validateToken($rawToken);
+        if (!$validation['ok']) {
+            return $validation;
+        }
+
+        $reset = $validation['reset'];
+        $pdo = Database::getConnection();
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Update user password hash
+            $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("UPDATE `user` SET password = :password WHERE user_id = :user_id");
+            $stmt->execute([
+                ':password' => $newHash,
+                ':user_id' => $reset['user_id']
+            ]);
+
+            // 2. Mark token as used
+            $mark = $pdo->prepare("UPDATE password_resets SET used_at = NOW() WHERE id = :id");
+            $mark->execute([':id' => $reset['id']]);
+
+            $pdo->commit();
+
+            return ['ok' => true, 'message' => 'Your password has been reset successfully. You can now login.'];
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            return ['ok' => false, 'error' => 'Failed to update password. Please try again.'];
+        }
+    }
+}

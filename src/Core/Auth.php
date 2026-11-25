@@ -2,13 +2,197 @@
 
 namespace App\Core;
 
+use PDO;
+use Throwable;
+
 class Auth
 {
+    private const MAX_ATTEMPTS = 5;
+    private const LOCKOUT_MINUTES = 15;
+
     public static function initSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            // Set secure session cookie parameters
+            $params = session_get_cookie_params();
+            session_set_cookie_params([
+                'lifetime' => $params['lifetime'],
+                'path' => '/',
+                'domain' => $params['domain'],
+                'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
             session_start();
         }
+    }
+
+    public static function hashIp(string $ip): string
+    {
+        $salt = Env::get('APP_KEY', 'suwoda_herbhub_salt_2026');
+        return hash('sha256', $ip . $salt);
+    }
+
+    public static function isLockedOut(string $email, string $ip): bool
+    {
+        try {
+            $pdo = Database::getConnection();
+            $ipHash = self::hashIp($ip);
+
+            $stmt = $pdo->prepare("
+                SELECT COUNT(*) FROM login_attempts
+                WHERE email = :email AND ip_hash = :ip_hash
+                  AND attempted_at >= (NOW() - INTERVAL :minutes MINUTE)
+                  AND success = 0
+            ");
+            $stmt->bindValue(':email', strtolower(trim($email)));
+            $stmt->bindValue(':ip_hash', $ipHash);
+            $stmt->bindValue(':minutes', self::LOCKOUT_MINUTES, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return (int)$stmt->fetchColumn() >= self::MAX_ATTEMPTS;
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    public static function recordAttempt(string $email, string $ip, bool $success): void
+    {
+        try {
+            $pdo = Database::getConnection();
+            $ipHash = self::hashIp($ip);
+
+            $stmt = $pdo->prepare("
+                INSERT INTO login_attempts (email, ip_hash, success, attempted_at)
+                VALUES (:email, :ip_hash, :success, NOW())
+            ");
+            $stmt->execute([
+                ':email' => strtolower(trim($email)),
+                ':ip_hash' => $ipHash,
+                ':success' => $success ? 1 : 0
+            ]);
+
+            // If success, clear recent failed attempts for this email & IP
+            if ($success) {
+                $del = $pdo->prepare("
+                    DELETE FROM login_attempts 
+                    WHERE email = :email AND ip_hash = :ip_hash
+                ");
+                $del->execute([
+                    ':email' => strtolower(trim($email)),
+                    ':ip_hash' => $ipHash
+                ]);
+            }
+        } catch (Throwable) {
+            // Silently ignore logging errors
+        }
+    }
+
+    public static function attemptUser(string $email, string $password, string $ip): array
+    {
+        $cleanEmail = strtolower(trim($email));
+
+        if (self::isLockedOut($cleanEmail, $ip)) {
+            return [
+                'ok' => false,
+                'error' => 'Too many failed attempts. Account locked for 15 minutes.'
+            ];
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT * FROM `user` WHERE LOWER(email) = :email LIMIT 1");
+        $stmt->execute([':email' => $cleanEmail]);
+        $user = $stmt->fetch();
+
+        if (!$user) {
+            self::recordAttempt($cleanEmail, $ip, false);
+            return ['ok' => false, 'error' => 'Invalid email or password.'];
+        }
+
+        if ($user['status'] === 'blocked') {
+            return ['ok' => false, 'error' => 'Your account has been suspended. Please contact support.'];
+        }
+
+        if ($user['status'] === 'inactive') {
+            return ['ok' => false, 'error' => 'Please verify your email address before logging in.'];
+        }
+
+        // Strict password verify - no plain text fallback
+        if (!password_verify($password, $user['password'])) {
+            self::recordAttempt($cleanEmail, $ip, false);
+            return ['ok' => false, 'error' => 'Invalid email or password.'];
+        }
+
+        self::recordAttempt($cleanEmail, $ip, true);
+        self::loginUser($user);
+
+        return ['ok' => true, 'user' => $user];
+    }
+
+    public static function attemptAdmin(string $email, string $password, string $ip): array
+    {
+        $cleanEmail = strtolower(trim($email));
+
+        if (self::isLockedOut($cleanEmail, $ip)) {
+            return [
+                'ok' => false,
+                'error' => 'Too many failed attempts. Admin portal locked for 15 minutes.'
+            ];
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT * FROM `admin` WHERE LOWER(email) = :email LIMIT 1");
+        $stmt->execute([':email' => $cleanEmail]);
+        $admin = $stmt->fetch();
+
+        if (!$admin || !password_verify($password, $admin['password'])) {
+            self::recordAttempt($cleanEmail, $ip, false);
+            return ['ok' => false, 'error' => 'Invalid admin credentials.'];
+        }
+
+        self::recordAttempt($cleanEmail, $ip, true);
+        self::loginAdmin($admin);
+
+        return ['ok' => true, 'admin' => $admin];
+    }
+
+    public static function loginUser(array $user): void
+    {
+        self::initSession();
+        session_regenerate_id(true);
+
+        unset($user['password'], $user['verification_token']);
+        $_SESSION['user_id'] = (int)$user['user_id'];
+        $_SESSION['user'] = $user;
+    }
+
+    public static function loginAdmin(array $admin): void
+    {
+        self::initSession();
+        session_regenerate_id(true);
+
+        unset($admin['password']);
+        $_SESSION['admin_id'] = (int)$admin['admin_id'];
+        $_SESSION['admin'] = $admin;
+    }
+
+    public static function logout(): void
+    {
+        self::initSession();
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params['path'],
+                $params['domain'],
+                $params['secure'],
+                $params['httponly']
+            );
+        }
+        session_destroy();
     }
 
     public static function check(): bool
