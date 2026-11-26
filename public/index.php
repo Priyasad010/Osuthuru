@@ -34,8 +34,15 @@ use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Validator;
 use App\Core\Mailer;
+use App\Core\Upload;
+use App\Repository\ProductRepo;
 use App\Service\PasswordResetService;
 use App\Service\CheckoutService;
+use App\Service\DeliveryZoneService;
+use App\Service\CouponService;
+use App\Service\OrderService;
+use App\Service\InvoiceService;
+use App\Service\WishlistAndAlertService;
 
 // 3. Environment & Error Reporting
 Env::load($rootDir);
@@ -268,6 +275,373 @@ if ($requestUri === '/logout' && $requestMethod === 'POST') {
 }
 
 // ----------------------------------------------------
+// PHASE 2: STOREFRONT (PRODUCTS, CART, CHECKOUT, ORDERS, WISHLIST)
+// ----------------------------------------------------
+if ($requestUri === '/products' && $requestMethod === 'GET') {
+    $catId = isset($_GET['category']) && is_numeric($_GET['category']) ? (int)$_GET['category'] : null;
+    $products = ProductRepo::findAll($catId);
+    $categories = ProductRepo::getAllCategories();
+    $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
+
+    $flash = $_SESSION['flash_success'] ?? null;
+    unset($_SESSION['flash_success']);
+
+    echo View::render('shop/products', [
+        'pageTitle' => t('nav_products'),
+        'products' => $products,
+        'categories' => $categories,
+        'selectedCategory' => $catId,
+        'wishlistIds' => $wishlistIds,
+        'flash' => $flash
+    ]);
+    exit;
+}
+
+if ($requestUri === '/cart' && $requestMethod === 'GET') {
+    Auth::requireUser();
+    $pdo = Database::getConnection();
+    $stmt = $pdo->prepare("
+        SELECT c.product_id, c.quantity, p.product_name, p.price, p.quantity AS stock,
+               (SELECT MAX(d.discount_percentage)
+                FROM discount d
+                WHERE d.product_id = p.product_id
+                  AND (d.start_date IS NULL OR d.start_date <= NOW())
+                  AND (d.end_date IS NULL OR d.end_date >= NOW())
+               ) AS active_discount_percentage
+        FROM cart c
+        JOIN product p ON p.product_id = c.product_id
+        WHERE c.user_id = :uid
+    ");
+    $stmt->execute([':uid' => Auth::id()]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $cartItems = [];
+    $subtotal = 0.0;
+    foreach ($rows as $row) {
+        $enriched = ProductRepo::enrichWithSalePrice($row);
+        $lineTotal = round((float)$enriched['effective_price'] * (int)$row['quantity'], 2);
+        $enriched['line_total'] = $lineTotal;
+        $subtotal += $lineTotal;
+        $cartItems[] = $enriched;
+    }
+
+    echo View::render('shop/cart', [
+        'pageTitle' => t('nav_cart'),
+        'cartItems' => $cartItems,
+        'subtotal' => $subtotal,
+        'zones' => DeliveryZoneService::getAllZones()
+    ]);
+    exit;
+}
+
+if ($requestUri === '/cart/add' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+
+    $pid = (int)($_POST['product_id'] ?? 0);
+    $qty = max(1, (int)($_POST['quantity'] ?? 1));
+    $pdo = Database::getConnection();
+
+    $check = $pdo->prepare("SELECT cart_id, quantity FROM cart WHERE user_id = :uid AND product_id = :pid");
+    $check->execute([':uid' => Auth::id(), ':pid' => $pid]);
+    $existing = $check->fetch(PDO::FETCH_ASSOC);
+
+    if ($existing) {
+        $upd = $pdo->prepare("UPDATE cart SET quantity = quantity + :qty WHERE cart_id = :cid");
+        $upd->execute([':qty' => $qty, ':cid' => $existing['cart_id']]);
+    } else {
+        $ins = $pdo->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (:uid, :pid, :qty)");
+        $ins->execute([':uid' => Auth::id(), ':pid' => $pid, ':qty' => $qty]);
+    }
+
+    $_SESSION['flash_success'] = 'Added to cart!';
+    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/cart'));
+    exit;
+}
+
+if ($requestUri === '/cart/update' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+    $pid = (int)($_POST['product_id'] ?? 0);
+    $qty = max(1, (int)($_POST['quantity'] ?? 1));
+    $pdo = Database::getConnection();
+    $upd = $pdo->prepare("UPDATE cart SET quantity = :qty WHERE user_id = :uid AND product_id = :pid");
+    $upd->execute([':qty' => $qty, ':uid' => Auth::id(), ':pid' => $pid]);
+    header('Location: /cart');
+    exit;
+}
+
+if ($requestUri === '/cart/remove' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+    $pid = (int)($_POST['product_id'] ?? 0);
+    $pdo = Database::getConnection();
+    $del = $pdo->prepare("DELETE FROM cart WHERE user_id = :uid AND product_id = :pid");
+    $del->execute([':uid' => Auth::id(), ':pid' => $pid]);
+    header('Location: /cart');
+    exit;
+}
+
+if ($requestUri === '/checkout') {
+    Auth::requireUser();
+    $pdo = Database::getConnection();
+
+    $stmt = $pdo->prepare("
+        SELECT c.product_id, c.quantity, p.product_name, p.price, p.quantity AS stock,
+               (SELECT MAX(d.discount_percentage)
+                FROM discount d
+                WHERE d.product_id = p.product_id
+                  AND (d.start_date IS NULL OR d.start_date <= NOW())
+                  AND (d.end_date IS NULL OR d.end_date >= NOW())
+               ) AS active_discount_percentage
+        FROM cart c
+        JOIN product p ON p.product_id = c.product_id
+        WHERE c.user_id = :uid
+    ");
+    $stmt->execute([':uid' => Auth::id()]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (empty($rows)) {
+        header('Location: /cart');
+        exit;
+    }
+
+    $cartItems = [];
+    $subtotal = 0.0;
+    foreach ($rows as $row) {
+        $enriched = ProductRepo::enrichWithSalePrice($row);
+        $lineTotal = round((float)$enriched['effective_price'] * (int)$row['quantity'], 2);
+        $enriched['line_total'] = $lineTotal;
+        $subtotal += $lineTotal;
+        $cartItems[] = $enriched;
+    }
+
+    if ($requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            echo View::render('shop/checkout', [
+                'error' => 'Invalid CSRF token.',
+                'cartItems' => $cartItems,
+                'subtotal' => $subtotal,
+                'zones' => DeliveryZoneService::getAllZones(),
+                'old' => $_POST
+            ]);
+            exit;
+        }
+
+        $paymentMethod = (string)($_POST['payment_method'] ?? 'cod');
+        if (!in_array($paymentMethod, ['cod', 'bank_transfer', 'card'], true)) {
+            $paymentMethod = 'cod';
+        }
+
+        $slipPath = null;
+        if ($paymentMethod === 'bank_transfer' && !empty($_FILES['bank_slip']['name'])) {
+            $uploadRes = Upload::process($_FILES['bank_slip'], 'slips');
+            if (!$uploadRes['ok']) {
+                echo View::render('shop/checkout', [
+                    'error' => $uploadRes['error'],
+                    'cartItems' => $cartItems,
+                    'subtotal' => $subtotal,
+                    'zones' => DeliveryZoneService::getAllZones(),
+                    'old' => $_POST
+                ]);
+                exit;
+            }
+            $slipPath = $uploadRes['path'];
+        }
+
+        $orderRes = CheckoutService::createOrder(
+            Auth::id(),
+            $cartItems,
+            $paymentMethod,
+            null,
+            [
+                'shipping_name' => trim((string)($_POST['shipping_name'] ?? '')),
+                'shipping_phone' => trim((string)($_POST['shipping_phone'] ?? '')),
+                'shipping_address' => trim((string)($_POST['shipping_address'] ?? '')),
+                'district' => trim((string)($_POST['district'] ?? '')),
+                'coupon_code' => trim((string)($_POST['coupon_code'] ?? '')),
+            ]
+        );
+
+        if (!$orderRes['ok']) {
+            echo View::render('shop/checkout', [
+                'error' => $orderRes['error'],
+                'cartItems' => $cartItems,
+                'subtotal' => $subtotal,
+                'zones' => DeliveryZoneService::getAllZones(),
+                'old' => $_POST
+            ]);
+            exit;
+        }
+
+        $gateway = CheckoutService::getGateway($paymentMethod);
+        $payRes = $gateway->initiatePayment(
+            (int)$orderRes['order_id'],
+            (float)$orderRes['total_price'],
+            [
+                'email' => Auth::user()['email'] ?? '',
+                'slip_path' => $slipPath
+            ]
+        );
+
+        if (!$payRes['ok']) {
+            echo View::render('shop/checkout', [
+                'error' => $payRes['error'],
+                'cartItems' => $cartItems,
+                'subtotal' => $subtotal,
+                'zones' => DeliveryZoneService::getAllZones(),
+                'old' => $_POST
+            ]);
+            exit;
+        }
+
+        header('Location: ' . $payRes['redirect_url']);
+        exit;
+    }
+
+    echo View::render('shop/checkout', [
+        'pageTitle' => 'Checkout',
+        'cartItems' => $cartItems,
+        'subtotal' => $subtotal,
+        'zones' => DeliveryZoneService::getAllZones()
+    ]);
+    exit;
+}
+
+if ($requestUri === '/orders' && $requestMethod === 'GET') {
+    Auth::requireUser();
+    echo View::render('shop/orders', [
+        'pageTitle' => 'My Orders',
+        'orders' => OrderService::getUserOrders(Auth::id())
+    ]);
+    exit;
+}
+
+if (preg_match('#^/orders/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET') {
+    Auth::requireUser();
+    $order = OrderService::getOrderDetails((int)$m[1]);
+    if (!$order || (int)$order['user_id'] !== Auth::id()) {
+        http_response_code(404);
+        echo "<h1>404 Order Not Found</h1>";
+        exit;
+    }
+
+    $flash = $_SESSION['flash_success'] ?? null;
+    $err = $_SESSION['flash_error'] ?? null;
+    unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+    echo View::render('shop/order_detail', [
+        'pageTitle' => 'Order #' . $order['order_id'],
+        'order' => $order,
+        'flash' => $flash,
+        'error' => $err
+    ]);
+    exit;
+}
+
+if (preg_match('#^/orders/(\d+)/invoice$#', $requestUri, $m) && $requestMethod === 'GET') {
+    Auth::requireUser();
+    $order = OrderService::getOrderDetails((int)$m[1]);
+    if (!$order || (int)$order['user_id'] !== Auth::id()) {
+        http_response_code(404);
+        exit('Order not found');
+    }
+
+    $pdf = InvoiceService::renderPdf($order);
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="invoice-' . (int)$order['order_id'] . '.pdf"');
+    echo $pdf;
+    exit;
+}
+
+if (preg_match('#^/orders/(\d+)/cancel$#', $requestUri, $m) && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+    $res = OrderService::cancelByCustomer((int)$m[1], Auth::id());
+    if ($res['ok']) {
+        $_SESSION['flash_success'] = $res['message'];
+    } else {
+        $_SESSION['flash_error'] = $res['error'];
+    }
+    header('Location: /orders/' . (int)$m[1]);
+    exit;
+}
+
+if (preg_match('#^/orders/(\d+)/upload-slip$#', $requestUri, $m) && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+    $orderId = (int)$m[1];
+    $order = OrderService::getOrderDetails($orderId);
+    if (!$order || (int)$order['user_id'] !== Auth::id()) {
+        http_response_code(404);
+        exit('Order not found');
+    }
+
+    $uploadRes = Upload::process($_FILES['bank_slip'] ?? [], 'slips');
+    if (!$uploadRes['ok']) {
+        $_SESSION['flash_error'] = $uploadRes['error'];
+    } else {
+        $pdo = Database::getConnection();
+        $ins = $pdo->prepare("INSERT INTO bank_slip (order_id, file_path, status, created_at) VALUES (:oid, :path, 'submitted', NOW())");
+        $ins->execute([':oid' => $orderId, ':path' => $uploadRes['path']]);
+        $_SESSION['flash_success'] = 'Bank slip uploaded! Admin will verify it shortly.';
+    }
+    header('Location: /orders/' . $orderId);
+    exit;
+}
+
+if ($requestUri === '/wishlist' && $requestMethod === 'GET') {
+    Auth::requireUser();
+    echo View::render('shop/wishlist', [
+        'pageTitle' => 'My Wishlist',
+        'products' => WishlistAndAlertService::getUserWishlistProducts(Auth::id())
+    ]);
+    exit;
+}
+
+if ($requestUri === '/wishlist/toggle' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+    $pid = (int)($_POST['product_id'] ?? 0);
+    $added = WishlistAndAlertService::toggleWishlist(Auth::id(), $pid);
+    $_SESSION['flash_success'] = $added ? 'Added to wishlist.' : 'Removed from wishlist.';
+    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/products'));
+    exit;
+}
+
+if ($requestUri === '/stock-alert' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    if (!Csrf::validateRequest()) {
+        http_response_code(419);
+        exit('Invalid CSRF token');
+    }
+    $pid = (int)($_POST['product_id'] ?? 0);
+    WishlistAndAlertService::subscribeStockAlert(Auth::id(), $pid);
+    $_SESSION['flash_success'] = 'You will be notified by email once this item is back in stock!';
+    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/products'));
+    exit;
+}
+
+// ----------------------------------------------------
 // ADMIN ROUTES & GUARDS
 // ----------------------------------------------------
 if ($requestUri === '/admin/login') {
@@ -328,6 +702,223 @@ if (str_starts_with($requestUri, '/admin/')) {
             'pageTitle' => 'Admin Dashboard',
             'stats' => $stats
         ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/orders' && $requestMethod === 'GET') {
+        $pdo = Database::getConnection();
+        $orders = $pdo->query("
+            SELECT o.*, u.name AS user_name
+            FROM orders o
+            JOIN user u ON u.user_id = o.user_id
+            ORDER BY o.order_date DESC, o.order_id DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $flash = $_SESSION['flash_success'] ?? null;
+        unset($_SESSION['flash_success']);
+
+        echo View::render('admin/orders', [
+            'pageTitle' => 'Manage Orders',
+            'orders' => $orders,
+            'flash' => $flash
+        ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/orders/status' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        $orderId = (int)($_POST['order_id'] ?? 0);
+        $status = (string)($_POST['status'] ?? '');
+        $note = trim((string)($_POST['note'] ?? ''));
+        $adminId = Auth::admin()['admin_id'] ?? null;
+
+        OrderService::updateStatus($orderId, $status, $note !== '' ? $note : null, $adminId);
+        $_SESSION['flash_success'] = "Order #{$orderId} updated to {$status}.";
+        header('Location: /admin/orders');
+        exit;
+    }
+
+    if ($requestUri === '/admin/coupons' && $requestMethod === 'GET') {
+        $flash = $_SESSION['flash_success'] ?? null;
+        $err = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+        echo View::render('admin/coupons', [
+            'pageTitle' => 'Manage Coupons',
+            'coupons' => CouponService::getAll(),
+            'flash' => $flash,
+            'error' => $err
+        ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/coupons/create' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        try {
+            CouponService::create([
+                'code' => $_POST['code'] ?? '',
+                'type' => $_POST['type'] ?? 'percent',
+                'value' => $_POST['value'] ?? 0,
+                'min_order' => $_POST['min_order'] ?? 0,
+                'max_uses' => $_POST['max_uses'] ?? 100,
+                'starts_at' => date('Y-m-d H:i:s'),
+                'ends_at' => str_replace('T', ' ', (string)($_POST['ends_at'] ?? '')) . ':00',
+            ]);
+            $_SESSION['flash_success'] = 'Coupon created!';
+        } catch (Throwable $e) {
+            $_SESSION['flash_error'] = 'Error creating coupon: ' . $e->getMessage();
+        }
+        header('Location: /admin/coupons');
+        exit;
+    }
+
+    if ($requestUri === '/admin/coupons/toggle' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        CouponService::toggleActive((int)($_POST['coupon_id'] ?? 0));
+        header('Location: /admin/coupons');
+        exit;
+    }
+
+    if ($requestUri === '/admin/coupons/delete' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        CouponService::delete((int)($_POST['coupon_id'] ?? 0));
+        $_SESSION['flash_success'] = 'Coupon deleted.';
+        header('Location: /admin/coupons');
+        exit;
+    }
+
+    if ($requestUri === '/admin/zones' && $requestMethod === 'GET') {
+        $flash = $_SESSION['flash_success'] ?? null;
+        unset($_SESSION['flash_success']);
+        echo View::render('admin/zones', [
+            'pageTitle' => 'Delivery Zones',
+            'zones' => DeliveryZoneService::getAllZones(),
+            'flash' => $flash
+        ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/zones/save' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        DeliveryZoneService::upsertZone(
+            (string)($_POST['district'] ?? ''),
+            (float)($_POST['fee'] ?? 0),
+            (float)($_POST['free_over'] ?? 0)
+        );
+        $_SESSION['flash_success'] = 'Delivery zone saved.';
+        header('Location: /admin/zones');
+        exit;
+    }
+
+    if ($requestUri === '/admin/zones/delete' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        DeliveryZoneService::deleteZone((int)($_POST['zone_id'] ?? 0));
+        $_SESSION['flash_success'] = 'Delivery zone deleted.';
+        header('Location: /admin/zones');
+        exit;
+    }
+
+    if ($requestUri === '/admin/bank-slips' && $requestMethod === 'GET') {
+        $pdo = Database::getConnection();
+        $slips = $pdo->query("
+            SELECT bs.*, o.total_price, u.name AS user_name
+            FROM bank_slip bs
+            JOIN orders o ON o.order_id = bs.order_id
+            JOIN user u ON u.user_id = o.user_id
+            ORDER BY bs.created_at DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $flash = $_SESSION['flash_success'] ?? null;
+        $err = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+        echo View::render('admin/bank_slips', [
+            'pageTitle' => 'Bank Slips',
+            'slips' => $slips,
+            'flash' => $flash,
+            'error' => $err
+        ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/bank-slips/review' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        $slipId = (int)($_POST['slip_id'] ?? 0);
+        $action = (string)($_POST['action'] ?? '');
+        $adminId = Auth::admin()['admin_id'] ?? null;
+        $pdo = Database::getConnection();
+
+        $stmt = $pdo->prepare("SELECT * FROM bank_slip WHERE slip_id = :id LIMIT 1");
+        $stmt->execute([':id' => $slipId]);
+        $slip = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($slip) {
+            if ($action === 'verify') {
+                $payRes = CheckoutService::confirmPayment((int)$slip['order_id']);
+                if ($payRes['ok']) {
+                    $upd = $pdo->prepare("UPDATE bank_slip SET status = 'verified', reviewed_by = :aid WHERE slip_id = :id");
+                    $upd->execute([':aid' => $adminId, ':id' => $slipId]);
+                    OrderService::updateStatus((int)$slip['order_id'], 'Confirmed', 'Bank slip verified', $adminId);
+                    $_SESSION['flash_success'] = "Slip #{$slipId} verified and Order #{$slip['order_id']} marked paid.";
+                } else {
+                    $_SESSION['flash_error'] = $payRes['error'];
+                }
+            } elseif ($action === 'reject') {
+                $upd = $pdo->prepare("UPDATE bank_slip SET status = 'rejected', reviewed_by = :aid WHERE slip_id = :id");
+                $upd->execute([':aid' => $adminId, ':id' => $slipId]);
+                $_SESSION['flash_success'] = "Slip #{$slipId} rejected.";
+            }
+        }
+        header('Location: /admin/bank-slips');
+        exit;
+    }
+
+    if ($requestUri === '/admin/products' && $requestMethod === 'GET') {
+        $flash = $_SESSION['flash_success'] ?? null;
+        unset($_SESSION['flash_success']);
+        echo View::render('admin/products', [
+            'pageTitle' => 'Manage Products & Stock',
+            'products' => ProductRepo::findAll(),
+            'flash' => $flash
+        ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/products/stock' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        $pid = (int)($_POST['product_id'] ?? 0);
+        $qty = max(0, (int)($_POST['quantity'] ?? 0));
+        $res = WishlistAndAlertService::updateProductStock($pid, $qty);
+        $msg = "Product #{$pid} stock updated to {$qty}.";
+        if (($res['notified_count'] ?? 0) > 0) {
+            $msg .= " Notified {$res['notified_count']} waiting user(s).";
+        }
+        $_SESSION['flash_success'] = $msg;
+        header('Location: /admin/products');
         exit;
     }
 }

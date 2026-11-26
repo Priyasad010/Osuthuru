@@ -4,6 +4,11 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\Env;
+use App\Repository\ProductRepo;
+use App\Payment\PaymentGateway;
+use App\Payment\StripeGateway;
+use App\Payment\CodGateway;
+use App\Payment\BankTransferGateway;
 use PDO;
 use Throwable;
 use Stripe\Stripe;
@@ -12,12 +17,27 @@ use Stripe\Checkout\Session as StripeSession;
 
 class CheckoutService
 {
-    /**
-     * Create initial unpaid order.
-     * Note: Stock is NOT reduced here for card payments; stock is only reduced upon payment confirmation.
-     */
-    public static function createOrder(int $userId, array $items, string $paymentMethod = 'card', ?string $stripeSessionId = null): array
+    public static function getGateway(string $paymentMethod): PaymentGateway
     {
+        return match ($paymentMethod) {
+            'cod' => new CodGateway(),
+            'bank_transfer' => new BankTransferGateway(),
+            default => new StripeGateway(),
+        };
+    }
+
+    /**
+     * Create initial unpaid order with shipping snapshot, coupon, delivery fee, and sale prices.
+     * Note: Stock is NOT reduced here; Stripe reduces at webhook, COD reduces in CodGateway::initiatePayment,
+     * Bank Transfer reduces when admin verifies slip.
+     */
+    public static function createOrder(
+        int $userId,
+        array $items,
+        string $paymentMethod = 'card',
+        ?string $stripeSessionId = null,
+        array $shippingAndCoupon = []
+    ): array {
         if (empty($items)) {
             return ['ok' => false, 'error' => 'Your cart is empty.'];
         }
@@ -27,28 +47,40 @@ class CheckoutService
         try {
             $pdo->beginTransaction();
 
-            $totalPrice = 0.0;
+            $itemsSubtotal = 0.0;
             $orderItemsToInsert = [];
 
             foreach ($items as $item) {
                 $productId = (int)$item['product_id'];
                 $quantity = max(1, (int)$item['quantity']);
 
-                $stmt = $pdo->prepare("SELECT product_id, product_name, price, quantity FROM product WHERE product_id = :id FOR UPDATE");
+                $stmt = $pdo->prepare("
+                    SELECT p.product_id, p.product_name, p.price, p.quantity,
+                           (SELECT MAX(d.discount_percentage)
+                            FROM discount d
+                            WHERE d.product_id = p.product_id
+                              AND (d.start_date IS NULL OR d.start_date <= NOW())
+                              AND (d.end_date IS NULL OR d.end_date >= NOW())
+                           ) AS active_discount_percentage
+                    FROM product p
+                    WHERE p.product_id = :id
+                    FOR UPDATE
+                ");
                 $stmt->execute([':id' => $productId]);
-                $product = $stmt->fetch();
+                $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if (!$product) {
                     throw new \RuntimeException("Product ID {$productId} not found.");
                 }
 
-                if ($product['quantity'] < $quantity) {
+                if ((int)$product['quantity'] < $quantity) {
                     throw new \RuntimeException("Insufficient stock for {$product['product_name']} (Available: {$product['quantity']}).");
                 }
 
-                $unitPrice = (float)$product['price'];
-                $subtotal = $unitPrice * $quantity;
-                $totalPrice += $subtotal;
+                $enriched = ProductRepo::enrichWithSalePrice($product);
+                $unitPrice = (float)$enriched['effective_price'];
+                $subtotal = round($unitPrice * $quantity, 2);
+                $itemsSubtotal += $subtotal;
 
                 $orderItemsToInsert[] = [
                     'product_id' => $productId,
@@ -58,16 +90,56 @@ class CheckoutService
                 ];
             }
 
+            // Coupon handling
+            $discountTotal = 0.0;
+            $couponId = null;
+            if (!empty($shippingAndCoupon['coupon_code'])) {
+                $couponRes = CouponService::validateAndCalculate((string)$shippingAndCoupon['coupon_code'], $itemsSubtotal, $userId);
+                if (!$couponRes['ok']) {
+                    throw new \RuntimeException($couponRes['error']);
+                }
+                $discountTotal = (float)$couponRes['discount_amount'];
+                $couponId = (int)$couponRes['coupon_id'];
+            }
+
+            $netSubtotal = max(0.0, $itemsSubtotal - $discountTotal);
+
+            // Delivery fee handling
+            $deliveryFee = 0.0;
+            $district = trim((string)($shippingAndCoupon['district'] ?? ''));
+            if ($district !== '') {
+                $zoneRes = DeliveryZoneService::calculateFee($district, $netSubtotal);
+                if (!$zoneRes['ok']) {
+                    throw new \RuntimeException($zoneRes['error']);
+                }
+                $deliveryFee = (float)$zoneRes['fee'];
+            }
+
+            $totalPrice = round($netSubtotal + $deliveryFee, 2);
+
             // Insert into orders table with payment_status = 'unpaid'
             $orderStmt = $pdo->prepare("
-                INSERT INTO `orders` (user_id, order_date, total_price, payment_status, payment_method, stripe_session_id)
-                VALUES (:user_id, NOW(), :total_price, 'unpaid', :payment_method, :stripe_session_id)
+                INSERT INTO `orders` (
+                    user_id, order_date, total_price, payment_status, payment_method, stripe_session_id,
+                    shipping_name, shipping_phone, shipping_address, district, delivery_fee, discount_total, coupon_id, status
+                )
+                VALUES (
+                    :user_id, NOW(), :total_price, 'unpaid', :payment_method, :stripe_session_id,
+                    :shipping_name, :shipping_phone, :shipping_address, :district, :delivery_fee, :discount_total, :coupon_id, 'Pending'
+                )
             ");
             $orderStmt->execute([
                 ':user_id' => $userId,
                 ':total_price' => $totalPrice,
                 ':payment_method' => $paymentMethod,
                 ':stripe_session_id' => $stripeSessionId,
+                ':shipping_name' => $shippingAndCoupon['shipping_name'] ?? null,
+                ':shipping_phone' => $shippingAndCoupon['shipping_phone'] ?? null,
+                ':shipping_address' => $shippingAndCoupon['shipping_address'] ?? null,
+                ':district' => $district !== '' ? $district : null,
+                ':delivery_fee' => $deliveryFee,
+                ':discount_total' => $discountTotal,
+                ':coupon_id' => $couponId,
             ]);
 
             $orderId = (int)$pdo->lastInsertId();
@@ -88,11 +160,24 @@ class CheckoutService
                 ]);
             }
 
+            // Redeem coupon if used
+            if ($couponId !== null) {
+                if (!CouponService::redeem($couponId, $userId, $orderId)) {
+                    throw new \RuntimeException("Coupon could not be redeemed (usage limit reached).");
+                }
+            }
+
+            // Record initial Pending history row
+            OrderService::recordHistory($orderId, 'Pending', 'Order placed', null);
+
             $pdo->commit();
 
             return [
                 'ok' => true,
                 'order_id' => $orderId,
+                'items_subtotal' => $itemsSubtotal,
+                'discount_total' => $discountTotal,
+                'delivery_fee' => $deliveryFee,
                 'total_price' => $totalPrice,
                 'items_count' => count($orderItemsToInsert),
             ];
