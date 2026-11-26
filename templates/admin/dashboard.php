@@ -50,6 +50,9 @@ $admin = Auth::admin();
         <div class="d-flex flex-wrap gap-2">
             <a href="/admin/products" class="btn btn-outline-success btn-sm"><i class="bi bi-box-seam me-1"></i> <?= e(t('admin_products')) ?></a>
             <a href="/admin/herbs" class="btn btn-outline-success btn-sm"><i class="bi bi-journal-medical me-1"></i> <?= e(t('admin_herbs')) ?></a>
+            <a href="/admin/quiz" class="btn btn-outline-success btn-sm"><i class="bi bi-clipboard2-pulse me-1"></i> <?= e(t('admin_quiz')) ?></a>
+            <a href="/admin/dosha" class="btn btn-outline-success btn-sm"><i class="bi bi-diagram-3 me-1"></i> <?= e(t('admin_dosha')) ?></a>
+            <a href="/admin/safety" class="btn btn-outline-success btn-sm"><i class="bi bi-shield-check me-1"></i> <?= e(t('admin_safety')) ?></a>
             <a href="/admin/orders" class="btn btn-outline-success btn-sm"><i class="bi bi-receipt me-1"></i> <?= e(t('admin_orders')) ?></a>
             <a href="/admin/coupons" class="btn btn-outline-success btn-sm"><i class="bi bi-ticket-perforated me-1"></i> <?= e(t('admin_coupons')) ?></a>
             <a href="/admin/zones" class="btn btn-outline-success btn-sm"><i class="bi bi-truck me-1"></i> <?= e(t('admin_zones')) ?></a>

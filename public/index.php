@@ -39,6 +39,8 @@ use App\Core\Request;
 use App\Service\RegistrationService;
 use App\Repository\ProductRepo;
 use App\Repository\HerbRepo;
+use App\Repository\QuizRepo;
+use App\Service\SafetyService;
 use App\Service\SearchService;
 use App\Service\PasswordResetService;
 use App\Service\CheckoutService;
@@ -80,7 +82,13 @@ if ($requestUri === '/api/health' && $requestMethod === 'GET') {
 // HOME PAGE & LANGUAGE SWITCH
 // ----------------------------------------------------
 if ($requestUri === '/' || $requestUri === '') {
+    // Latest saved result for members, otherwise this session's quiz attempt
+    $saved = Auth::check() ? QuizRepo::history(Auth::id(), 1) : [];
+    $doshaResult = $saved[0] ?? $_SESSION['quiz_result'] ?? null;
+
     echo View::render('home', [
+        'recommended' => $doshaResult ? QuizRepo::recommendedProducts($doshaResult) : [],
+        'quizLive' => QuizRepo::isLive(),
         'pageTitle' => t('welcome_title'),
         'herbOfTheDay' => HerbRepo::getHerbOfTheDay(),
         'concerns' => HerbRepo::getAllConcerns(),
@@ -104,6 +112,11 @@ if ($requestUri === '/lang' && $requestMethod === 'POST') {
     header('Location: ' . $referer);
     exit;
 }
+
+// ----------------------------------------------------
+// DOSHA QUIZ & SAFETY CHECKER (PHASE 4)
+// ----------------------------------------------------
+require $rootDir . '/routes/phase4.php';
 
 // ----------------------------------------------------
 // SEARCH & AUTOCOMPLETE (PHASE 3)
@@ -136,7 +149,7 @@ if ($requestUri === '/login') {
 
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             echo View::render('auth/login', ['error' => t('err_csrf')]);
             exit;
         }
@@ -190,7 +203,7 @@ if ($requestUri === '/register') {
 
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             echo View::render('auth/register', ['error' => t('err_csrf')]);
             exit;
         }
@@ -238,7 +251,7 @@ if ($requestUri === '/verify') {
 if ($requestUri === '/forgot-password') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             echo View::render('auth/forgot_password', ['error' => t('err_csrf')]);
             exit;
         }
@@ -260,7 +273,7 @@ if ($requestUri === '/forgot-password') {
 if ($requestUri === '/reset-password') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             echo View::render('auth/reset_password', ['error' => t('err_csrf'), 'token' => '']);
             exit;
         }
@@ -451,7 +464,7 @@ if ($requestUri === '/cart' && $requestMethod === 'GET') {
 if ($requestUri === '/cart/add' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
 
@@ -479,7 +492,7 @@ if ($requestUri === '/cart/add' && $requestMethod === 'POST') {
 if ($requestUri === '/cart/update' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
     $pid = (int)($_POST['product_id'] ?? 0);
@@ -494,7 +507,7 @@ if ($requestUri === '/cart/update' && $requestMethod === 'POST') {
 if ($requestUri === '/cart/remove' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
     $pid = (int)($_POST['product_id'] ?? 0);
@@ -541,7 +554,7 @@ if ($requestUri === '/checkout') {
 
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             echo View::render('shop/checkout', [
                 'error' => t('err_csrf'),
                 'cartItems' => $cartItems,
@@ -555,6 +568,18 @@ if ($requestUri === '/checkout') {
         $paymentMethod = (string)($_POST['payment_method'] ?? 'cod');
         if (!in_array($paymentMethod, ['cod', 'bank_transfer', 'card'], true)) {
             $paymentMethod = 'cod';
+        }
+
+        // An "avoid" safety match must be acknowledged before paying (nothing is stored)
+        if (SafetyService::needsAcknowledgement(array_column($cartItems, 'product_id'), !empty($_POST['safety_ack']))) {
+            echo View::render('shop/checkout', [
+                'error' => t('safety_ack_required'),
+                'cartItems' => $cartItems,
+                'subtotal' => $subtotal,
+                'zones' => DeliveryZoneService::getAllZones(),
+                'old' => $_POST
+            ]);
+            exit;
         }
 
         $slipPath = null;
@@ -686,7 +711,7 @@ if (preg_match('#^/orders/(\d+)/invoice$#', $requestUri, $m) && $requestMethod =
 if (preg_match('#^/orders/(\d+)/cancel$#', $requestUri, $m) && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
     $res = OrderService::cancelByCustomer((int)$m[1], Auth::id());
@@ -702,7 +727,7 @@ if (preg_match('#^/orders/(\d+)/cancel$#', $requestUri, $m) && $requestMethod ==
 if (preg_match('#^/orders/(\d+)/upload-slip$#', $requestUri, $m) && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
     $orderId = (int)$m[1];
@@ -743,7 +768,7 @@ if ($requestUri === '/wishlist' && $requestMethod === 'GET') {
 if ($requestUri === '/wishlist/toggle' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
     $pid = (int)($_POST['product_id'] ?? 0);
@@ -756,7 +781,7 @@ if ($requestUri === '/wishlist/toggle' && $requestMethod === 'POST') {
 if ($requestUri === '/stock-alert' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
-        http_response_code(419);
+        http_response_code(403);
         exit('Invalid CSRF token');
     }
     $pid = (int)($_POST['product_id'] ?? 0);
@@ -777,7 +802,7 @@ if ($requestUri === '/admin/login') {
 
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             echo View::render('auth/admin_login', ['error' => t('err_csrf')]);
             exit;
         }
@@ -854,7 +879,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/orders/status' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         $orderId = (int)($_POST['order_id'] ?? 0);
@@ -891,7 +916,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/coupons/create' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         try {
@@ -915,7 +940,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/coupons/toggle' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         CouponService::toggleActive((int)($_POST['coupon_id'] ?? 0));
@@ -925,7 +950,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/coupons/delete' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         CouponService::delete((int)($_POST['coupon_id'] ?? 0));
@@ -947,7 +972,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/zones/save' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         DeliveryZoneService::upsertZone(
@@ -962,7 +987,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/zones/delete' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         DeliveryZoneService::deleteZone((int)($_POST['zone_id'] ?? 0));
@@ -996,7 +1021,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/bank-slips/review' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         $slipId = (int)($_POST['slip_id'] ?? 0);
@@ -1046,7 +1071,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/herbs/update' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         $hid = (int)($_POST['herb_id'] ?? 0);
@@ -1077,7 +1102,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/products/stock' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         $pid = (int)($_POST['product_id'] ?? 0);
@@ -1094,7 +1119,7 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/products/update' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
-            http_response_code(419);
+            http_response_code(403);
             exit('Invalid CSRF token');
         }
         $pid = (int)($_POST['product_id'] ?? 0);

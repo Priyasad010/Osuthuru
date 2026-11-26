@@ -51,6 +51,9 @@ $pageTitle = $pageTitle ?? t('app_name');
                     <li class="nav-item">
                         <a class="nav-link" href="/dictionary"><i class="bi bi-journal-medical me-1"></i><?= e(t('nav_dictionary')) ?></a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/quiz"><i class="bi bi-clipboard2-pulse me-1"></i><?= e(t('nav_quiz')) ?></a>
+                    </li>
                 </ul>
 
                 <!-- Search Bar with Autocomplete & Voice Search -->

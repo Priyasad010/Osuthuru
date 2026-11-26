@@ -35,3 +35,19 @@ INSERT IGNORE INTO `discount` (`discount_id`, `product_id`, `discount_percentage
 
 INSERT IGNORE INTO `blog` (`blog_id`, `title`, `image`, `content`, `published_date`) VALUES
 (1, 'What Is Ayurveda?', '../assets/images/uploads/Blogs1753081225_Blog1.jpg', 'Introduction\r\nAyurveda is one of the world’s oldest holistic systems. Originating in India and widely practised in Sri Lanka, Ayurveda emphasises balance between the body, mind and spirit. The word “Ayurveda” comes from the Sanskrit words “Ayur” (life) and “Veda” (knowledge or science), meaning the “Science of Life”.\r\n\r\nCore principles\r\nAyurveda describes five elements: Earth (Prithvi), Water (Jala), Fire (Teja), Air (Vayu) and Space (Akasha). In this tradition they combine to form three doshas: Vata, Pitta and Kapha. A person’s own combination of doshas is called their Prakriti.\r\n', '2025-07-21 12:30:25');
+
+-- SAMPLE safety entries to show how the admin screen works.
+-- They are NOT medical information and stay unpublished (hidden from customers).
+INSERT IGNORE INTO `herb_safety` (`herb_id`, `flag_id`, `severity`, `note_en`, `note_si`, `source_note`, `published`)
+SELECT h.herb_id, f.flag_id, sample.severity,
+       'SAMPLE - not medical information. Replace with practitioner-reviewed text.',
+       'නියැදියකි - වෛද්‍ය තොරතුරු නොවේ. සමාලෝචනය කළ පෙළක් යොදන්න.',
+       'SAMPLE - no source', 0
+FROM (
+    SELECT 'Azadirachta indica' AS herb, 'pregnant' AS flag, 'avoid' AS severity
+    UNION ALL SELECT 'Centella asiatica', 'child_under_12', 'caution'
+    UNION ALL SELECT 'Curcuma longa', 'blood_thinners', 'info'
+) AS sample
+JOIN `herb` h ON h.scientific_name = CONVERT(sample.herb USING utf8mb4) COLLATE utf8mb4_general_ci
+JOIN `safety_flag` f ON f.code = CONVERT(sample.flag USING utf8mb4) COLLATE utf8mb4_unicode_ci;
+

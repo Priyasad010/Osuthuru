@@ -76,3 +76,5 @@
         </div>
     </div>
 </div>
+
+<?= \App\Core\View::partial('safety_panel', ['productIds' => [(int)$product['product_id']], 'productId' => (int)$product['product_id']]) ?>

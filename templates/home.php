@@ -32,6 +32,24 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
     </div>
 </div>
 
+<?php if (!empty($recommended)): ?>
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold text-success mb-0"><?= e(t('recommended_title')) ?></h3>
+            <a href="/quiz/result" class="btn btn-outline-success btn-sm"><?= e(t('quiz_result_title')) ?></a>
+        </div>
+        <?= \App\Core\View::partial('product_cards', ['products' => $recommended]) ?>
+    </div>
+<?php elseif (!empty($quizLive)): ?>
+    <div class="card border-0 shadow-sm p-4 mb-5 d-flex flex-row flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h5 class="fw-bold text-success mb-1"><?= e(t('quiz_title')) ?></h5>
+            <p class="text-muted small mb-0"><?= e(t('quiz_intro')) ?></p>
+        </div>
+        <a href="/quiz" class="btn btn-suwoda"><?= e(t('quiz_start')) ?></a>
+    </div>
+<?php endif; ?>
+
 <!-- Herb of the Day Feature -->
 <?php if (!empty($herbOfTheDay)): ?>
     <div class="card border-0 shadow-sm mb-5 overflow-hidden" style="border-left: 6px solid #2d6a4f !important;">

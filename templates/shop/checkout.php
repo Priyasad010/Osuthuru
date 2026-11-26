@@ -5,6 +5,12 @@
     <div class="alert alert-danger py-2 small"><?= e($error) ?></div>
 <?php endif; ?>
 
+<?php
+$productIds = array_column($cartItems, 'product_id');
+$safety = \App\Service\SafetyService::currentResult($productIds);
+?>
+<?= \App\Core\View::partial('safety_panel', ['productIds' => $productIds, 'back' => 'checkout']) ?>
+
 <form method="POST" action="/checkout" enctype="multipart/form-data">
     <?= csrf_field() ?>
     <div class="row g-4">
@@ -112,6 +118,15 @@
                     <span><?= e(t('total_payable')) ?></span>
                     <span id="chkGrandTotal"><?= e(format_price($subtotal)) ?></span>
                 </div>
+
+                <?php if (!empty($safety['has_avoid'])): ?>
+                    <div class="alert alert-danger py-2 small">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="safety_ack" name="safety_ack" value="1" required>
+                            <label class="form-check-label fw-semibold" for="safety_ack"><?= e(t('safety_ack')) ?></label>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
                 <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold">
                     <i class="bi bi-lock-fill me-1"></i> <?= e(t('place_order')) ?>

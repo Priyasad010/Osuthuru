@@ -101,6 +101,12 @@
         </div>
     </div>
 
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <?= \App\Core\View::partial('safety_panel', ['productIds' => array_column($cartItems, 'product_id')]) ?>
+        </div>
+    </div>
+
     <script>
         function updateCartDeliveryEstimate() {
             const subtotal = <?= json_encode((float)$subtotal) ?>;
