@@ -53,7 +53,7 @@
 ## Project Phases
 - [x] **Phase 0: Foundation** (Docker, DB baseline migration, Core PSR-4 classes, base layout)
 - [x] **Phase 1: Security and core fixes** (Safe auth, admin guards, token reset, checkout correctness)
-- [x] **Phase 2: Commerce for Sri Lanka** (COD, bank transfer, delivery zones, invoices, wishlist)
+- [ ] **Phase 2: Commerce for Sri Lanka** (COD, bank transfer, delivery zones, invoices, wishlist)
 - [ ] **Phase 3: Herbal knowledge and bilingual search** (Sinhala/English, concern pages, voice)
 - [ ] **Phase 4: Novelty A** (Dosha quiz, safety checker)
 - [ ] **Phase 5: Novelty B** (QR batch traceability, AI Assistant)

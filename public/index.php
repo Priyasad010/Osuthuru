@@ -36,6 +36,8 @@ use App\Core\Validator;
 use App\Core\Mailer;
 use App\Core\Upload;
 use App\Repository\ProductRepo;
+use App\Repository\HerbRepo;
+use App\Service\SearchService;
 use App\Service\PasswordResetService;
 use App\Service\CheckoutService;
 use App\Service\DeliveryZoneService;
@@ -73,13 +75,49 @@ if ($requestUri === '/api/health' && $requestMethod === 'GET') {
 }
 
 // ----------------------------------------------------
-// HOME PAGE
+// HOME PAGE & LANGUAGE SWITCH
 // ----------------------------------------------------
 if ($requestUri === '/' || $requestUri === '') {
     echo View::render('home', [
-        'pageTitle' => t('welcome_title')
+        'pageTitle' => t('welcome_title'),
+        'herbOfTheDay' => HerbRepo::getHerbOfTheDay(),
+        'concerns' => HerbRepo::getAllConcerns(),
+        'featuredProducts' => array_slice(ProductRepo::findAll(), 0, 4)
     ]);
     exit;
+}
+
+if ($requestUri === '/lang' && $requestMethod === 'POST') {
+    $lang = (string)($_POST['lang'] ?? 'en');
+    if (in_array($lang, ['en', 'si'], true)) {
+        Lang::setLocale($lang);
+    }
+    $referer = $_SERVER['HTTP_REFERER'] ?? '/';
+    if (parse_url($referer, PHP_URL_PATH) === '/lang') {
+        $referer = '/';
+    }
+    header('Location: ' . $referer);
+    exit;
+}
+
+// ----------------------------------------------------
+// SEARCH & AUTOCOMPLETE (PHASE 3)
+// ----------------------------------------------------
+if ($requestUri === '/search' && $requestMethod === 'GET') {
+    $q = trim((string)($_GET['q'] ?? ''));
+    $results = SearchService::search($q);
+    echo View::render('shop/search', [
+        'pageTitle' => t('search_results_title', ['query' => $q]),
+        'query' => $q,
+        'results' => $results
+    ]);
+    exit;
+}
+
+if ($requestUri === '/api/search/suggest' && $requestMethod === 'GET') {
+    $q = trim((string)($_GET['q'] ?? ''));
+    $res = SearchService::suggest($q);
+    json_response($res);
 }
 
 // ----------------------------------------------------
@@ -275,7 +313,7 @@ if ($requestUri === '/logout' && $requestMethod === 'POST') {
 }
 
 // ----------------------------------------------------
-// PHASE 2: STOREFRONT (PRODUCTS, CART, CHECKOUT, ORDERS, WISHLIST)
+// PHASE 2 & 3: STOREFRONT & HERBAL KNOWLEDGE
 // ----------------------------------------------------
 if ($requestUri === '/products' && $requestMethod === 'GET') {
     $catId = isset($_GET['category']) && is_numeric($_GET['category']) ? (int)$_GET['category'] : null;
@@ -293,6 +331,87 @@ if ($requestUri === '/products' && $requestMethod === 'GET') {
         'selectedCategory' => $catId,
         'wishlistIds' => $wishlistIds,
         'flash' => $flash
+    ]);
+    exit;
+}
+
+if (preg_match('#^/products/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET') {
+    $productId = (int)$m[1];
+    $product = ProductRepo::findById($productId);
+    if (!$product) {
+        http_response_code(404);
+        echo "<h1>404 Product Not Found</h1>";
+        exit;
+    }
+    $herbs = HerbRepo::getHerbsByProduct($productId);
+    $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
+    echo View::render('shop/product_detail', [
+        'pageTitle' => $product['display_name'] ?? $product['product_name'],
+        'product' => $product,
+        'herbs' => $herbs,
+        'isWishlisted' => in_array($productId, $wishlistIds, true)
+    ]);
+    exit;
+}
+
+if ($requestUri === '/dictionary' && $requestMethod === 'GET') {
+    $letter = isset($_GET['letter']) ? strtoupper(trim((string)$_GET['letter'])) : null;
+    $herbs = HerbRepo::findAll($letter);
+    echo View::render('shop/dictionary', [
+        'pageTitle' => t('nav_dictionary'),
+        'herbs' => $herbs,
+        'selectedLetter' => $letter
+    ]);
+    exit;
+}
+
+if (preg_match('#^/herb/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET') {
+    $herbId = (int)$m[1];
+    $herb = HerbRepo::findById($herbId);
+    if (!$herb) {
+        http_response_code(404);
+        echo "<h1>404 Herb Not Found</h1>";
+        exit;
+    }
+    $products = HerbRepo::getProductsByHerb($herbId);
+    $concerns = HerbRepo::getConcernsByHerb($herbId);
+    echo View::render('shop/herb_detail', [
+        'pageTitle' => $herb['display_name'],
+        'herb' => $herb,
+        'products' => $products,
+        'concerns' => $concerns
+    ]);
+    exit;
+}
+
+if (preg_match('#^/concern/([a-z0-9-]+)$#', $requestUri, $m) && $requestMethod === 'GET') {
+    $slug = $m[1];
+    $concern = HerbRepo::getConcernBySlug($slug);
+    if (!$concern) {
+        http_response_code(404);
+        echo "<h1>404 Health Concern Not Found</h1>";
+        exit;
+    }
+    $herbs = HerbRepo::getHerbsByConcern((int)$concern['concern_id']);
+    
+    // Products prepared with these herbs
+    $products = [];
+    $seenPids = [];
+    foreach ($herbs as $h) {
+        $hProds = HerbRepo::getProductsByHerb((int)$h['herb_id']);
+        foreach ($hProds as $hp) {
+            if (!in_array($hp['product_id'], $seenPids, true)) {
+                $seenPids[] = $hp['product_id'];
+                $products[] = $hp;
+            }
+        }
+    }
+
+    echo View::render('shop/concern', [
+        'pageTitle' => $concern['display_name'],
+        'concern' => $concern,
+        'herbs' => $herbs,
+        'products' => $products
     ]);
     exit;
 }
@@ -897,9 +1016,17 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/products' && $requestMethod === 'GET') {
         $flash = $_SESSION['flash_success'] ?? null;
         unset($_SESSION['flash_success']);
+
+        $products = ProductRepo::findAll();
+        foreach ($products as &$p) {
+            $p['herbs'] = HerbRepo::getHerbsByProduct((int)$p['product_id']);
+        }
+        unset($p);
+
         echo View::render('admin/products', [
             'pageTitle' => 'Manage Products & Stock',
-            'products' => ProductRepo::findAll(),
+            'products' => $products,
+            'allHerbs' => HerbRepo::findAll(),
             'flash' => $flash
         ]);
         exit;
@@ -918,6 +1045,25 @@ if (str_starts_with($requestUri, '/admin/')) {
             $msg .= " Notified {$res['notified_count']} waiting user(s).";
         }
         $_SESSION['flash_success'] = $msg;
+        header('Location: /admin/products');
+        exit;
+    }
+
+    if ($requestUri === '/admin/products/update' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        $pid = (int)($_POST['product_id'] ?? 0);
+        $herbIds = isset($_POST['herb_ids']) && is_array($_POST['herb_ids']) ? array_map('intval', $_POST['herb_ids']) : [];
+
+        ProductRepo::updateDetails($pid, [
+            'product_name_si' => $_POST['product_name_si'] ?? null,
+            'description_si' => $_POST['description_si'] ?? null,
+            'herb_ids' => $herbIds
+        ]);
+
+        $_SESSION['flash_success'] = "Product #{$pid} details and linked herbs updated.";
         header('Location: /admin/products');
         exit;
     }

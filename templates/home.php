@@ -1,41 +1,150 @@
-<div class="row align-items-center py-5">
-    <div class="col-lg-7">
-        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill mb-3">
-            <i class="bi bi-patch-check-fill me-1"></i> Phase 0: Foundation Running
-        </span>
-        <h1 class="display-5 fw-bold text-success mb-3"><?= e(t('welcome_title')) ?></h1>
-        <p class="lead text-muted mb-4"><?= e(t('welcome_subtitle')) ?></p>
-        
-        <div class="d-flex flex-wrap gap-2">
-            <a href="/api/health" class="btn btn-outline-success">
-                <i class="bi bi-activity me-1"></i> Check PHP API Health
-            </a>
-            <a href="http://localhost:8025" target="_blank" class="btn btn-outline-secondary">
-                <i class="bi bi-envelope me-1"></i> Mailpit Inbox
-            </a>
+<?php
+use App\Repository\HerbRepo;
+use App\Repository\ProductRepo;
+
+$herbOfTheDay = $herbOfTheDay ?? HerbRepo::getHerbOfTheDay();
+$concerns = $concerns ?? HerbRepo::getAllConcerns();
+$featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 4);
+?>
+
+<!-- Hero Banner -->
+<div class="card border-0 shadow-sm p-4 p-md-5 mb-5 text-white" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%); border-radius: 1rem;">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <span class="badge bg-white text-success px-3 py-2 rounded-pill mb-3 fw-semibold">
+                <i class="bi bi-patch-check-fill me-1 text-success"></i> Authentic Sri Lankan Herbal &amp; Ayurveda &bull; Phase 0: Foundation Running
+            </span>
+            <h1 class="display-5 fw-bold mb-3"><?= e(t('welcome_title')) ?></h1>
+            <p class="lead opacity-90 mb-4"><?= e(t('welcome_subtitle')) ?></p>
+            
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/products" class="btn btn-light text-success fw-bold px-4 py-2">
+                    <i class="bi bi-box-seam me-1"></i> <?= e(t('nav_products')) ?>
+                </a>
+                <a href="/dictionary" class="btn btn-outline-light px-4 py-2">
+                    <i class="bi bi-journal-medical me-1"></i> <?= e(t('nav_dictionary')) ?>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center mt-4 mt-lg-0">
+            <i class="bi bi-flower1 opacity-25" style="font-size: 8rem; color: #b7e4c7;"></i>
         </div>
     </div>
-    <div class="col-lg-5 text-center mt-4 mt-lg-0">
-        <div class="card shadow-sm border-0 bg-white p-4">
-            <h5 class="fw-bold mb-3 text-success"><i class="bi bi-layers-fill me-2"></i>V2 Architecture Status</h5>
-            <ul class="list-group list-group-flush text-start small">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Web App (PHP 8.3 + Apache)
-                    <span class="badge bg-success rounded-pill">Active</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Database (MySQL 8)
-                    <span class="badge bg-success rounded-pill">Ready</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ML Service (Python 3.12 FastAPI)
-                    <span class="badge bg-info text-dark rounded-pill">Port 8000</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Mailpit Dev SMTP
-                    <span class="badge bg-secondary rounded-pill">Port 8025</span>
-                </li>
-            </ul>
+</div>
+
+<!-- Herb of the Day Feature -->
+<?php if (!empty($herbOfTheDay)): ?>
+    <div class="card border-0 shadow-sm mb-5 overflow-hidden" style="border-left: 6px solid #2d6a4f !important;">
+        <div class="card-body p-4">
+            <div class="row align-items-center g-4">
+                <div class="col-md-3 text-center">
+                    <div class="bg-success-subtle p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 110px; height: 110px;">
+                        <i class="bi bi-flower1 text-success" style="font-size: 3.5rem;"></i>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-success text-white px-2 py-1">
+                            <i class="bi bi-calendar-event me-1"></i><?= e(t('herb_of_the_day')) ?>
+                        </span>
+                        <?php if (!empty($herbOfTheDay['name_si']) && $herbOfTheDay['display_name'] !== $herbOfTheDay['name_si']): ?>
+                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1"><?= e($herbOfTheDay['name_si']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <h3 class="fw-bold text-success mb-1">
+                        <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="text-success text-decoration-none">
+                            <?= e($herbOfTheDay['display_name']) ?>
+                        </a>
+                    </h3>
+                    <p class="text-muted fst-italic small mb-2">
+                        <strong><?= e(t('scientific_name')) ?>:</strong> <?= e($herbOfTheDay['scientific_name']) ?>
+                    </p>
+                    <p class="text-secondary mb-3 small leading-relaxed">
+                        <?= e(mb_strimwidth((string)$herbOfTheDay['display_uses'], 0, 180, '...')) ?>
+                    </p>
+                    <div>
+                        <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="btn btn-outline-success btn-sm fw-semibold">
+                            Read Full Herbal Profile &amp; Uses <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+<?php endif; ?>
+
+<!-- Shop by Health Concern Grid -->
+<div class="mb-5">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-success mb-2"><?= e(t('health_concerns_title')) ?></h3>
+        <p class="text-muted small mx-auto" style="max-width: 600px;"><?= e(t('health_concerns_subtitle')) ?></p>
+    </div>
+
+    <div class="row g-3">
+        <?php foreach ($concerns as $c): ?>
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="/concern/<?= e($c['slug']) ?>" class="card h-100 border-0 shadow-sm text-decoration-none p-3 text-center health-concern-card transition-all">
+                    <div class="bg-success-subtle text-success rounded-circle mx-auto p-3 mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                        <i class="bi <?= e($c['icon']) ?> fs-3"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-1"><?= e($c['display_name']) ?></h6>
+                    <small class="text-muted"><?= e($c['name_en']) ?></small>
+                </a>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<!-- Featured Herbal Products -->
+<?php if (!empty($featuredProducts)): ?>
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-success mb-1">Featured Ayurvedic Products</h3>
+                <p class="text-muted small mb-0">Handcrafted remedies made with natural Ceylon herbs</p>
+            </div>
+            <a href="/products" class="btn btn-outline-success btn-sm">
+                View All <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            <?php foreach ($featuredProducts as $p): ?>
+                <div class="col-sm-6 col-md-3">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
+                            <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <small class="text-muted"><?= e($p['display_category_name'] ?? 'Ayurvedic') ?></small>
+                            <h6 class="card-title fw-bold mt-1 mb-2">
+                                <a href="/products/<?= (int)$p['product_id'] ?>" class="text-dark text-decoration-none">
+                                    <?= e($p['display_name']) ?>
+                                </a>
+                            </h6>
+                            <div class="mb-3">
+                                <?php if ($p['has_discount']): ?>
+                                    <span class="fw-bold text-success"><?= e(format_price($p['sale_price'])) ?></span>
+                                    <small class="text-muted text-decoration-line-through ms-1"><?= e(format_price($p['base_price'])) ?></small>
+                                <?php else: ?>
+                                    <span class="fw-bold text-success"><?= e(format_price($p['base_price'])) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="mt-auto">
+                                <a href="/products/<?= (int)$p['product_id'] ?>" class="btn btn-outline-success btn-sm w-100">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
+<!-- Medical Disclaimer Banner -->
+<div class="disclaimer-box text-center mb-4">
+    <i class="bi bi-shield-exclamation text-warning me-2"></i>
+    <?= e(t('medical_disclaimer')) ?>
 </div>

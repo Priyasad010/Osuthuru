@@ -51,23 +51,45 @@ $pageTitle = $pageTitle ?? t('app_name');
                     <li class="nav-item">
                         <a class="nav-link" href="/dictionary"><i class="bi bi-journal-medical me-1"></i><?= e(t('nav_dictionary')) ?></a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/blogs"><i class="bi bi-newspaper me-1"></i><?= e(t('nav_blogs')) ?></a>
-                    </li>
                 </ul>
+
+                <!-- Search Bar with Autocomplete & Voice Search -->
+                <form class="d-flex position-relative me-lg-3 my-2 my-lg-0" action="/search" method="GET" style="min-width: 280px; max-width: 360px;">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="q" id="globalSearchInput" class="form-control"
+                               placeholder="<?= e(t('search_placeholder')) ?>"
+                               value="<?= e($_GET['q'] ?? '') ?>" autocomplete="off">
+                        <button class="btn btn-outline-light border-start-0" type="button" id="voiceSearchBtn" title="<?= e(t('voice_search')) ?>">
+                            <i class="bi bi-mic-fill" id="voiceMicIcon"></i>
+                        </button>
+                        <button class="btn btn-light text-success fw-bold" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <!-- Autocomplete dropdown container -->
+                    <div id="searchSuggestBox" class="dropdown-menu w-100 shadow border-0 mt-1 d-none" style="position: absolute; top: 100%; left: 0; z-index: 1050; max-height: 380px; overflow-y: auto;">
+                    </div>
+                </form>
 
                 <!-- Language Switcher & User Profile -->
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Language selector -->
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Language selector">
-                        <a href="?lang=en" class="btn <?= $currentLang === 'en' ? 'btn-light text-success fw-bold' : 'btn-outline-light' ?>">EN</a>
-                        <a href="?lang=si" class="btn <?= $currentLang === 'si' ? 'btn-light text-success fw-bold' : 'btn-outline-light' ?>">සිං</a>
+                    <!-- Language selector form -->
+                    <div class="btn-group btn-group-sm" role="group">
+                        <form action="/lang" method="POST" class="d-inline">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="lang" value="en">
+                            <button type="submit" class="btn btn-sm <?= $currentLang === 'en' ? 'btn-light text-success fw-bold' : 'btn-outline-light' ?>">EN</button>
+                        </form>
+                        <form action="/lang" method="POST" class="d-inline">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="lang" value="si">
+                            <button type="submit" class="btn btn-sm <?= $currentLang === 'si' ? 'btn-light text-success fw-bold' : 'btn-outline-light' ?>">සිං</button>
+                        </form>
                     </div>
 
                     <!-- Cart -->
-                    <a href="/cart" class="btn btn-outline-light btn-sm position-relative">
+                    <a href="/cart" class="btn btn-outline-light btn-sm position-relative" title="<?= e(t('nav_cart')) ?>">
                         <i class="bi bi-cart3"></i>
-                        <span class="visually-hidden"><?= e(t('nav_cart')) ?></span>
                     </a>
 
                     <!-- Auth Links -->
@@ -77,7 +99,8 @@ $pageTitle = $pageTitle ?? t('app_name');
                                 <i class="bi bi-person-circle me-1"></i><?= e(Auth::user()['name'] ?? 'User') ?>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
-                                <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i><?= e(t('nav_profile')) ?></a></li>
+                                <li><a class="dropdown-item" href="/orders"><i class="bi bi-receipt me-2"></i><?= e(t('nav_profile')) ?> / Orders</a></li>
+                                <li><a class="dropdown-item" href="/wishlist"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="/logout" method="POST" class="d-inline">

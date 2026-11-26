@@ -17,9 +17,31 @@ return [
 
     'welcome_title' => 'Welcome to Suwoda HerbHub V2',
     'welcome_subtitle' => 'Know your body → Find the right herb → Verify it is genuine → Buy safely',
-    
-    'health_check_ok' => 'Service is healthy',
+
     'search_placeholder' => 'Search herbs, products or health concerns...',
-    'all_rights_reserved' => 'All rights reserved.',
+    'search_button' => 'Search',
+    'voice_search' => 'Voice search',
+    'voice_listening' => 'Listening... Speak now',
+    'voice_unsupported' => 'Voice search is not supported in this browser.',
+    'did_you_mean' => 'Did you mean: :suggestion?',
+    'concern_shortcut_banner' => 'Looking for solutions regarding :concern? View our curated herbal care guide.',
+    'search_results_title' => 'Search Results for ":query"',
+    'no_search_results' => 'No products or herbs found matching ":query". Try another keyword or check suggestions.',
+
+    'herb_of_the_day' => 'Herb of the Day',
+    'health_concerns_title' => 'Shop by Health Concern',
+    'health_concerns_subtitle' => 'Traditional Ayurvedic remedies categorised by your everyday wellness needs',
+    'dictionary_title' => 'Ayurvedic Herbal Dictionary',
+    'dictionary_subtitle' => 'Comprehensive guide to indigenous and Ayurvedic medicinal plants of Sri Lanka',
+    'filter_all' => 'All',
+    'scientific_name' => 'Scientific Name',
+    'traditional_uses' => 'Traditional Uses',
+    'products_with_herb' => 'Products containing this herb',
+    'no_products_for_herb' => 'No commercially packaged products currently available containing this herb.',
+    'contains_herbs' => 'Contains Key Ayurvedic Herbs:',
+
+    'traditionally_used_for' => 'Traditionally used for',
+    'concern_disclaimer' => 'Educational Use Only: These remedies are traditionally recognized in indigenous Ayurvedic texts and are not intended to diagnose, treat, cure, or replace professional medical consultations.',
     'medical_disclaimer' => 'Disclaimer: The information provided on this platform is for educational and wellness purposes only and does not constitute medical advice or diagnosis. Always consult a qualified Ayurvedic physician or medical professional.',
+    'all_rights_reserved' => 'All rights reserved.',
 ];

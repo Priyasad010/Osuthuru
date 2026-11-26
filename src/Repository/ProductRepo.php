@@ -3,15 +3,31 @@
 namespace App\Repository;
 
 use App\Core\Database;
+use App\Core\Lang;
 use PDO;
 
 class ProductRepo
 {
-    public static function findAll(?int $categoryId = null): array
+    public static function enrichLocale(array $p, ?string $locale = null): array
+    {
+        $locale = $locale ?? Lang::getLocale();
+        $isSi = ($locale === 'si');
+
+        $p['display_name'] = ($isSi && !empty($p['product_name_si'])) ? $p['product_name_si'] : $p['product_name'];
+        $p['display_description'] = ($isSi && !empty($p['description_si'])) ? $p['description_si'] : ($p['description'] ?? '');
+
+        if (isset($p['category_name'])) {
+            $p['display_category_name'] = ($isSi && !empty($p['category_name_si'])) ? $p['category_name_si'] : $p['category_name'];
+        }
+
+        return $p;
+    }
+
+    public static function findAll(?int $categoryId = null, ?string $locale = null): array
     {
         $pdo = Database::getConnection();
         $sql = "
-            SELECT p.*, c.name AS category_name,
+            SELECT p.*, c.name AS category_name, c.name_si AS category_name_si,
                    (SELECT MAX(d.discount_percentage)
                     FROM discount d
                     WHERE d.product_id = p.product_id
@@ -33,14 +49,16 @@ class ProductRepo
         $stmt->execute($params);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return array_map([self::class, 'enrichWithSalePrice'], $rows);
+        return array_map(function($p) use ($locale) {
+            return self::enrichWithSalePrice(self::enrichLocale($p, $locale));
+        }, $rows);
     }
 
-    public static function findById(int $productId): ?array
+    public static function findById(int $productId, ?string $locale = null): ?array
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare("
-            SELECT p.*, c.name AS category_name,
+            SELECT p.*, c.name AS category_name, c.name_si AS category_name_si,
                    (SELECT MAX(d.discount_percentage)
                     FROM discount d
                     WHERE d.product_id = p.product_id
@@ -55,7 +73,13 @@ class ProductRepo
         $stmt->execute([':id' => $productId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $row ? self::enrichWithSalePrice($row) : null;
+        if (!$row) {
+            return null;
+        }
+
+        $row = self::enrichWithSalePrice(self::enrichLocale($row, $locale));
+        $row['herbs'] = HerbRepo::getHerbsByProduct($productId, $locale);
+        return $row;
     }
 
     public static function enrichWithSalePrice(array $product): array
@@ -81,9 +105,37 @@ class ProductRepo
         return $product;
     }
 
-    public static function getAllCategories(): array
+    public static function getAllCategories(?string $locale = null): array
     {
         $pdo = Database::getConnection();
-        return $pdo->query("SELECT * FROM category ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $pdo->query("SELECT * FROM category ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $isSi = ($locale ?? Lang::getLocale()) === 'si';
+
+        return array_map(function($c) use ($isSi) {
+            $c['display_name'] = ($isSi && !empty($c['name_si'])) ? $c['name_si'] : $c['name'];
+            return $c;
+        }, $rows);
+    }
+
+    public static function updateDetails(int $productId, array $data): bool
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("
+            UPDATE product
+            SET product_name_si = :name_si,
+                description_si = :desc_si
+            WHERE product_id = :id
+        ");
+        $stmt->execute([
+            ':name_si' => !empty($data['product_name_si']) ? trim((string)$data['product_name_si']) : null,
+            ':desc_si' => !empty($data['description_si']) ? trim((string)$data['description_si']) : null,
+            ':id' => $productId,
+        ]);
+
+        if (isset($data['herb_ids']) && is_array($data['herb_ids'])) {
+            HerbRepo::syncProductHerbs($productId, $data['herb_ids']);
+        }
+
+        return true;
     }
 }
