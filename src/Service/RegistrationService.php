@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\Lang;
 use App\Core\Mailer;
 
 class RegistrationService
@@ -25,19 +26,20 @@ class RegistrationService
         $token = bin2hex(random_bytes(32));
 
         $ins = $pdo->prepare("
-            INSERT INTO `user` (name, email, password, phone, status, verification_token)
-            VALUES (:name, :email, :password, :phone, 'inactive', :token)
+            INSERT INTO `user` (name, email, password, phone, status, lang, verification_token)
+            VALUES (:name, :email, :password, :phone, 'inactive', :lang, :token)
         ");
         $ins->execute([
             ':name' => $name,
             ':email' => $email,
             ':password' => password_hash($password, PASSWORD_DEFAULT),
             ':phone' => trim($phone),
+            ':lang' => Lang::getLocale(),
             ':token' => $token
         ]);
         $userId = (int)$pdo->lastInsertId();
 
-        $mailSent = Mailer::sendVerification($email, $name, $token);
+        $mailSent = Mailer::sendVerification($email, $name, $token, Lang::getLocale());
 
         return ['ok' => true, 'user_id' => $userId, 'mail_sent' => $mailSent];
     }
@@ -61,6 +63,17 @@ class RegistrationService
         return $stmt->rowCount() === 1;
     }
 
+    public static function saveLanguage(int $userId, string $lang): void
+    {
+        if (!in_array($lang, ['en', 'si'], true)) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("UPDATE `user` SET lang = :lang WHERE user_id = :id");
+        $stmt->execute([':lang' => $lang, ':id' => $userId]);
+    }
+
     public static function resendVerification(array $user): bool
     {
         $token = (string)($user['verification_token'] ?? '');
@@ -72,6 +85,11 @@ class RegistrationService
             $upd->execute([':token' => $token, ':id' => $user['user_id']]);
         }
 
-        return Mailer::sendVerification((string)$user['email'], (string)($user['name'] ?? ''), $token);
+        return Mailer::sendVerification(
+            (string)$user['email'],
+            (string)($user['name'] ?? ''),
+            $token,
+            (string)($user['lang'] ?? 'en')
+        );
     }
 }

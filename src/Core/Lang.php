@@ -44,6 +44,23 @@ class Lang
         self::loadTranslations($lang);
     }
 
+    /**
+     * Build text in another language (for example an email to a customer),
+     * then restore the current one. The visitor's session and cookie are not changed.
+     */
+    public static function runIn(string $lang, callable $callback): mixed
+    {
+        $previous = self::$currentLang;
+        self::$currentLang = in_array($lang, ['en', 'si'], true) ? $lang : 'en';
+        self::loadTranslations(self::$currentLang);
+
+        try {
+            return $callback();
+        } finally {
+            self::$currentLang = $previous;
+        }
+    }
+
     public static function getLocale(): string
     {
         return self::$currentLang;

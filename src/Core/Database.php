@@ -25,7 +25,7 @@ class Database
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false, // native prepared statements
-                PDO::MYSQL_ATTR_MULTI_STATEMENTS => true, // enable multi-statement execution for migrations
+                PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE utf8mb4_unicode_ci"
             ];
 
@@ -40,6 +40,28 @@ class Database
         }
 
         return self::$instance;
+    }
+
+    /**
+     * Separate connection for trusted SQL files only (migrations and seeds).
+     * Multi-statement scripts need emulated prepares.
+     */
+    public static function createScriptConnection(): PDO
+    {
+        $dsn = sprintf(
+            'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+            Env::get('DB_HOST', '127.0.0.1'),
+            Env::get('DB_PORT', 3306),
+            Env::get('DB_NAME', 'suwoda')
+        );
+
+        return new PDO($dsn, (string)Env::get('DB_USER', 'app'), (string)Env::get('DB_PASS', 'app_secret'), [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::MYSQL_ATTR_MULTI_STATEMENTS => true,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci'
+        ]);
     }
 
     public static function setConnection(?PDO $pdo): void

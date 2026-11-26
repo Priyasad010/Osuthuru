@@ -2,12 +2,17 @@
 
 namespace App\Service;
 
+use App\Core\Lang;
+use App\Repository\ProductRepo;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
 class InvoiceService
 {
-    public static function generateHtml(array $order): string
+    /**
+     * Invoice document in the current language.
+     */
+    public static function generateHtml(array $order, bool $forBrowser = false): string
     {
         $itemsSubtotal = 0.0;
         $rowsHtml = '';
@@ -16,7 +21,7 @@ class InvoiceService
             $itemsSubtotal += $sub;
             $rowsHtml .= "
                 <tr>
-                    <td style='padding:8px; border-bottom:1px solid #ddd;'>" . htmlspecialchars($item['product_name'], ENT_QUOTES, 'UTF-8') . "</td>
+                    <td style='padding:8px; border-bottom:1px solid #ddd;'>" . e(ProductRepo::enrichLocale($item)['display_name']) . "</td>
                     <td style='padding:8px; border-bottom:1px solid #ddd; text-align:right;'>" . (int)$item['quantity'] . "</td>
                     <td style='padding:8px; border-bottom:1px solid #ddd; text-align:right;'>Rs. " . number_format((float)$item['unit_price'], 2) . "</td>
                     <td style='padding:8px; border-bottom:1px solid #ddd; text-align:right;'>Rs. " . number_format($sub, 2) . "</td>
@@ -31,7 +36,7 @@ class InvoiceService
         $couponCode = !empty($order['coupon_code']) ? " (" . htmlspecialchars($order['coupon_code'], ENT_QUOTES, 'UTF-8') . ")" : "";
         $discountRow = $discountTotal > 0 ? "
             <tr>
-                <td colspan='3' style='padding:6px 8px; text-align:right; color:#198754;'><strong>Coupon Discount{$couponCode}:</strong></td>
+                <td colspan='3' style='padding:6px 8px; text-align:right; color:#198754;'><strong>" . e(t('inv_coupon')) . "{$couponCode}:</strong></td>
                 <td style='padding:6px 8px; text-align:right; color:#198754;'>- Rs. " . number_format($discountTotal, 2) . "</td>
             </tr>
         " : "";
@@ -43,18 +48,41 @@ class InvoiceService
 
         $orderId = (int)$order['order_id'];
         $orderDate = htmlspecialchars($order['order_date'] ?? '', ENT_QUOTES, 'UTF-8');
-        $payMethod = strtoupper(str_replace('_', ' ', (string)($order['payment_method'] ?? 'card')));
-        $payStatus = strtoupper((string)($order['payment_status'] ?? 'unpaid'));
-        $status = htmlspecialchars((string)($order['status'] ?? 'Pending'), ENT_QUOTES, 'UTF-8');
+        $payMethod = e(t_or('method_', (string)($order['payment_method'] ?? 'card')));
+        $payStatus = e(t_or('payment_', (string)($order['payment_status'] ?? 'unpaid')));
+        $status = e(t_or('status_', (string)($order['status'] ?? 'Pending')));
+
+        $l = [];
+        foreach ([
+            'title' => 'inv_title', 'number' => 'inv_number', 'date' => 'col_date', 'to' => 'inv_billed_to',
+            'status' => 'inv_order_status', 'method' => 'method_label', 'payment' => 'payment_status_label',
+            'product' => 'col_product', 'qty' => 'col_qty', 'price' => 'col_unit_price', 'subtotal' => 'col_subtotal',
+            'items' => 'items_subtotal', 'delivery' => 'delivery_fee_label', 'total' => 'grand_total',
+            'thanks' => 'inv_thanks', 'print' => 'inv_print',
+        ] as $name => $key) {
+            $l[$name] = e(t($key));
+        }
+        $lang = e(Lang::getLocale());
+        $free = e(t('free'));
+        // Browser view: load a Sinhala font and offer printing or saving as PDF
+        $fontLink = $forBrowser
+            ? "<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;700&display=swap' rel='stylesheet'>"
+            : '';
+        $fontFamily = $forBrowser ? "'Noto Sans Sinhala', Arial, sans-serif" : 'DejaVu Sans, Arial, sans-serif';
+        $printButton = $forBrowser
+            ? "<p style='text-align:right;'><button type='button' onclick='window.print()'>{$l['print']}</button></p>"
+            : '';
 
         return "
         <!DOCTYPE html>
-        <html>
+        <html lang='{$lang}'>
         <head>
             <meta charset='UTF-8'>
-            <title>Invoice #{$orderId}</title>
+            <title>{$l['number']} #{$orderId}</title>
+            {$fontLink}
             <style>
-                body { font-family: DejaVu Sans, Arial, sans-serif; color: #222; font-size: 13px; margin: 25px; }
+                @media print { button { display: none; } }
+                body { font-family: {$fontFamily}; color: #222; font-size: 13px; margin: 25px; }
                 .header { background-color: #198754; color: #fff; padding: 15px 20px; margin-bottom: 20px; }
                 .header h1 { margin: 0; font-size: 20px; }
                 .meta { width: 100%; margin-bottom: 20px; }
@@ -65,24 +93,25 @@ class InvoiceService
             </style>
         </head>
         <body>
+            {$printButton}
             <div class='header'>
-                <h1>Suwoda HerbHub - Official Invoice</h1>
-                <div>Invoice #INV-{$orderId} | Date: {$orderDate}</div>
+                <h1>Suwoda HerbHub - {$l['title']}</h1>
+                <div>{$l['number']} #INV-{$orderId} | {$l['date']}: {$orderDate}</div>
             </div>
 
             <table class='meta'>
                 <tr>
                     <td>
-                        <strong>Billed / Shipped To:</strong><br>
+                        <strong>{$l['to']}</strong><br>
                         {$shippingName}<br>
                         {$shippingPhone}<br>
                         {$shippingAddr}<br>
                         {$district}
                     </td>
                     <td style='text-align:right;'>
-                        <strong>Order Status:</strong> {$status}<br>
-                        <strong>Payment Method:</strong> {$payMethod}<br>
-                        <strong>Payment Status:</strong> {$payStatus}
+                        <strong>{$l['status']}</strong> {$status}<br>
+                        <strong>{$l['method']}</strong> {$payMethod}<br>
+                        <strong>{$l['payment']}</strong> {$payStatus}
                     </td>
                 </tr>
             </table>
@@ -90,38 +119,42 @@ class InvoiceService
             <table class='items'>
                 <thead>
                     <tr>
-                        <th>Product</th>
-                        <th style='text-align:right;'>Qty</th>
-                        <th style='text-align:right;'>Unit Price</th>
-                        <th style='text-align:right;'>Subtotal</th>
+                        <th>{$l['product']}</th>
+                        <th style='text-align:right;'>{$l['qty']}</th>
+                        <th style='text-align:right;'>{$l['price']}</th>
+                        <th style='text-align:right;'>{$l['subtotal']}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {$rowsHtml}
                     <tr>
-                        <td colspan='3' style='padding:8px; text-align:right;'><strong>Items Subtotal:</strong></td>
+                        <td colspan='3' style='padding:8px; text-align:right;'><strong>{$l['items']}</strong></td>
                         <td style='padding:8px; text-align:right;'>Rs. " . number_format($itemsSubtotal, 2) . "</td>
                     </tr>
                     {$discountRow}
                     <tr>
-                        <td colspan='3' style='padding:6px 8px; text-align:right;'><strong>Delivery Fee ({$district}):</strong></td>
-                        <td style='padding:6px 8px; text-align:right;'>" . ($deliveryFee > 0 ? "Rs. " . number_format($deliveryFee, 2) : "FREE") . "</td>
+                        <td colspan='3' style='padding:6px 8px; text-align:right;'><strong>{$l['delivery']} ({$district}):</strong></td>
+                        <td style='padding:6px 8px; text-align:right;'>" . ($deliveryFee > 0 ? "Rs. " . number_format($deliveryFee, 2) : $free) . "</td>
                     </tr>
                     <tr style='background-color:#f1f5f3; font-size:15px;'>
-                        <td colspan='3' style='padding:10px 8px; text-align:right;'><strong>Grand Total:</strong></td>
+                        <td colspan='3' style='padding:10px 8px; text-align:right;'><strong>{$l['total']}</strong></td>
                         <td style='padding:10px 8px; text-align:right;'><strong>Rs. " . number_format($grandTotal, 2) . "</strong></td>
                     </tr>
                 </tbody>
             </table>
 
             <div class='footer'>
-                Thank you for choosing Suwoda HerbHub. For inquiries: support@suwoda.lk
+                {$l['thanks']} support@suwoda.lk
             </div>
         </body>
         </html>
         ";
     }
 
+    /**
+     * PDF invoice, always in English: Dompdf cannot shape Sinhala script.
+     * Sinhala readers use the printable HTML invoice instead.
+     */
     public static function renderPdf(array $order): string
     {
         $options = new Options();
@@ -129,7 +162,7 @@ class InvoiceService
         $options->set('defaultFont', 'DejaVu Sans');
 
         $dompdf = new Dompdf($options);
-        $dompdf->loadHtml(self::generateHtml($order));
+        $dompdf->loadHtml(Lang::runIn('en', fn() => self::generateHtml($order)));
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 

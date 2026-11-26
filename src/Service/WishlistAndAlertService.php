@@ -3,6 +3,8 @@
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\Lang;
+use App\Repository\ProductRepo;
 use App\Core\Mailer;
 use PDO;
 
@@ -113,12 +115,12 @@ class WishlistAndAlertService
 
         // Fetch distinct waiting users for this product
         $stmt = $pdo->prepare("
-            SELECT sa.user_id, u.email, u.name, p.product_name
+            SELECT sa.user_id, u.email, u.name, u.lang, p.product_name, p.product_name_si
             FROM `stock_alert` sa
             JOIN `user` u ON u.user_id = sa.user_id
             JOIN `product` p ON p.product_id = sa.product_id
             WHERE sa.product_id = :pid AND sa.notified_at IS NULL
-            GROUP BY sa.user_id, u.email, u.name, p.product_name
+            GROUP BY sa.user_id, u.email, u.name, u.lang, p.product_name, p.product_name_si
         ");
         $stmt->execute([':pid' => $productId]);
         $waiters = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -138,21 +140,22 @@ class WishlistAndAlertService
         $count = 0;
         foreach ($waiters as $w) {
             if ($sendEmail && !empty($w['email'])) {
-                $productUrl = url("products/{$productId}");
-                $subject = "Back in Stock: " . $w['product_name'];
-                $body = "
-                    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                        <div style='background-color: #198754; color: white; padding: 15px 20px;'>
-                            <h2 style='margin: 0;'>Suwoda HerbHub - Back in Stock!</h2>
-                        </div>
-                        <div style='padding: 20px; border: 1px solid #e0e0e0;'>
-                            <p>Hello " . htmlspecialchars($w['name'] ?? 'Customer', ENT_QUOTES, 'UTF-8') . ",</p>
-                            <p>Good news! <strong>" . htmlspecialchars($w['product_name'], ENT_QUOTES, 'UTF-8') . "</strong> is back in stock.</p>
-                            <p><a href='{$productUrl}' style='background-color: #198754; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Shop Now</a></p>
-                        </div>
-                    </div>
-                ";
-                Mailer::send($w['email'], $w['name'] ?? 'Customer', $subject, $body);
+                Lang::runIn((string)$w['lang'], function () use ($w, $productId) {
+                    $productName = ProductRepo::enrichLocale($w)['display_name'];
+                    $name = (string)($w['name'] ?? '');
+
+                    return Mailer::send(
+                        $w['email'],
+                        $name,
+                        t('mail_stock_subject', ['product' => $productName]),
+                        Mailer::layout(
+                            $name,
+                            [t('mail_stock_intro', ['product' => $productName])],
+                            t('view_product'),
+                            url("products/{$productId}")
+                        )
+                    );
+                });
             }
             $count++;
         }

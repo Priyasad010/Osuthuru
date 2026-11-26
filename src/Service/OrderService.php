@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\Lang;
 use App\Core\Mailer;
 use PDO;
 use Throwable;
@@ -39,7 +40,7 @@ class OrderService
     public static function updateStatus(int $orderId, string $newStatus, ?string $note = null, ?int $adminId = null, bool $sendEmail = true): array
     {
         if (!in_array($newStatus, self::STATUSES, true)) {
-            return ['ok' => false, 'error' => 'Invalid order status.'];
+            return ['ok' => false, 'error' => t('admin_err_status')];
         }
 
         $pdo = Database::getConnection();
@@ -48,7 +49,7 @@ class OrderService
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare("
-                SELECT o.*, u.email AS user_email, u.name AS user_name
+                SELECT o.*, u.email AS user_email, u.name AS user_name, u.lang AS user_lang
                 FROM `orders` o
                 JOIN `user` u ON u.user_id = o.user_id
                 WHERE o.order_id = :order_id
@@ -58,20 +59,20 @@ class OrderService
             $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$order) {
-                throw new \RuntimeException("Order #{$orderId} not found.");
+                throw new \RuntimeException(t('err_order_404'));
             }
 
             if ($order['status'] === $newStatus) {
                 $pdo->commit();
-                return ['ok' => true, 'unchanged' => true, 'message' => 'Status unchanged.'];
+                return ['ok' => true, 'unchanged' => true, 'message' => t('admin_status_unchanged')];
             }
 
             // Cancelled is final; delivered goods cannot be cancelled back into stock
             if ($order['status'] === 'Cancelled') {
-                throw new \RuntimeException("Order #{$orderId} is cancelled and cannot be changed.");
+                throw new \RuntimeException(t('admin_err_cancelled_final', ['id' => $orderId]));
             }
             if ($newStatus === 'Cancelled' && $order['status'] === 'Delivered') {
-                throw new \RuntimeException("Order #{$orderId} is already delivered and cannot be cancelled.");
+                throw new \RuntimeException(t('admin_err_delivered', ['id' => $orderId]));
             }
 
             // For COD orders: marking as Delivered sets payment_status = 'paid'
@@ -102,7 +103,7 @@ class OrderService
 
             // Send one email per status change
             if ($sendEmail && !empty($order['user_email'])) {
-                self::sendStatusEmail($order['user_email'], $order['user_name'] ?? 'Customer', $orderId, $newStatus, $note);
+                self::sendStatusEmail($order['user_email'], $order['user_name'] ?? '', $orderId, $newStatus, $note, (string)$order['user_lang']);
             }
 
             return [
@@ -130,7 +131,7 @@ class OrderService
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare("
-                SELECT o.*, u.email AS user_email, u.name AS user_name
+                SELECT o.*, u.email AS user_email, u.name AS user_name, u.lang AS user_lang
                 FROM `orders` o
                 JOIN `user` u ON u.user_id = o.user_id
                 WHERE o.order_id = :order_id AND o.user_id = :user_id
@@ -157,7 +158,7 @@ class OrderService
             $pdo->commit();
 
             if (!empty($order['user_email'])) {
-                self::sendStatusEmail($order['user_email'], $order['user_name'] ?? 'Customer', $orderId, 'Cancelled', $reason);
+                self::sendStatusEmail($order['user_email'], $order['user_name'] ?? '', $orderId, 'Cancelled', $reason, (string)$order['user_lang']);
             }
 
             return ['ok' => true, 'message' => t('flash_order_cancelled', ['id' => $orderId])];
@@ -249,28 +250,21 @@ class OrderService
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public static function sendStatusEmail(string $email, string $name, int $orderId, string $status, ?string $note = null): bool
+    public static function sendStatusEmail(string $email, string $name, int $orderId, string $status, ?string $note = null, string $lang = 'en'): bool
     {
-        $orderUrl = url("orders/{$orderId}");
-        $subject = "Order #{$orderId} Status Update: {$status}";
-        $noteHtml = $note ? "<p><strong>Note:</strong> " . htmlspecialchars($note, ENT_QUOTES, 'UTF-8') . "</p>" : "";
+        return Lang::runIn($lang, function () use ($email, $name, $orderId, $status, $note) {
+            $statusText = t_or('status_', $status);
+            $lines = [t('mail_order_intro', ['id' => $orderId, 'status' => $statusText])];
+            if ($note) {
+                $lines[] = t('mail_order_note', ['note' => t_or('note_', $note)]);
+            }
 
-        $body = "
-            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                <div style='background-color: #198754; color: white; padding: 15px 20px;'>
-                    <h2 style='margin: 0;'>Suwoda HerbHub - Order Update</h2>
-                </div>
-                <div style='padding: 20px; border: 1px solid #e0e0e0;'>
-                    <p>Hello " . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . ",</p>
-                    <p>Your order <strong>#{$orderId}</strong> status has been updated to: <strong style='color: #198754;'>{$status}</strong></p>
-                    {$noteHtml}
-                    <p style='margin-top: 20px;'>
-                        <a href='{$orderUrl}' style='background-color: #198754; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>View Order Timeline</a>
-                    </p>
-                </div>
-            </div>
-        ";
-
-        return Mailer::send($email, $name, $subject, $body);
+            return Mailer::send(
+                $email,
+                $name,
+                t('mail_order_subject', ['id' => $orderId, 'status' => $statusText]),
+                Mailer::layout($name, $lines, t('view_timeline'), url("orders/{$orderId}"))
+            );
+        });
     }
 }

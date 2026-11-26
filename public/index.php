@@ -93,6 +93,9 @@ if ($requestUri === '/lang' && $requestMethod === 'POST') {
     $lang = (string)($_POST['lang'] ?? 'en');
     if (in_array($lang, ['en', 'si'], true)) {
         Lang::setLocale($lang);
+        if (Auth::check()) {
+            RegistrationService::saveLanguage(Auth::id(), $lang);
+        }
     }
     $referer = $_SERVER['HTTP_REFERER'] ?? '/';
     if (parse_url($referer, PHP_URL_PATH) === '/lang') {
@@ -143,6 +146,7 @@ if ($requestUri === '/login') {
 
         $result = Auth::attemptUser($email, $password, $clientIp);
         if ($result['ok']) {
+            RegistrationService::saveLanguage(Auth::id(), Lang::getLocale());
             header('Location: /');
             exit;
         }
@@ -667,6 +671,11 @@ if (preg_match('#^/orders/(\d+)/invoice$#', $requestUri, $m) && $requestMethod =
         exit('Order not found');
     }
 
+    if (Lang::getLocale() === 'si') {
+        echo InvoiceService::generateHtml($order, true);
+        exit;
+    }
+
     $pdf = InvoiceService::renderPdf($order);
     header('Content-Type: application/pdf');
     header('Content-Disposition: inline; filename="invoice-' . (int)$order['order_id'] . '.pdf"');
@@ -789,7 +798,7 @@ if ($requestUri === '/admin/login') {
         exit;
     }
 
-    echo View::render('auth/admin_login', ['pageTitle' => 'Admin Login']);
+    echo View::render('auth/admin_login', ['pageTitle' => t('admin_login')]);
     exit;
 }
 
@@ -815,7 +824,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         ];
 
         echo View::render('admin/dashboard', [
-            'pageTitle' => 'Admin Dashboard',
+            'pageTitle' => t('admin_dashboard'),
             'stats' => $stats
         ]);
         exit;
@@ -835,7 +844,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
         echo View::render('admin/orders', [
-            'pageTitle' => 'Manage Orders',
+            'pageTitle' => t('admin_orders'),
             'orders' => $orders,
             'error' => $err,
             'flash' => $flash
@@ -857,9 +866,9 @@ if (str_starts_with($requestUri, '/admin/')) {
         if (!$res['ok']) {
             $_SESSION['flash_error'] = $res['error'];
         } else {
-            $_SESSION['flash_success'] = "Order #{$orderId} updated to {$status}.";
+            $_SESSION['flash_success'] = t('admin_order_updated', ['id' => $orderId, 'status' => t_or('status_', $status)]);
             if (!empty($res['refund_needed'])) {
-                $_SESSION['flash_success'] .= ' This order was already paid: refund the customer.';
+                $_SESSION['flash_success'] .= ' ' . t('admin_refund_needed');
             }
         }
         header('Location: /admin/orders');
@@ -872,7 +881,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
         echo View::render('admin/coupons', [
-            'pageTitle' => 'Manage Coupons',
+            'pageTitle' => t('admin_coupons'),
             'coupons' => CouponService::getAll(),
             'flash' => $flash,
             'error' => $err
@@ -895,9 +904,10 @@ if (str_starts_with($requestUri, '/admin/')) {
                 'starts_at' => date('Y-m-d H:i:s'),
                 'ends_at' => str_replace('T', ' ', (string)($_POST['ends_at'] ?? '')) . ':00',
             ]);
-            $_SESSION['flash_success'] = 'Coupon created!';
+            $_SESSION['flash_success'] = t('admin_coupon_created');
         } catch (Throwable $e) {
-            $_SESSION['flash_error'] = 'Error creating coupon: ' . $e->getMessage();
+            error_log('Coupon creation failed: ' . $e->getMessage());
+            $_SESSION['flash_error'] = t('admin_coupon_error');
         }
         header('Location: /admin/coupons');
         exit;
@@ -919,7 +929,7 @@ if (str_starts_with($requestUri, '/admin/')) {
             exit('Invalid CSRF token');
         }
         CouponService::delete((int)($_POST['coupon_id'] ?? 0));
-        $_SESSION['flash_success'] = 'Coupon deleted.';
+        $_SESSION['flash_success'] = t('admin_coupon_deleted');
         header('Location: /admin/coupons');
         exit;
     }
@@ -928,7 +938,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         $flash = $_SESSION['flash_success'] ?? null;
         unset($_SESSION['flash_success']);
         echo View::render('admin/zones', [
-            'pageTitle' => 'Delivery Zones',
+            'pageTitle' => t('admin_zones'),
             'zones' => DeliveryZoneService::getAllZones(),
             'flash' => $flash
         ]);
@@ -945,7 +955,7 @@ if (str_starts_with($requestUri, '/admin/')) {
             (float)($_POST['fee'] ?? 0),
             (float)($_POST['free_over'] ?? 0)
         );
-        $_SESSION['flash_success'] = 'Delivery zone saved.';
+        $_SESSION['flash_success'] = t('admin_zone_saved');
         header('Location: /admin/zones');
         exit;
     }
@@ -956,7 +966,7 @@ if (str_starts_with($requestUri, '/admin/')) {
             exit('Invalid CSRF token');
         }
         DeliveryZoneService::deleteZone((int)($_POST['zone_id'] ?? 0));
-        $_SESSION['flash_success'] = 'Delivery zone deleted.';
+        $_SESSION['flash_success'] = t('admin_zone_deleted');
         header('Location: /admin/zones');
         exit;
     }
@@ -976,7 +986,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
         echo View::render('admin/bank_slips', [
-            'pageTitle' => 'Bank Slips',
+            'pageTitle' => t('admin_slips'),
             'slips' => $slips,
             'flash' => $flash,
             'error' => $err
@@ -1001,21 +1011,21 @@ if (str_starts_with($requestUri, '/admin/')) {
         if ($slip) {
             $slipOrder = OrderService::getOrderDetails((int)$slip['order_id']);
             if ($action === 'verify' && ($slipOrder['status'] ?? '') === 'Cancelled') {
-                $_SESSION['flash_error'] = "Order #{$slip['order_id']} is cancelled, so the slip cannot be verified.";
+                $_SESSION['flash_error'] = t('admin_slip_cancelled', ['id' => $slip['order_id']]);
             } elseif ($action === 'verify') {
                 $payRes = CheckoutService::confirmPayment((int)$slip['order_id']);
                 if ($payRes['ok']) {
                     $upd = $pdo->prepare("UPDATE bank_slip SET status = 'verified', reviewed_by = :aid WHERE slip_id = :id");
                     $upd->execute([':aid' => $adminId, ':id' => $slipId]);
                     OrderService::updateStatus((int)$slip['order_id'], 'Confirmed', 'Bank slip verified', $adminId);
-                    $_SESSION['flash_success'] = "Slip #{$slipId} verified and Order #{$slip['order_id']} marked paid.";
+                    $_SESSION['flash_success'] = t('admin_slip_verified', ['slip' => $slipId, 'order' => $slip['order_id']]);
                 } else {
                     $_SESSION['flash_error'] = $payRes['error'];
                 }
             } elseif ($action === 'reject') {
                 $upd = $pdo->prepare("UPDATE bank_slip SET status = 'rejected', reviewed_by = :aid WHERE slip_id = :id");
                 $upd->execute([':aid' => $adminId, ':id' => $slipId]);
-                $_SESSION['flash_success'] = "Slip #{$slipId} rejected.";
+                $_SESSION['flash_success'] = t('admin_slip_rejected', ['slip' => $slipId]);
             }
         }
         header('Location: /admin/bank-slips');
@@ -1027,7 +1037,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         unset($_SESSION['flash_success']);
 
         echo View::render('admin/herbs', [
-            'pageTitle' => 'Herb Text',
+            'pageTitle' => t('admin_herbs'),
             'herbs' => HerbRepo::findAll(null, 'en'),
             'flash' => $flash
         ]);
@@ -1041,7 +1051,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         }
         $hid = (int)($_POST['herb_id'] ?? 0);
         HerbRepo::updateUses($hid, (string)($_POST['uses'] ?? ''), (string)($_POST['uses_si'] ?? ''));
-        $_SESSION['flash_success'] = "Herb #{$hid} text saved.";
+        $_SESSION['flash_success'] = t('admin_herb_saved', ['id' => $hid]);
         header('Location: /admin/herbs');
         exit;
     }
@@ -1057,7 +1067,7 @@ if (str_starts_with($requestUri, '/admin/')) {
         unset($p);
 
         echo View::render('admin/products', [
-            'pageTitle' => 'Manage Products & Stock',
+            'pageTitle' => t('admin_products'),
             'products' => $products,
             'allHerbs' => HerbRepo::findAll(),
             'flash' => $flash
@@ -1073,9 +1083,9 @@ if (str_starts_with($requestUri, '/admin/')) {
         $pid = (int)($_POST['product_id'] ?? 0);
         $qty = max(0, (int)($_POST['quantity'] ?? 0));
         $res = WishlistAndAlertService::updateProductStock($pid, $qty);
-        $msg = "Product #{$pid} stock updated to {$qty}.";
+        $msg = t('admin_stock_updated', ['id' => $pid, 'qty' => $qty]);
         if (($res['notified_count'] ?? 0) > 0) {
-            $msg .= " Notified {$res['notified_count']} waiting user(s).";
+            $msg .= ' ' . t('admin_notified', ['count' => $res['notified_count']]);
         }
         $_SESSION['flash_success'] = $msg;
         header('Location: /admin/products');
@@ -1091,12 +1101,13 @@ if (str_starts_with($requestUri, '/admin/')) {
         $herbIds = isset($_POST['herb_ids']) && is_array($_POST['herb_ids']) ? array_map('intval', $_POST['herb_ids']) : [];
 
         ProductRepo::updateDetails($pid, [
+            'description' => $_POST['description'] ?? null,
             'product_name_si' => $_POST['product_name_si'] ?? null,
             'description_si' => $_POST['description_si'] ?? null,
             'herb_ids' => $herbIds
         ]);
 
-        $_SESSION['flash_success'] = "Product #{$pid} details and linked herbs updated.";
+        $_SESSION['flash_success'] = t('admin_product_updated', ['id' => $pid]);
         header('Location: /admin/products');
         exit;
     }

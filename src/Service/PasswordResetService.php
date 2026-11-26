@@ -14,7 +14,7 @@ class PasswordResetService
         $cleanEmail = strtolower(trim($email));
 
         $pdo = Database::getConnection();
-        $stmt = $pdo->prepare("SELECT user_id, name, email FROM `user` WHERE LOWER(email) = :email LIMIT 1");
+        $stmt = $pdo->prepare("SELECT user_id, name, email, lang FROM `user` WHERE LOWER(email) = :email LIMIT 1");
         $stmt->execute([':email' => $cleanEmail]);
         $user = $stmt->fetch();
 
@@ -46,7 +46,7 @@ class PasswordResetService
             ]);
 
             // Send reset email
-            Mailer::sendPasswordReset($user['email'], $user['name'] ?? 'Customer', $rawToken);
+            Mailer::sendPasswordReset($user['email'], $user['name'] ?? '', $rawToken, (string)($user['lang'] ?? 'en'));
 
             return [
                 'ok' => true,

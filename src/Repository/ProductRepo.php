@@ -132,6 +132,11 @@ class ProductRepo
             ':id' => $productId,
         ]);
 
+        if (array_key_exists('description', $data) && $data['description'] !== null) {
+            $desc = $pdo->prepare("UPDATE product SET description = :description WHERE product_id = :id");
+            $desc->execute([':description' => trim((string)$data['description']), ':id' => $productId]);
+        }
+
         if (isset($data['herb_ids']) && is_array($data['herb_ids'])) {
             HerbRepo::syncProductHerbs($productId, $data['herb_ids']);
         }

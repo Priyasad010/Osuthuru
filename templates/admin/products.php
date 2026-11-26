@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <a href="/admin/dashboard" class="text-success small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Admin Dashboard</a>
-        <h2 class="fw-bold text-success mt-1 mb-0">Manage Products, Stock &amp; Herbal Links</h2>
+        <a href="/admin/dashboard" class="text-success small text-decoration-none"><i class="bi bi-arrow-left me-1"></i><?= e(t('admin_dashboard')) ?></a>
+        <h2 class="fw-bold text-success mt-1 mb-0"><?= e(t('admin_products_title')) ?></h2>
     </div>
 </div>
 
@@ -15,12 +15,12 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
-                    <th>Product &amp; Bilingual Details</th>
-                    <th>Linked Herbs</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Stock Action</th>
-                    <th>Edit</th>
+                    <th><?= e(t('admin_product_details')) ?></th>
+                    <th><?= e(t('admin_linked_herbs')) ?></th>
+                    <th><?= e(t('col_price')) ?></th>
+                    <th><?= e(t('admin_stock')) ?></th>
+                    <th><?= e(t('admin_stock_action')) ?></th>
+                    <th><?= e(t('admin_edit')) ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -47,7 +47,7 @@
                                     <?php endforeach; ?>
                                 </div>
                             <?php else: ?>
-                                <span class="text-muted small">None linked</span>
+                                <span class="text-muted small"><?= e(t('admin_none_linked')) ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -69,7 +69,7 @@
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
                                 <input type="number" name="quantity" value="<?= (int)$p['quantity'] ?>" min="0" class="form-control form-control-sm">
-                                <button type="submit" class="btn btn-sm btn-suwoda" title="Update Stock">Save</button>
+                                <button type="submit" class="btn btn-sm btn-suwoda" title="<?= e(t('admin_update_stock')) ?>"><?= e(t('save')) ?></button>
                             </form>
                         </td>
                         <td>
@@ -86,24 +86,29 @@
                                             <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
 
                                             <div class="modal-header">
-                                                <h5 class="modal-title fw-bold text-success">Edit Product #<?= (int)$p['product_id'] ?></h5>
+                                                <h5 class="modal-title fw-bold text-success"><?= e(t('admin_edit_product', ['id' => (int)$p['product_id']])) ?></h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <div class="modal-body">
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Product Name (English)</label>
+                                                    <label class="form-label fw-semibold"><?= e(t('admin_name_en')) ?></label>
                                                     <input type="text" class="form-control bg-light" value="<?= e($p['product_name']) ?>" disabled>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Product Name (සිංහල / Sinhala)</label>
+                                                    <label class="form-label fw-semibold"><?= e(t('admin_name_si')) ?></label>
                                                     <input type="text" name="product_name_si" class="form-control" value="<?= e($p['product_name_si'] ?? '') ?>" placeholder="උදා: සුවෝදා කොහොඹ සබන්">
                                                 </div>
+                                                <div class="alert alert-warning py-2 small"><?= e(t('admin_review_warning')) ?></div>
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Description (සිංහල / Sinhala)</label>
+                                                    <label class="form-label fw-semibold"><?= e(t('admin_desc_en')) ?></label>
+                                                    <textarea name="description" class="form-control" rows="3"><?= e($p['description'] ?? '') ?></textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold"><?= e(t('admin_desc_si')) ?></label>
                                                     <textarea name="description_si" class="form-control" rows="3" placeholder="සිංහල විස්තරය..."><?= e($p['description_si'] ?? '') ?></textarea>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold d-block">Linked Ayurvedic Herbs</label>
+                                                    <label class="form-label fw-semibold d-block"><?= e(t('admin_linked_herbs')) ?></label>
                                                     <div class="p-2 border rounded bg-light" style="max-height: 180px; overflow-y: auto;">
                                                         <?php foreach ($allHerbs as $ah): ?>
                                                             <div class="form-check">
@@ -118,8 +123,8 @@
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <button type="submit" class="btn btn-sm btn-suwoda">Save Changes</button>
+                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal"><?= e(t('cancel')) ?></button>
+                                                <button type="submit" class="btn btn-sm btn-suwoda"><?= e(t('admin_save_changes')) ?></button>
                                             </div>
                                         </form>
                                     </div>

@@ -56,53 +56,62 @@ class Mailer
         }
     }
 
-    public static function sendPasswordReset(string $toEmail, string $toName, string $resetToken): bool
+    public static function sendPasswordReset(string $toEmail, string $toName, string $resetToken, string $lang = 'en'): bool
     {
         $resetUrl = url('reset-password?token=' . urlencode($resetToken));
-        $subject = 'Reset Your Suwoda HerbHub Password';
 
-        $body = "
-            <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-                <div style='background-color: #198754; color: white; padding: 15px 20px; text-align: center;'>
-                    <h2 style='margin: 0;'>Suwoda HerbHub</h2>
-                </div>
-                <div style='padding: 20px; border: 1px solid #e0e0e0;'>
-                    <p>Hello " . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ",</p>
-                    <p>We received a request to reset your password. Click the button below to choose a new password:</p>
-                    <p style='text-align: center; margin: 30px 0;'>
-                        <a href='{$resetUrl}' style='background-color: #198754; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Reset Password</a>
-                    </p>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <p style='word-break: break-all;'><a href='{$resetUrl}'>{$resetUrl}</a></p>
-                    <p style='color: #666; font-size: 0.9em;'>This link will expire in 30 minutes and can only be used once. If you did not request a password reset, please ignore this email.</p>
-                </div>
-            </div>
-        ";
-
-        return self::send($toEmail, $toName, $subject, $body);
+        return Lang::runIn($lang, fn() => self::send(
+            $toEmail,
+            $toName,
+            t('mail_reset_subject'),
+            self::layout(
+                $toName,
+                [t('mail_reset_intro')],
+                t('reset_title'),
+                $resetUrl,
+                t('mail_reset_note')
+            )
+        ));
     }
 
-    public static function sendVerification(string $toEmail, string $toName, string $verificationToken): bool
+    public static function sendVerification(string $toEmail, string $toName, string $verificationToken, string $lang = 'en'): bool
     {
         $verifyUrl = url('verify?token=' . urlencode($verificationToken));
-        $subject = 'Verify Your Suwoda HerbHub Account';
 
-        $body = "
+        return Lang::runIn($lang, fn() => self::send(
+            $toEmail,
+            $toName,
+            t('mail_verify_subject'),
+            self::layout($toName, [t('mail_verify_intro')], t('mail_verify_button'), $verifyUrl)
+        ));
+    }
+
+    /**
+     * Shared HTML email body in the current language. All arguments are plain text.
+     */
+    public static function layout(string $name, array $paragraphs, string $button, string $link, string $note = ''): string
+    {
+        $text = '';
+        foreach ($paragraphs as $paragraph) {
+            $text .= '<p>' . e($paragraph) . '</p>';
+        }
+        $noteHtml = $note !== '' ? "<p style='color: #666; font-size: 0.9em;'>" . e($note) . '</p>' : '';
+
+        return "
             <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                 <div style='background-color: #198754; color: white; padding: 15px 20px; text-align: center;'>
                     <h2 style='margin: 0;'>Suwoda HerbHub</h2>
                 </div>
                 <div style='padding: 20px; border: 1px solid #e0e0e0;'>
-                    <p>Hello " . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ",</p>
-                    <p>Thank you for registering at Suwoda HerbHub. Please confirm your email address by clicking the link below:</p>
+                    <p>" . e(t('mail_hello', ['name' => $name])) . "</p>
+                    {$text}
                     <p style='text-align: center; margin: 30px 0;'>
-                        <a href='{$verifyUrl}' style='background-color: #198754; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;'>Verify Account</a>
+                        <a href='" . e($link) . "' style='background-color: #198754; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;'>" . e($button) . "</a>
                     </p>
-                    <p>Or visit: <a href='{$verifyUrl}'>{$verifyUrl}</a></p>
+                    <p style='word-break: break-all;'><a href='" . e($link) . "'>" . e($link) . "</a></p>
+                    {$noteHtml}
                 </div>
             </div>
         ";
-
-        return self::send($toEmail, $toName, $subject, $body);
     }
 }

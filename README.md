@@ -32,7 +32,10 @@
    ```bash
    docker compose exec web composer install
    docker compose exec web php bin/migrate.php
+   docker compose exec web php bin/seed.php
+   docker compose exec web php bin/create_admin.php
    ```
+   `seed.php` loads the demo catalogue and is safe to run again. `create_admin.php` uses `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env`.
 
 5. **Run Tests**:
    ```bash
@@ -42,6 +45,7 @@
    # Run Python ML tests
    docker compose exec ml pytest
    ```
+   PHPUnit rebuilds a separate `suwoda_test` database on every run (using `DB_ROOT_PASS`), so development data is not touched. Test emails still appear in Mailpit.
 
 ## Services & Ports
 - Web Application: [http://localhost:8080](http://localhost:8080)
@@ -55,7 +59,10 @@
 - **Login lockout**: based on the connecting IP address. Behind a reverse proxy, configure the web server to set `REMOTE_ADDR` from that trusted proxy.
 - **Cancelled orders**: stock returns once, only if it had been taken. Cancelled is final, delivered orders cannot be cancelled, and a paid order that is cancelled must be refunded manually.
 - **Herb text**: no health text is seeded. Enter practitioner-reviewed text at `/admin/herbs`; empty entries show "awaiting review".
-- **Languages**: customer pages are in English and Sinhala. Admin pages, emails and PDF invoices are in English. Sinhala text still needs review by a native speaker.
+- **Languages**: shop pages, admin pages and emails are in English and Sinhala; emails use the customer's last chosen language.
+- **Invoices**: English downloads as PDF. Sinhala opens as a printable page (print or save as PDF), because the PDF library cannot shape Sinhala script.
+- **Sinhala review**: `docker compose exec web php bin/export_translations.php` writes `docs/translation_review.csv` for a native speaker. Apply corrections in `lang/si.php`.
+- **Catalogue text**: seeded descriptions make no health claims. Admins can edit English and Sinhala descriptions under Manage Products.
 
 ## Project Phases
 - [x] **Phase 0: Foundation** (Docker, DB baseline migration, Core PSR-4 classes, base layout)

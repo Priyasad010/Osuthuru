@@ -1,40 +1,37 @@
--- Suwoda HerbHub V2 - Initial Catalog Seed Data (Categories, Products, Discounts, Herbs, Blogs)
-SET FOREIGN_KEY_CHECKS = 0;
+-- Suwoda HerbHub V2 - Demo Catalogue Seed (categories, products, discounts, blog)
+-- Load after the migrations with:  docker compose exec web php bin/seed.php
+-- Herbs and health concerns come from the migrations.
+-- Product text states what an item is and contains. It makes no health claims;
+-- anything more must be entered by an admin after practitioner review.
+SET NAMES utf8mb4;
 
-INSERT INTO `category` (`category_id`, `name`, `image`) VALUES
-(1, 'Herbal Oils', '../assets/images/herbal_oils.jpg'),
-(2, 'Ayurvedic Teas', '../assets/images/ayurvedic tea.jpg'),
-(3, 'Herbal Powders', '../assets/images/herbal powders.jpg'),
-(4, 'Soaps & Skincare', '../assets/images/soap&skin.jpg'),
-(5, 'Pain Relief Balms', '../assets/images/balms.jpg'),
-(6, 'Wellness Syrups', '../assets/images/syrup.jpg'),
-(7, 'Hair Care', '../assets/images/hair care.jpg'),
-(11, 'Baby Care', '../uploads/categories/1753353235_baby_care.jpg');
+INSERT IGNORE INTO `category` (`category_id`, `name`, `name_si`, `image`) VALUES
+(1, 'Herbal Oils', 'ඖෂධීය තෙල්', '../assets/images/herbal_oils.jpg'),
+(2, 'Ayurvedic Teas', 'ආයුර්වේද තේ', '../assets/images/ayurvedic tea.jpg'),
+(3, 'Herbal Powders', 'ඖෂධීය චූර්ණ සහ කුඩු', '../assets/images/herbal powders.jpg'),
+(4, 'Soaps & Skincare', 'සබන් සහ සමේ සත්කාර', '../assets/images/soap&skin.jpg'),
+(5, 'Herbal Balms', 'ඖෂධීය බාම්', '../assets/images/balms.jpg'),
+(6, 'Wellness Syrups', 'ඖෂධීය පැනිය සහ සිරප්', '../assets/images/syrup.jpg'),
+(7, 'Hair Care', 'කෙස් සත්කාර', '../assets/images/hair care.jpg'),
+(11, 'Baby Care', 'ළදරු සත්කාර', '../uploads/categories/1753353235_baby_care.jpg');
 
-INSERT INTO `product` (`product_id`, `product_name`, `category_id`, `price`, `quantity`, `image`, `description`, `original_price`) VALUES
-(1, 'Neem Oil', 1, 1850.00, 118, '../uploads/products/1753084677_NeemOil.png', 'Neem Oil (Neem Thaila) is a powerful Ayurvedic oil known for its antibacterial, antifungal, and anti-inflammatory properties. It is commonly used to treat various skin conditions and support healthy skin and scalp.\r\n\r\nBenefits:\r\n● Effective for acne, eczema, and fungal infections\r\n● Promotes clear and healthy skin\r\n● Soothes scalp irritation and dandruff\r\n● Natural insect repellent and skin purifier', NULL),
-(2, 'Pinda Oil', 1, 1900.00, 95, '../uploads/products/1753083984_PindaOil.png', 'Pinda oil (Pinda thaila) is a blend of Ayurvedic oils that soothe skin diseases such as eczema and psoriasis. It also relieves symptoms of arthritis such as stiffness, burning sensations, and joint pain.\r\n\r\nBenefits :\r\n\r\n● Suitable for eczema and psoriasis\r\n● Arthritis pain reliever', NULL),
-(12, 'Mahanarayana Oil ', 1, 1600.00, 97, '../uploads/products/1753085109_MahanarayanaOil.jpg', 'Mahanarayana Oil is a classical Ayurvedic massage oil used to relieve joint and muscle pain. It strengthens bones and nerves, making it ideal for arthritis and physical weakness.\r\n\r\nBenefits:\r\n● Relieves joint and muscle stiffness\r\n● Strengthens nerves and bones\r\n● Useful in arthritis and paralysis management', NULL),
-(15, 'Senna Tea', 2, 450.00, 150, '../uploads/products/Senna-Tea-570x570.jpg', 'Made from Ranawara flowers (Cassia auriculata) and green tea, this herbal blend is known for its natural cleansing and cooling properties.\r\n\r\nBenefits:\r\n●	Purifies the blood and enhances body complexion\r\n●	Provides a cooling effect and relieves urinary problems\r\n●	Aids in stomach cleansing and digestion\r\n●	Restores natural skin glow and freshness\r\n', NULL),
-(16, 'Nil Katarolu Flowers Drink', 2, 450.00, 137, '../uploads/products/Nilkatarolu-570x570.jpg', ' Made from Nil Katarolu flowers (Clitoria ternatea), this vibrant herbal drink is packed with natural antioxidants and calming properties.\r\n\r\nBenefits:\r\n●	Fights free radicals and supports healthy aging\r\n●	Enhances memory, focus, and relaxation\r\n●	Promotes radiant skin and aids digestion\r\n●	Helps maintain weight balance and uplifts mood\r\n', NULL),
-(17, 'Natural Gotukola Tea', 2, 400.00, 96, '../uploads/products/Gotukola.jpg', ' Made from Gotukola (Centella asiatica), this traditional Ayurvedic herbal tea is crafted to preserve its natural flavor and healing properties.\r\n\r\nBenefits:\r\n●	Enhances memory, focus, and mental alertness\r\n●	Reduces stress, fatigue, and promotes restful sleep\r\n●	Relieves joint swelling, varicose veins, and hemorrhoid pain', NULL),
-(18, 'Kekulu Toothpaste', 11, 200.00, 243, '../uploads/products/kekulu-toothpaste.png', 'Specially formulated for children, this gentle herbal toothpaste is enriched with natural ingredients like clove, munamal, and miswak. Its mild, fluoride-free formula protects delicate teeth and gums while ensuring safe daily oral care for kids.\r\n\r\nBenefits:\r\n● Gently cleanses and protects children’s teeth\r\n● Fluoride-free and safe for daily use\r\n● Strengthens gums and prevents tooth decay\r\n● Provides natural freshness', NULL),
-(19, 'Kohomba Baby Soap', 11, 320.00, 296, '../uploads/products/Khomba-Baby-Soap-Milk.png', 'A gentle baby soap with kohomba (neem), coconut milk, and aloe vera. Kohomba protects delicate skin, coconut milk moisturizes, and aloe vera soothes and refreshes. This mild formula keeps your baby’s skin clean, soft, and healthy.\r\n\r\nBenefits:\r\n● Protects delicate skin\r\n● Moisturizes and prevents dryness\r\n● Soothes and refreshes\r\n● Keeps skin soft and healthy', NULL),
-(20, 'Camphor Balms', 5, 270.00, 139, '../uploads/products/Camphor-Cream-570x570.png', 'Camphor Cream is a soothing herbal preparation made with natural ingredients like Cinnamon Oil, Menthol, Camphor, and Bee’s Wax. It is designed for external application to relieve pain and discomfort.\r\n\r\nBenefits:\r\n●	Provides quick relief from body aches, rheumatism, sprains, and swelling\r\n●	Helps reduce chest pain caused by phlegm and lung congestion\r\n●	Soothes neuralgia and contusions with a cooling effect\r\n●	Safe for all user groups when applied externally\r\n', NULL);
+INSERT IGNORE INTO `product` (`product_id`, `product_name`, `product_name_si`, `category_id`, `price`, `quantity`, `image`, `description`, `description_si`) VALUES
+(1, 'Neem Oil', 'සුවෝදා කොහොඹ තෙල්', 1, 1850.00, 118, '../uploads/products/1753084677_NeemOil.png', 'Neem Oil (Neem Thaila) is an Ayurvedic oil.', 'කොහොඹ තෙල් (Neem Thaila) ආයුර්වේද තෙලකි.'),
+(2, 'Pinda Oil', 'සුවෝදා පින්ද තෙල්', 1, 1900.00, 95, '../uploads/products/1753083984_PindaOil.png', 'Pinda Oil (Pinda Thaila) is a blend of Ayurvedic oils.', 'පිණ්ඩ තෛලය ආයුර්වේද තෙල් මිශ්‍රණයකි.'),
+(12, 'Mahanarayana Oil', 'සුවෝදා මහානාරායන තෙල්', 1, 1600.00, 97, '../uploads/products/1753085109_MahanarayanaOil.jpg', 'Mahanarayana Oil is a classical Ayurvedic massage oil.', 'මහානාරායන තෛලය සාම්ප්‍රදායික ආයුර්වේද සම්බාහන තෙලකි.'),
+(15, 'Senna Tea', NULL, 2, 450.00, 150, '../uploads/products/Senna-Tea-570x570.jpg', 'A herbal blend made from Ranawara flowers (Cassia auriculata) and green tea.', 'රණවරා මල් (Cassia auriculata) සහ හරිත තේ වලින් සැකසූ ඖෂධීය මිශ්‍රණයකි.'),
+(16, 'Nil Katarolu Flowers Drink', NULL, 2, 450.00, 137, '../uploads/products/Nilkatarolu-570x570.jpg', 'A herbal drink made from Nil Katarolu flowers (Clitoria ternatea).', 'නිල් කටරොළු මල් (Clitoria ternatea) වලින් සැකසූ ඖෂධීය පානයකි.'),
+(17, 'Natural Gotukola Tea', 'ස්වාභාවික ගොටුකොළ තේ', 2, 400.00, 96, '../uploads/products/Gotukola.jpg', 'A traditional Ayurvedic herbal tea made from Gotukola (Centella asiatica).', 'ගොටුකොළ (Centella asiatica) වලින් සැකසූ සාම්ප්‍රදායික ආයුර්වේද තේ පානයකි.'),
+(18, 'Kekulu Toothpaste', NULL, 11, 200.00, 243, '../uploads/products/kekulu-toothpaste.png', 'A fluoride-free herbal toothpaste for children, made with ingredients such as clove, munamal and miswak.', 'කරාබුනැටි, මූණමල් සහ මිස්වාක් වැනි අමුද්‍රව්‍ය අඩංගු, ෆ්ලෝරයිඩ් රහිත ළමා ඖෂධීය දන්තාලේපයකි.'),
+(19, 'Kohomba Baby Soap', 'කොහොඹ ළදරු සබන්', 11, 320.00, 296, '../uploads/products/Khomba-Baby-Soap-Milk.png', 'A baby soap made with kohomba (neem), coconut milk and aloe vera.', 'කොහොඹ, පොල්කිරි සහ කෝමාරිකා අඩංගු ළදරු සබන් වර්ගයකි.'),
+(20, 'Camphor Balms', NULL, 5, 270.00, 139, '../uploads/products/Camphor-Cream-570x570.png', 'A herbal cream made with cinnamon oil, menthol, camphor and beeswax. For external application.', 'කුරුඳු තෙල්, මෙන්තෝල්, කපුරු සහ මීඉටි අඩංගු ඖෂධීය ආලේපනයකි. බාහිර ආලේපනය සඳහා පමණි.');
 
-INSERT INTO `discount` (`discount_id`, `product_id`, `discount_percentage`, `start_date`, `end_date`) VALUES
-(2, 16, 10.00, '2025-09-13', '2025-09-13');
+INSERT IGNORE INTO `product_herb` (`product_id`, `herb_id`) VALUES
+(1, 1),
+(17, 3);
 
-INSERT INTO `herb` (`herb_id`, `name`, `scientific_name`, `uses`, `image`) VALUES
-(8, 'Amla (Nelli)', 'Phyllanthus emblica', ' Rich in Vitamin C, supports immunity, improves digestion, and promotes healthy skin and hair.\r\n\r\n', 'Amla.png'),
-(9, 'Aralu', 'Terminalia chebula', 'Constipation relief, detoxification, part of Thriphala formula, supports digestion.', 'Aralu.JPG'),
-(10, 'Aloe Vera', 'Aloe barbadensis miller', 'Skin healing, burn treatment, digestive support, detoxificat', 'Aloe Vera.jpg'),
-(11, 'Bovitiya', 'Osbeckia octandra', 'Used to treat liver problems, jaundice, and skin conditions. Often consumed as herbal tea or juice.', 'Bovitiya.jpg'),
-(12, 'Bim Thamburu', 'Plumbago zeylanica', 'Improves digestion, treats skin diseases, and is used externally for joint pain relief.', 'binThambaru.jpg'),
-(13, 'Binkohomba', 'Melia azedarach', 'Acts as an antiseptic and antifungal;
+INSERT IGNORE INTO `discount` (`discount_id`, `product_id`, `discount_percentage`, `start_date`, `end_date`) VALUES
+(2, 16, 10.00, '2025-09-13 00:00:00', '2025-09-13 23:59:59');
 
-INSERT INTO `blog` (`blog_id`, `title`, `image`, `content`, `published_date`) VALUES
-(1, ' What Is Ayurveda?', '../assets/images/uploads/Blogs1753081225_Blog1.jpg', 'Introduction\r\nAyurveda is one of the world’s oldest holistic healing systems. Originating more than 5,000 years ago in India and widely practiced in Sri Lanka, Ayurveda emphasizes balance between the body, mind, and spirit. The word “Ayurveda” comes from the Sanskrit words “Ayur” (life) and “Veda” (knowledge or science) — meaning the “Science of Life.”\r\n\r\nThe Core Principles of Ayurveda\r\nAyurveda is based on the belief that health and wellness depend on a delicate balance between the five elements:\r\n\r\nEarth (Prithvi)\r\n\r\nWater (Jala)\r\n\r\nFire (Teja)\r\n\r\nAir (Vayu)\r\n\r\nSpace (Akasha)\r\n\r\nThese elements combine in the body to form three energies or doshas:\r\n\r\nVata (Air + Space) – Controls movement and breathing\r\n\r\nPitta (Fire + Water) – Controls digestion and metabolism\r\n\r\nKapha (Earth + Water) – Controls structure and immunity\r\n\r\nEach person has a unique combination of doshas, called their Prakriti.\r\n', '2025-07-21 12:30:25'),
-(2, 'Top 10 Ayurvedic Herbs and Their Benefits', '../assets/images/uploads1753082317_Blog2.jpg', '🌱 Introduction\r\nAyurveda is a treasure trove of powerful herbs that have been used for thousands of years to heal the body naturally. These herbs are used in the form of powders, oils, teas, and pills. In this blog, we’ll introduce you to 10 of the most powerful Ayurvedic herbs and their health benefits — many of which are found right here in Sri Lanka!\r\n\r\n🪴 1. Gotu Kola (Centella Asiatica) – Ponnanwela (පොන්නාන්වැල්ල)\r\n🧠 Boosts brain function and memory\r\n\r\n🧘‍♀️ Reduces anxiety and stress\r\n\r\n💉 Improves blood circulation\r\n\r\nUsed in: herbal teas, pastes for wounds\r\n\r\n🪴 2. Neem (Azadirachta indica) – Kohomba (කොහොඹ)\r\n🌿 Natural blood purifier\r\n\r\n🧼 Treats acne, skin infections, and dandruff\r\n\r\n🦷 Used in herbal toothpastes for gum care\r\n\r\nAvailable as: oil, powder, capsules\r\n\r\n🪴 3. Turmeric (Curcuma longa) – Kaha (කහ)\r\n🔥 Strong anti-inflammatory properties\r\n\r\n🛡️ Boosts immunity\r\n\r\n🧴 Improves skin tone and brightness\r\n\r\nPopular in: turmeric lattes, face packs\r\n\r\n🪴 4. Ashwagandha (Withania somnifera)\r\n⚡ Boosts energy levels and stamina\r\n\r\n😌 Reduces cortisol (stress hormone)\r\n\r\n💪 Strengthens muscles and bones\r\n\r\nUsed as: capsules, powders, tonic\r\n\r\n🪴 5. Amla (Indian Gooseberry) – Nelli (නෙල්ලි)\r\n🍋 Rich in Vitamin C\r\n\r\n🧬 Slows aging and strengthens immunity\r\n\r\n🧖‍♀️ Improves hair health and reduces greying\r\n\r\nFound in: oils, hair tonics, herbal drinks\r\n\r\n🪴 6. Brahmi (Bacopa monnieri)\r\n🧠 Supports mental clarity and focus\r\n\r\n💤 Helps treat insomnia and restlessness\r\n\r\n🫀 Supports heart health\r\n\r\nUsed in: memory-boosting supplements\r\n\r\n🪴 7. Coriander (Coriandrum sativum) – Kottamalli (කොත්තමල්ලි)\r\n🌿 Improves digestion and relieves gas\r\n\r\n🤧 Useful for treating colds and fevers\r\n\r\n☕ Commonly consumed as herbal tea\r\n\r\n🪴 8. Fenugreek (Trigonella foenum-graecum) – Uluhal (උලුහල)\r\n🥗 Controls blood sugar levels\r\n\r\n🍼 Supports milk production in lactating mothers\r\n\r\n🌱 Improves metabolism and weight loss\r\n\r\n🪴 9. Ceylon Cinnamon (Cinnamomum verum) – Kurundu (කුරුඳු)\r\n🍬 Regulates blood sugar\r\n\r\n❤️ Good for heart health\r\n\r\n💨 Aids digestion and reduces bloating\r\n\r\n🪴 10. Cardamom (Elettaria cardamomum) – Enasal (ඇනසල්)\r\n😌 Helps in relieving nausea and acidity\r\n\r\n🌬️ Freshens breath and improves oral health\r\n\r\n☕ Adds flavor and medicinal value to teas\r\n\r\n', '2025-07-21 12:48:37');
-
-SET FOREIGN_KEY_CHECKS = 1;
+INSERT IGNORE INTO `blog` (`blog_id`, `title`, `image`, `content`, `published_date`) VALUES
+(1, 'What Is Ayurveda?', '../assets/images/uploads/Blogs1753081225_Blog1.jpg', 'Introduction\r\nAyurveda is one of the world’s oldest holistic systems. Originating in India and widely practised in Sri Lanka, Ayurveda emphasises balance between the body, mind and spirit. The word “Ayurveda” comes from the Sanskrit words “Ayur” (life) and “Veda” (knowledge or science), meaning the “Science of Life”.\r\n\r\nCore principles\r\nAyurveda describes five elements: Earth (Prithvi), Water (Jala), Fire (Teja), Air (Vayu) and Space (Akasha). In this tradition they combine to form three doshas: Vata, Pitta and Kapha. A person’s own combination of doshas is called their Prakriti.\r\n', '2025-07-21 12:30:25');

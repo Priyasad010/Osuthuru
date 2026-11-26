@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <a href="/admin/dashboard" class="text-success small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Admin Dashboard</a>
-        <h2 class="fw-bold text-success mt-1 mb-0">Verify Bank Transfer Slips</h2>
+        <a href="/admin/dashboard" class="text-success small text-decoration-none"><i class="bi bi-arrow-left me-1"></i><?= e(t('admin_dashboard')) ?></a>
+        <h2 class="fw-bold text-success mt-1 mb-0"><?= e(t('admin_slip_title')) ?></h2>
     </div>
 </div>
 
@@ -17,29 +17,29 @@
         <table class="table align-middle mb-0 small">
             <thead class="table-light">
                 <tr>
-                    <th>Slip #</th>
-                    <th>Order #</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Slip Image</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th><?= e(t('admin_slip_number')) ?></th>
+                    <th><?= e(t('col_order')) ?></th>
+                    <th><?= e(t('admin_customer')) ?></th>
+                    <th><?= e(t('admin_amount')) ?></th>
+                    <th><?= e(t('admin_slip_image')) ?></th>
+                    <th><?= e(t('col_status')) ?></th>
+                    <th><?= e(t('admin_actions')) ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($slips)): ?>
-                    <tr><td colspan="7" class="text-center text-muted py-4">No bank transfer slips submitted yet.</td></tr>
+                    <tr><td colspan="7" class="text-center text-muted py-4"><?= e(t('admin_no_slips')) ?></td></tr>
                 <?php else: ?>
                     <?php foreach ($slips as $s): ?>
                         <tr>
                             <td>#<?= (int)$s['slip_id'] ?></td>
                             <td class="fw-bold">#<?= (int)$s['order_id'] ?></td>
-                            <td><?= e($s['user_name'] ?? 'Customer') ?></td>
+                            <td><?= e($s['user_name'] ?? t('admin_customer')) ?></td>
                             <td class="fw-semibold"><?= e(format_price((float)$s['total_price'])) ?></td>
-                            <td><a href="<?= e($s['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary">View Slip</a></td>
+                            <td><a href="<?= e($s['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><?= e(t('admin_view_slip')) ?></a></td>
                             <td>
                                 <span class="badge <?= $s['status'] === 'verified' ? 'bg-success' : ($s['status'] === 'rejected' ? 'bg-danger' : 'bg-warning text-dark') ?>">
-                                    <?= e(strtoupper($s['status'])) ?>
+                                    <?= e(t_or('slip_', $s['status'])) ?>
                                 </span>
                             </td>
                             <td class="d-flex gap-1">
@@ -48,13 +48,13 @@
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="slip_id" value="<?= (int)$s['slip_id'] ?>">
                                         <input type="hidden" name="action" value="verify">
-                                        <button type="submit" class="btn btn-sm btn-success">Verify &amp; Mark Paid</button>
+                                        <button type="submit" class="btn btn-sm btn-success"><?= e(t('admin_verify_paid')) ?></button>
                                     </form>
                                     <form method="POST" action="/admin/bank-slips/review">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="slip_id" value="<?= (int)$s['slip_id'] ?>">
                                         <input type="hidden" name="action" value="reject">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><?= e(t('admin_reject')) ?></button>
                                     </form>
                                 <?php endif; ?>
                             </td>
