@@ -12,7 +12,7 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
     <div class="row align-items-center">
         <div class="col-lg-8">
             <span class="badge bg-white text-success px-3 py-2 rounded-pill mb-3 fw-semibold">
-                <i class="bi bi-patch-check-fill me-1 text-success"></i> Authentic Sri Lankan Herbal &amp; Ayurveda &bull; Phase 0: Foundation Running
+                <i class="bi bi-patch-check-fill me-1 text-success"></i> <?= e(t('home_badge')) ?>
             </span>
             <h1 class="display-5 fw-bold mb-3"><?= e(t('welcome_title')) ?></h1>
             <p class="lead opacity-90 mb-4"><?= e(t('welcome_subtitle')) ?></p>
@@ -60,11 +60,11 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
                         <strong><?= e(t('scientific_name')) ?>:</strong> <?= e($herbOfTheDay['scientific_name']) ?>
                     </p>
                     <p class="text-secondary mb-3 small leading-relaxed">
-                        <?= e(mb_strimwidth((string)$herbOfTheDay['display_uses'], 0, 180, '...')) ?>
+                        <?= e(mb_strimwidth((string)($herbOfTheDay['display_uses'] ?: t('uses_pending')), 0, 180, '...')) ?>
                     </p>
                     <div>
                         <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="btn btn-outline-success btn-sm fw-semibold">
-                            Read Full Herbal Profile &amp; Uses <i class="bi bi-arrow-right ms-1"></i>
+                            <?= e(t('read_herb_profile')) ?> <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
@@ -88,7 +88,9 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
                         <i class="bi <?= e($c['icon']) ?> fs-3"></i>
                     </div>
                     <h6 class="fw-bold text-dark mb-1"><?= e($c['display_name']) ?></h6>
-                    <small class="text-muted"><?= e($c['name_en']) ?></small>
+                    <?php if ($c['display_name'] !== $c['name_en']): ?>
+                        <small class="text-muted"><?= e($c['name_en']) ?></small>
+                    <?php endif; ?>
                 </a>
             </div>
         <?php endforeach; ?>
@@ -100,11 +102,11 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
     <div class="mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h3 class="fw-bold text-success mb-1">Featured Ayurvedic Products</h3>
-                <p class="text-muted small mb-0">Handcrafted remedies made with natural Ceylon herbs</p>
+                <h3 class="fw-bold text-success mb-1"><?= e(t('featured_title')) ?></h3>
+                <p class="text-muted small mb-0"><?= e(t('featured_subtitle')) ?></p>
             </div>
             <a href="/products" class="btn btn-outline-success btn-sm">
-                View All <i class="bi bi-arrow-right ms-1"></i>
+                <?= e(t('view_all')) ?> <i class="bi bi-arrow-right ms-1"></i>
             </a>
         </div>
 
@@ -116,7 +118,7 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
                             <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
                         </div>
                         <div class="card-body d-flex flex-column">
-                            <small class="text-muted"><?= e($p['display_category_name'] ?? 'Ayurvedic') ?></small>
+                            <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>
                             <h6 class="card-title fw-bold mt-1 mb-2">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="text-dark text-decoration-none">
                                     <?= e($p['display_name']) ?>
@@ -132,7 +134,7 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
                             </div>
                             <div class="mt-auto">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                    View Details
+                                    <?= e(t('view_details')) ?>
                                 </a>
                             </div>
                         </div>

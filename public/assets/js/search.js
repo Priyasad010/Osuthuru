@@ -7,6 +7,64 @@ document.addEventListener('DOMContentLoaded', function () {
     const voiceBtn = document.getElementById('voiceSearchBtn');
     const micIcon = document.getElementById('voiceMicIcon');
 
+    // Translated labels are provided by the page through data attributes
+    const labels = suggestBox ? suggestBox.dataset : {};
+    const listeningText = voiceBtn ? (voiceBtn.dataset.listening || '') : '';
+    const defaultPlaceholder = searchInput ? searchInput.placeholder : '';
+
+    function element(tag, className, text) {
+        const node = document.createElement(tag);
+        node.className = className;
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+        return node;
+    }
+
+    function link(url, className) {
+        const a = element('a', className);
+        // Only same-site paths are allowed
+        a.setAttribute('href', /^\/(?!\/)/.test(url) ? url : '#');
+        return a;
+    }
+
+    function concernItem(c) {
+        const a = link(c.url, 'dropdown-item py-1 text-truncate');
+        a.append(
+            element('span', 'badge bg-success-subtle text-success me-1', labels.concern || ''),
+            document.createTextNode(c.title)
+        );
+        return a;
+    }
+
+    function herbItem(h) {
+        const a = link(h.url, 'dropdown-item py-1');
+        a.append(
+            element('div', 'fw-semibold text-truncate', h.title),
+            element('small', 'text-muted fst-italic', h.subtitle)
+        );
+        return a;
+    }
+
+    function productItem(p) {
+        const a = link(p.url, 'dropdown-item py-1');
+        a.append(
+            element('div', 'fw-semibold text-truncate', p.title),
+            element('small', 'text-success', p.subtitle)
+        );
+        return a;
+    }
+
+    function addGroup(labelKey, icon, items, build) {
+        if (!items || items.length === 0) {
+            return;
+        }
+        const header = element('div', 'dropdown-header text-uppercase text-muted mt-1 small');
+        header.append(element('i', 'bi ' + icon + ' me-1'), document.createTextNode(labels[labelKey] || ''));
+        suggestBox.append(header);
+        items.forEach(item => suggestBox.append(build(item)));
+    }
+
     // 1. Autocomplete with Debounce
     let debounceTimer = null;
     if (searchInput && suggestBox) {
@@ -16,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (query.length < 2) {
                 suggestBox.classList.add('d-none');
-                suggestBox.innerHTML = '';
+                suggestBox.textContent = '';
                 return;
             }
 
@@ -30,46 +88,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         const d = data.data;
-                        let html = '';
+                        suggestBox.textContent = '';
 
-                        // Concerns
-                        if (d.concerns && d.concerns.length > 0) {
-                            html += '<div class="dropdown-header text-uppercase text-muted" style="font-size:0.75rem;"><i class="bi bi-heart-pulse me-1"></i> Health Concerns</div>';
-                            d.concerns.forEach(c => {
-                                html += `<a class="dropdown-item py-1 text-truncate" href="${c.url}">
-                                            <span class="badge bg-success-subtle text-success me-1">Concern</span> ${c.title}
-                                         </a>`;
-                            });
-                        }
+                        addGroup('concerns', 'bi-heart-pulse', d.concerns, concernItem);
+                        addGroup('herbs', 'bi-journal-medical', d.herbs, herbItem);
+                        addGroup('products', 'bi-box-seam', d.products, productItem);
 
-                        // Herbs
-                        if (d.herbs && d.herbs.length > 0) {
-                            html += '<div class="dropdown-header text-uppercase text-muted mt-1" style="font-size:0.75rem;"><i class="bi bi-journal-medical me-1"></i> Herbs</div>';
-                            d.herbs.forEach(h => {
-                                html += `<a class="dropdown-item py-1" href="${h.url}">
-                                            <div class="fw-semibold text-truncate">${h.title}</div>
-                                            <small class="text-muted fst-italic">${h.subtitle}</small>
-                                         </a>`;
-                            });
-                        }
-
-                        // Products
-                        if (d.products && d.products.length > 0) {
-                            html += '<div class="dropdown-header text-uppercase text-muted mt-1" style="font-size:0.75rem;"><i class="bi bi-box-seam me-1"></i> Products</div>';
-                            d.products.forEach(p => {
-                                html += `<a class="dropdown-item py-1" href="${p.url}">
-                                            <div class="fw-semibold text-truncate">${p.title}</div>
-                                            <small class="text-success">${p.subtitle}</small>
-                                         </a>`;
-                            });
-                        }
-
-                        if (html === '') {
-                            suggestBox.classList.add('d-none');
-                        } else {
-                            suggestBox.innerHTML = html;
-                            suggestBox.classList.remove('d-none');
-                        }
+                        suggestBox.classList.toggle('d-none', suggestBox.childElementCount === 0);
                     })
                     .catch(() => {
                         suggestBox.classList.add('d-none');
@@ -110,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 isListening = true;
                 micIcon.classList.remove('bi-mic-fill');
                 micIcon.classList.add('bi-mic-mute-fill', 'text-danger');
-                searchInput.placeholder = 'Listening... Speak now';
+                searchInput.placeholder = listeningText;
             } catch (err) {
                 console.warn('Speech recognition error:', err);
             }
@@ -136,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
             isListening = false;
             micIcon.classList.add('bi-mic-fill');
             micIcon.classList.remove('bi-mic-mute-fill', 'text-danger');
-            searchInput.placeholder = 'Search herbs, products or health concerns...';
+            searchInput.placeholder = defaultPlaceholder;
         }
     } else if (voiceBtn) {
         // Hide microphone button when unsupported in browser

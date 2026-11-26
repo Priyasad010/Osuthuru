@@ -49,6 +49,7 @@ $admin = Auth::admin();
     <div class="card-body">
         <div class="d-flex flex-wrap gap-2">
             <a href="/admin/products" class="btn btn-outline-success btn-sm"><i class="bi bi-box-seam me-1"></i> Manage Products &amp; Stock</a>
+            <a href="/admin/herbs" class="btn btn-outline-success btn-sm"><i class="bi bi-journal-medical me-1"></i> Herb Text</a>
             <a href="/admin/orders" class="btn btn-outline-success btn-sm"><i class="bi bi-receipt me-1"></i> Manage Orders</a>
             <a href="/admin/coupons" class="btn btn-outline-success btn-sm"><i class="bi bi-ticket-perforated me-1"></i> Coupons</a>
             <a href="/admin/zones" class="btn btn-outline-success btn-sm"><i class="bi bi-truck me-1"></i> Delivery Zones</a>

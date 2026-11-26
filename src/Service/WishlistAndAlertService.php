@@ -37,7 +37,7 @@ class WishlistAndAlertService
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare("
-            SELECT p.*, c.name AS category_name,
+            SELECT p.*, c.name AS category_name, c.name_si AS category_name_si,
                    (SELECT MAX(d.discount_percentage)
                     FROM discount d
                     WHERE d.product_id = p.product_id
@@ -53,7 +53,10 @@ class WishlistAndAlertService
         $stmt->execute([':uid' => $userId]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return array_map([\App\Repository\ProductRepo::class, 'enrichWithSalePrice'], $rows);
+        return array_map(
+            fn($p) => \App\Repository\ProductRepo::enrichWithSalePrice(\App\Repository\ProductRepo::enrichLocale($p)),
+            $rows
+        );
     }
 
     public static function subscribeStockAlert(int $userId, int $productId): bool

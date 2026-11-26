@@ -4,8 +4,8 @@
             <div class="card-body p-4">
                 <div class="text-center mb-4">
                     <i class="bi bi-shield-lock-fill text-success fs-1 mb-2"></i>
-                    <h3 class="fw-bold text-success">Reset Password</h3>
-                    <p class="text-muted small">Choose a strong new password for your account.</p>
+                    <h3 class="fw-bold text-success"><?= e(t('reset_title')) ?></h3>
+                    <p class="text-muted small"><?= e(t('reset_subtitle')) ?></p>
                 </div>
 
                 <?php if (!empty($error)): ?>
@@ -16,7 +16,7 @@
                     <div class="alert alert-success py-2 small">
                         <?= e($success) ?>
                         <div class="mt-2">
-                            <a href="/login" class="btn btn-sm btn-success">Login with new password</a>
+                            <a href="/login" class="btn btn-sm btn-success"><?= e(t('login_new_password')) ?></a>
                         </div>
                     </div>
                 <?php else: ?>
@@ -25,16 +25,16 @@
                         <input type="hidden" name="token" value="<?= e($token) ?>">
 
                         <div class="mb-3">
-                            <label for="password" class="form-label small fw-semibold">New Password</label>
+                            <label for="password" class="form-label small fw-semibold"><?= e(t('new_password')) ?></label>
                             <input type="password" class="form-control" id="password" name="password" required autofocus>
                         </div>
 
                         <div class="mb-3">
-                            <label for="password_confirmation" class="form-label small fw-semibold">Confirm New Password</label>
+                            <label for="password_confirmation" class="form-label small fw-semibold"><?= e(t('confirm_new_password')) ?></label>
                             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
                         </div>
 
-                        <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold">Update Password</button>
+                        <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('update_password')) ?></button>
                     </form>
                 <?php endif; ?>
             </div>

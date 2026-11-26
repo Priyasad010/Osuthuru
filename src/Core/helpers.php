@@ -18,6 +18,17 @@ if (!function_exists('t')) {
     }
 }
 
+if (!function_exists('t_or')) {
+    /** Translate a stored code (status, payment method...), showing the raw value if unknown. */
+    function t_or(string $prefix, ?string $value): string
+    {
+        $value = (string)$value;
+        $key = $prefix . trim((string)preg_replace('/[^a-z0-9]+/', '_', strtolower($value)), '_');
+        $text = Lang::trans($key);
+        return $text !== $key ? $text : $value;
+    }
+}
+
 if (!function_exists('env')) {
     function env(string $key, mixed $default = null): mixed
     {

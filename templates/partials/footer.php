@@ -17,16 +17,15 @@
                 <p class="text-white-50 small mb-0"><?= e(t('tagline')) ?></p>
             </div>
             <div class="col-6 col-md-4">
-                <h6 class="text-white mb-2">Quick Links</h6>
+                <h6 class="text-white mb-2"><?= e(t('quick_links')) ?></h6>
                 <ul class="list-unstyled small mb-0">
                     <li><a href="/products"><?= e(t('nav_products')) ?></a></li>
                     <li><a href="/dictionary"><?= e(t('nav_dictionary')) ?></a></li>
-                    <li><a href="/blogs"><?= e(t('nav_blogs')) ?></a></li>
                 </ul>
             </div>
             <div class="col-6 col-md-4">
-                <h6 class="text-white mb-2">Contact & Verification</h6>
-                <p class="text-white-50 small mb-1"><i class="bi bi-geo-alt me-1"></i> Colombo, Sri Lanka</p>
+                <h6 class="text-white mb-2"><?= e(t('contact_title')) ?></h6>
+                <p class="text-white-50 small mb-1"><i class="bi bi-geo-alt me-1"></i> <?= e(t('contact_city')) ?></p>
                 <p class="text-white-50 small mb-0"><i class="bi bi-envelope me-1"></i> support@suwoda.lk</p>
             </div>
         </div>
@@ -34,13 +33,12 @@
         <hr class="border-secondary my-3">
         <div class="d-flex flex-wrap justify-content-between align-items-center small text-white-50">
             <span>&copy; <?= date('Y') ?> <?= e(t('app_name')) ?>. <?= e(t('all_rights_reserved')) ?></span>
-            <span>V2 Foundation (Phase 0)</span>
         </div>
     </div>
 </footer>
 
 <!-- Bootstrap JS Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/assets/js/search.js"></script>
+<script src="/assets/js/search.js?v=2"></script>
 </body>
 </html>

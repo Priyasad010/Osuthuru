@@ -16,7 +16,7 @@ class Upload
     public static function process(array $file, string $subfolder = 'images'): array
     {
         if (!isset($file['error']) || is_array($file['error'])) {
-            return ['ok' => false, 'error' => 'Invalid file upload parameter.'];
+            return ['ok' => false, 'error' => t('err_upload_param')];
         }
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -25,7 +25,7 @@ class Upload
 
         // 1. Size check
         if ($file['size'] > self::MAX_SIZE) {
-            return ['ok' => false, 'error' => 'File size exceeds maximum limit of 2 MB.'];
+            return ['ok' => false, 'error' => t('err_upload_size')];
         }
 
         // 2. MIME type check with finfo
@@ -33,7 +33,7 @@ class Upload
         $mime = $finfo->file($file['tmp_name']);
 
         if (!array_key_exists($mime, self::ALLOWED_MIME)) {
-            return ['ok' => false, 'error' => 'Invalid file format. Only JPG, PNG, and WebP images are allowed.'];
+            return ['ok' => false, 'error' => t('err_upload_format')];
         }
 
         $extension = self::ALLOWED_MIME[$mime];
@@ -55,7 +55,7 @@ class Upload
             if (php_sapi_name() === 'cli' && copy($file['tmp_name'], $destination)) {
                 // Cli test copy fallback
             } else {
-                return ['ok' => false, 'error' => 'Failed to save uploaded file.'];
+                return ['ok' => false, 'error' => t('err_upload_save')];
             }
         }
 
@@ -69,13 +69,13 @@ class Upload
     private static function getErrorMessage(int $errorCode): string
     {
         return match ($errorCode) {
-            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the allowed file size.',
-            UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded.',
-            UPLOAD_ERR_NO_FILE => 'No file was uploaded.',
-            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder on the server.',
-            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
-            UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload.',
-            default => 'Unknown upload error.'
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => t('err_upload_limit'),
+            UPLOAD_ERR_PARTIAL => t('err_upload_partial'),
+            UPLOAD_ERR_NO_FILE => t('err_upload_none'),
+            UPLOAD_ERR_NO_TMP_DIR => t('err_upload_save'),
+            UPLOAD_ERR_CANT_WRITE => t('err_upload_save'),
+            UPLOAD_ERR_EXTENSION => t('err_upload_save'),
+            default => t('err_upload_save')
         };
     }
 }

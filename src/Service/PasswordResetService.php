@@ -22,7 +22,7 @@ class PasswordResetService
             // For security, do not reveal if the email exists
             return [
                 'ok' => true,
-                'message' => 'If this email is registered, you will receive a password reset link shortly.'
+                'message' => t('msg_reset_sent')
             ];
         }
 
@@ -50,17 +50,17 @@ class PasswordResetService
 
             return [
                 'ok' => true,
-                'message' => 'If this email is registered, you will receive a password reset link shortly.'
+                'message' => t('msg_reset_sent')
             ];
         } catch (Throwable $e) {
-            return ['ok' => false, 'error' => 'An error occurred while generating your reset link.'];
+            return ['ok' => false, 'error' => t('err_reset_generate')];
         }
     }
 
     public static function validateToken(string $rawToken): array
     {
         if (empty($rawToken)) {
-            return ['ok' => false, 'error' => 'Missing reset token.'];
+            return ['ok' => false, 'error' => t('err_reset_missing')];
         }
 
         $tokenHash = hash('sha256', $rawToken);
@@ -77,15 +77,15 @@ class PasswordResetService
         $reset = $stmt->fetch();
 
         if (!$reset) {
-            return ['ok' => false, 'error' => 'This password reset link is invalid or has expired.'];
+            return ['ok' => false, 'error' => t('err_reset_invalid')];
         }
 
         if (!empty($reset['used_at'])) {
-            return ['ok' => false, 'error' => 'This password reset link has already been used.'];
+            return ['ok' => false, 'error' => t('err_reset_used')];
         }
 
         if (strtotime($reset['expires_at']) < time()) {
-            return ['ok' => false, 'error' => 'This password reset link has expired.'];
+            return ['ok' => false, 'error' => t('err_reset_expired')];
         }
 
         return ['ok' => true, 'reset' => $reset];
@@ -118,12 +118,12 @@ class PasswordResetService
 
             $pdo->commit();
 
-            return ['ok' => true, 'message' => 'Your password has been reset successfully. You can now login.'];
+            return ['ok' => true, 'message' => t('msg_reset_done')];
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            return ['ok' => false, 'error' => 'Failed to update password. Please try again.'];
+            return ['ok' => false, 'error' => t('err_reset_failed')];
         }
     }
 }

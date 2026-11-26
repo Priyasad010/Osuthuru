@@ -2,6 +2,7 @@
 
 namespace App\Core;
 
+use App\Service\RegistrationService;
 use PDO;
 use Throwable;
 
@@ -95,7 +96,7 @@ class Auth
         if (self::isLockedOut($cleanEmail, $ip)) {
             return [
                 'ok' => false,
-                'error' => 'Too many failed attempts. Account locked for 15 minutes.'
+                'error' => t('err_locked_user')
             ];
         }
 
@@ -104,23 +105,22 @@ class Auth
         $stmt->execute([':email' => $cleanEmail]);
         $user = $stmt->fetch();
 
-        if (!$user) {
+        // Strict password verify - no plain text fallback.
+        // The password is checked first so account status is only revealed to its owner.
+        if (!$user || !password_verify($password, $user['password'])) {
             self::recordAttempt($cleanEmail, $ip, false);
-            return ['ok' => false, 'error' => 'Invalid email or password.'];
+            return ['ok' => false, 'error' => t('err_invalid_login')];
         }
 
         if ($user['status'] === 'blocked') {
-            return ['ok' => false, 'error' => 'Your account has been suspended. Please contact support.'];
+            return ['ok' => false, 'error' => t('err_account_blocked')];
         }
 
-        if ($user['status'] === 'inactive') {
-            return ['ok' => false, 'error' => 'Please verify your email address before logging in.'];
-        }
-
-        // Strict password verify - no plain text fallback
-        if (!password_verify($password, $user['password'])) {
+        if ($user['status'] !== 'active') {
+            // Counted as an attempt so verification emails cannot be sent without limit
             self::recordAttempt($cleanEmail, $ip, false);
-            return ['ok' => false, 'error' => 'Invalid email or password.'];
+            RegistrationService::resendVerification($user);
+            return ['ok' => false, 'error' => t('err_unverified')];
         }
 
         self::recordAttempt($cleanEmail, $ip, true);
@@ -136,7 +136,7 @@ class Auth
         if (self::isLockedOut($cleanEmail, $ip)) {
             return [
                 'ok' => false,
-                'error' => 'Too many failed attempts. Admin portal locked for 15 minutes.'
+                'error' => t('err_locked_admin')
             ];
         }
 
@@ -147,7 +147,7 @@ class Auth
 
         if (!$admin || !password_verify($password, $admin['password'])) {
             self::recordAttempt($cleanEmail, $ip, false);
-            return ['ok' => false, 'error' => 'Invalid admin credentials.'];
+            return ['ok' => false, 'error' => t('err_invalid_admin')];
         }
 
         self::recordAttempt($cleanEmail, $ip, true);

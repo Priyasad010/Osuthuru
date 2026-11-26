@@ -4,8 +4,8 @@
             <div class="card-body p-4">
                 <div class="text-center mb-4">
                     <i class="bi bi-key-fill text-success fs-1 mb-2"></i>
-                    <h3 class="fw-bold text-success">Forgot Password</h3>
-                    <p class="text-muted small">Enter your email and we'll send a secure one-time password reset link.</p>
+                    <h3 class="fw-bold text-success"><?= e(t('forgot_title')) ?></h3>
+                    <p class="text-muted small"><?= e(t('forgot_subtitle')) ?></p>
                 </div>
 
                 <?php if (!empty($error)): ?>
@@ -20,15 +20,15 @@
                     <?= csrf_field() ?>
 
                     <div class="mb-3">
-                        <label for="email" class="form-label small fw-semibold">Registered Email Address</label>
+                        <label for="email" class="form-label small fw-semibold"><?= e(t('registered_email')) ?></label>
                         <input type="email" class="form-control" id="email" name="email" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold">Send Reset Link</button>
+                    <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('send_reset_link')) ?></button>
                 </form>
 
                 <div class="text-center mt-4 pt-2 border-top small text-muted">
-                    Remember your password? <a href="/login" class="text-success fw-semibold text-decoration-none">Back to Login</a>
+                    <?= e(t('remember_password')) ?> <a href="/login" class="text-success fw-semibold text-decoration-none"><?= e(t('back_to_login')) ?></a>
                 </div>
             </div>
         </div>

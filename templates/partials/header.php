@@ -59,7 +59,7 @@ $pageTitle = $pageTitle ?? t('app_name');
                         <input type="text" name="q" id="globalSearchInput" class="form-control"
                                placeholder="<?= e(t('search_placeholder')) ?>"
                                value="<?= e($_GET['q'] ?? '') ?>" autocomplete="off">
-                        <button class="btn btn-outline-light border-start-0" type="button" id="voiceSearchBtn" title="<?= e(t('voice_search')) ?>">
+                        <button class="btn btn-outline-light border-start-0" type="button" id="voiceSearchBtn" title="<?= e(t('voice_search')) ?>" data-listening="<?= e(t('voice_listening')) ?>">
                             <i class="bi bi-mic-fill" id="voiceMicIcon"></i>
                         </button>
                         <button class="btn btn-light text-success fw-bold" type="submit">
@@ -67,7 +67,12 @@ $pageTitle = $pageTitle ?? t('app_name');
                         </button>
                     </div>
                     <!-- Autocomplete dropdown container -->
-                    <div id="searchSuggestBox" class="dropdown-menu w-100 shadow border-0 mt-1 d-none" style="position: absolute; top: 100%; left: 0; z-index: 1050; max-height: 380px; overflow-y: auto;">
+                    <div id="searchSuggestBox"
+                         data-concern="<?= e(t('suggest_concern')) ?>"
+                         data-concerns="<?= e(t('suggest_concerns')) ?>"
+                         data-herbs="<?= e(t('suggest_herbs')) ?>"
+                         data-products="<?= e(t('nav_products')) ?>"
+                         class="dropdown-menu w-100 shadow border-0 mt-1 d-none" style="position: absolute; top: 100%; left: 0; z-index: 1050; max-height: 380px; overflow-y: auto;">
                     </div>
                 </form>
 
@@ -96,11 +101,11 @@ $pageTitle = $pageTitle ?? t('app_name');
                     <?php if (Auth::check()): ?>
                         <div class="dropdown">
                             <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i><?= e(Auth::user()['name'] ?? 'User') ?>
+                                <i class="bi bi-person-circle me-1"></i><?= e(Auth::user()['name'] ?? t('user_fallback')) ?>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
-                                <li><a class="dropdown-item" href="/orders"><i class="bi bi-receipt me-2"></i><?= e(t('nav_profile')) ?> / Orders</a></li>
-                                <li><a class="dropdown-item" href="/wishlist"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+                                <li><a class="dropdown-item" href="/orders"><i class="bi bi-receipt me-2"></i><?= e(t('my_orders')) ?></a></li>
+                                <li><a class="dropdown-item" href="/wishlist"><i class="bi bi-heart me-2"></i><?= e(t('wishlist')) ?></a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="/logout" method="POST" class="d-inline">

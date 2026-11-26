@@ -66,6 +66,14 @@ class OrderService
                 return ['ok' => true, 'unchanged' => true, 'message' => 'Status unchanged.'];
             }
 
+            // Cancelled is final; delivered goods cannot be cancelled back into stock
+            if ($order['status'] === 'Cancelled') {
+                throw new \RuntimeException("Order #{$orderId} is cancelled and cannot be changed.");
+            }
+            if ($newStatus === 'Cancelled' && $order['status'] === 'Delivered') {
+                throw new \RuntimeException("Order #{$orderId} is already delivered and cannot be cancelled.");
+            }
+
             // For COD orders: marking as Delivered sets payment_status = 'paid'
             $paymentStatus = $order['payment_status'];
             if ($order['payment_method'] === 'cod' && $newStatus === 'Delivered') {
@@ -83,6 +91,10 @@ class OrderService
                 ':order_id' => $orderId
             ]);
 
+            if ($newStatus === 'Cancelled') {
+                self::restoreStock($orderId, $order);
+            }
+
             // Record history row
             self::recordHistory($orderId, $newStatus, $note, $adminId);
 
@@ -93,7 +105,12 @@ class OrderService
                 self::sendStatusEmail($order['user_email'], $order['user_name'] ?? 'Customer', $orderId, $newStatus, $note);
             }
 
-            return ['ok' => true, 'status' => $newStatus, 'payment_status' => $paymentStatus];
+            return [
+                'ok' => true,
+                'status' => $newStatus,
+                'payment_status' => $paymentStatus,
+                'refund_needed' => $newStatus === 'Cancelled' && $paymentStatus === 'paid',
+            ];
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -123,24 +140,14 @@ class OrderService
             $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$order) {
-                throw new \RuntimeException("Order not found.");
+                throw new \RuntimeException(t('err_order_404'));
             }
 
             if ($order['status'] !== 'Pending') {
-                throw new \RuntimeException("Only Pending orders can be cancelled.");
+                throw new \RuntimeException(t('err_cancel_pending_only'));
             }
 
-            // If COD (or already paid), restore product stock
-            if ($order['payment_method'] === 'cod' || $order['payment_status'] === 'paid') {
-                $itemsStmt = $pdo->prepare("SELECT product_id, quantity FROM `order_item` WHERE order_id = :oid");
-                $itemsStmt->execute([':oid' => $orderId]);
-                $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
-
-                $restock = $pdo->prepare("UPDATE `product` SET quantity = quantity + :qty WHERE product_id = :pid");
-                foreach ($items as $item) {
-                    $restock->execute([':qty' => (int)$item['quantity'], ':pid' => (int)$item['product_id']]);
-                }
-            }
+            self::restoreStock($orderId, $order);
 
             $upd = $pdo->prepare("UPDATE `orders` SET status = 'Cancelled' WHERE order_id = :oid");
             $upd->execute([':oid' => $orderId]);
@@ -153,13 +160,36 @@ class OrderService
                 self::sendStatusEmail($order['user_email'], $order['user_name'] ?? 'Customer', $orderId, 'Cancelled', $reason);
             }
 
-            return ['ok' => true, 'message' => "Order #{$orderId} has been cancelled."];
+            return ['ok' => true, 'message' => t('flash_order_cancelled', ['id' => $orderId])];
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             return ['ok' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Return an order's items to stock, only if they were taken from stock and only once.
+     * Must run inside a transaction that holds a lock on the order row.
+     */
+    private static function restoreStock(int $orderId, array $order): void
+    {
+        if ((int)$order['stock_deducted'] !== 1) {
+            return;
+        }
+
+        $pdo = Database::getConnection();
+        $itemsStmt = $pdo->prepare("SELECT product_id, quantity FROM `order_item` WHERE order_id = :oid");
+        $itemsStmt->execute([':oid' => $orderId]);
+
+        $restock = $pdo->prepare("UPDATE `product` SET quantity = quantity + :qty WHERE product_id = :pid");
+        foreach ($itemsStmt->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $restock->execute([':qty' => (int)$item['quantity'], ':pid' => (int)$item['product_id']]);
+        }
+
+        $mark = $pdo->prepare("UPDATE `orders` SET stock_deducted = 0 WHERE order_id = :oid");
+        $mark->execute([':oid' => $orderId]);
     }
 
     public static function getTimeline(int $orderId): array
@@ -195,7 +225,7 @@ class OrderService
         }
 
         $itemsStmt = $pdo->prepare("
-            SELECT oi.*, p.product_name, p.image
+            SELECT oi.*, p.product_name, p.product_name_si, p.image
             FROM `order_item` oi
             JOIN `product` p ON p.product_id = oi.product_id
             WHERE oi.order_id = :oid

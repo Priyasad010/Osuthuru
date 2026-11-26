@@ -34,7 +34,21 @@ class CodGateway implements PaymentGateway
             $order = $orderStmt->fetch();
 
             if (!$order) {
-                throw new \RuntimeException("Order #{$orderId} not found.");
+                throw new \RuntimeException(t('err_order_404'));
+            }
+
+            if ($order['status'] === 'Cancelled') {
+                throw new \RuntimeException(t('err_order_cancelled'));
+            }
+
+            // Already placed: never take stock twice
+            if ((int)$order['stock_deducted'] === 1) {
+                $pdo->commit();
+                return [
+                    'ok' => true,
+                    'redirect_url' => "/orders/{$orderId}?placed=cod",
+                    'message' => t('msg_cod_placed')
+                ];
             }
 
             $itemsStmt = $pdo->prepare("SELECT * FROM `order_item` WHERE order_id = :order_id");
@@ -52,11 +66,14 @@ class CodGateway implements PaymentGateway
                 $avail = $lockProductStmt->fetchColumn();
 
                 if ($avail === false || (int)$avail < $qty) {
-                    throw new \RuntimeException("Insufficient stock for product #{$pid}.");
+                    throw new \RuntimeException(t('err_stock_product', ['id' => $pid]));
                 }
 
                 $updateStockStmt->execute([':qty' => $qty, ':product_id' => $pid]);
             }
+
+            $mark = $pdo->prepare("UPDATE `orders` SET stock_deducted = 1 WHERE order_id = :order_id");
+            $mark->execute([':order_id' => $orderId]);
 
             // Clear purchased items from cart
             $clearCart = $pdo->prepare("
@@ -74,7 +91,7 @@ class CodGateway implements PaymentGateway
             return [
                 'ok' => true,
                 'redirect_url' => "/orders/{$orderId}?placed=cod",
-                'message' => 'Cash on Delivery order placed successfully.'
+                'message' => t('msg_cod_placed')
             ];
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {

@@ -11,7 +11,7 @@ class CouponService
     {
         $cleanCode = strtoupper(trim($code));
         if ($cleanCode === '') {
-            return ['ok' => false, 'error' => 'Please enter a coupon code.'];
+            return ['ok' => false, 'error' => t('err_coupon_enter')];
         }
 
         $pdo = Database::getConnection();
@@ -20,31 +20,31 @@ class CouponService
         $coupon = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$coupon) {
-            return ['ok' => false, 'error' => 'Coupon code not found.'];
+            return ['ok' => false, 'error' => t('err_coupon_missing')];
         }
 
         if ((int)$coupon['active'] !== 1) {
-            return ['ok' => false, 'error' => 'This coupon is currently inactive.'];
+            return ['ok' => false, 'error' => t('err_coupon_inactive')];
         }
 
         $now = time();
         if (strtotime($coupon['starts_at']) > $now) {
-            return ['ok' => false, 'error' => 'This coupon is not active yet.'];
+            return ['ok' => false, 'error' => t('err_coupon_early')];
         }
 
         if (strtotime($coupon['ends_at']) < $now) {
-            return ['ok' => false, 'error' => 'This coupon has expired.'];
+            return ['ok' => false, 'error' => t('err_coupon_expired')];
         }
 
         if ((int)$coupon['used_count'] >= (int)$coupon['max_uses']) {
-            return ['ok' => false, 'error' => 'This coupon has reached its maximum usage limit.'];
+            return ['ok' => false, 'error' => t('err_coupon_max')];
         }
 
         $minOrder = (float)$coupon['min_order'];
         if ($subtotal < $minOrder) {
             return [
                 'ok' => false,
-                'error' => sprintf('Minimum order of Rs. %.2f is required for this coupon.', $minOrder)
+                'error' => t('err_coupon_min', ['amount' => format_price($minOrder)])
             ];
         }
 
@@ -53,7 +53,7 @@ class CouponService
             $usedStmt = $pdo->prepare("SELECT COUNT(*) FROM `coupon_redemption` WHERE coupon_id = :cid AND user_id = :uid");
             $usedStmt->execute([':cid' => $coupon['coupon_id'], ':uid' => $userId]);
             if ((int)$usedStmt->fetchColumn() > 0) {
-                return ['ok' => false, 'error' => 'You have already redeemed this coupon.'];
+                return ['ok' => false, 'error' => t('err_coupon_used')];
             }
         }
 

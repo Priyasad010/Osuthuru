@@ -23,8 +23,8 @@
 <?php if (empty($herbs)): ?>
     <div class="card border-0 shadow-sm p-5 text-center text-muted">
         <i class="bi bi-journal-x fs-1 mb-2"></i>
-        <h5>No herbs found starting with letter "<?= e($selectedLetter ?? '') ?>"</h5>
-        <a href="/dictionary" class="btn btn-sm btn-outline-success mt-2">View All Herbs</a>
+        <h5><?= e(t('no_herbs_letter', ['letter' => $selectedLetter ?? ''])) ?></h5>
+        <a href="/dictionary" class="btn btn-sm btn-outline-success mt-2"><?= e(t('view_all_herbs')) ?></a>
     </div>
 <?php else: ?>
     <div class="row g-4 mb-4">
@@ -42,11 +42,11 @@
                         </h6>
                         <small class="text-muted fst-italic mb-2"><?= e($h['scientific_name']) ?></small>
                         <p class="small text-secondary mb-3 flex-grow-1">
-                            <?= e(mb_strimwidth((string)$h['display_uses'], 0, 90, '...')) ?>
+                            <?= e(mb_strimwidth((string)($h['display_uses'] ?: t('uses_pending')), 0, 90, '...')) ?>
                         </p>
                         <div class="mt-auto">
                             <a href="/herb/<?= (int)$h['herb_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                View Uses &amp; Products
+                                <?= e(t('view_uses_products')) ?>
                             </a>
                         </div>
                     </div>

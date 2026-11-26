@@ -5,7 +5,7 @@
                 <div class="text-center mb-4">
                     <img src="/assets/images/Logo.jpg" alt="Suwoda Logo" width="56" height="56" class="rounded-circle mb-2">
                     <h3 class="fw-bold text-success"><?= e(t('nav_login')) ?></h3>
-                    <p class="text-muted small">Access your herbal wellness account</p>
+                    <p class="text-muted small"><?= e(t('login_subtitle')) ?></p>
                 </div>
 
                 <?php if (!empty($error)): ?>
@@ -20,23 +20,23 @@
                     <?= csrf_field() ?>
 
                     <div class="mb-3">
-                        <label for="email" class="form-label small fw-semibold">Email Address</label>
+                        <label for="email" class="form-label small fw-semibold"><?= e(t('email_address')) ?></label>
                         <input type="email" class="form-control" id="email" name="email" value="<?= e($email ?? '') ?>" required autofocus>
                     </div>
 
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <label for="password" class="form-label small fw-semibold">Password</label>
-                            <a href="/forgot-password" class="small text-success text-decoration-none">Forgot?</a>
+                            <label for="password" class="form-label small fw-semibold"><?= e(t('password')) ?></label>
+                            <a href="/forgot-password" class="small text-success text-decoration-none"><?= e(t('forgot_short')) ?></a>
                         </div>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
 
-                    <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold">Login</button>
+                    <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('nav_login')) ?></button>
                 </form>
 
                 <div class="text-center mt-4 pt-2 border-top small text-muted">
-                    Don't have an account? <a href="/register" class="text-success fw-semibold text-decoration-none">Register here</a>
+                    <?= e(t('no_account')) ?> <a href="/register" class="text-success fw-semibold text-decoration-none"><?= e(t('register_here')) ?></a>
                 </div>
             </div>
         </div>

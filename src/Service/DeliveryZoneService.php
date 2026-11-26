@@ -35,7 +35,7 @@ class DeliveryZoneService
                 'fee' => 0.0,
                 'free_over' => 0.0,
                 'is_free' => false,
-                'error' => "Delivery is not available for district: {$district}."
+                'error' => t('err_district', ['district' => $district])
             ];
         }
 

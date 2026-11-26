@@ -1,6 +1,6 @@
 <div class="mb-4">
     <a href="/products" class="text-success text-decoration-none small">
-        <i class="bi bi-arrow-left me-1"></i> Back to Products
+        <i class="bi bi-arrow-left me-1"></i> <?= e(t('back_to_products')) ?>
     </a>
 </div>
 
@@ -10,7 +10,7 @@
         <?= e(t('search_results_title', ['query' => $query])) ?>
     </h2>
     <p class="text-muted small">
-        Found <?= (int)($results['total_count'] ?? 0) ?> result(s)
+        <?= e(t('results_found', ['count' => (int)($results['total_count'] ?? 0)])) ?>
     </p>
 </div>
 
@@ -22,11 +22,11 @@
             <span class="fs-3 text-success"><i class="bi <?= e($sc['icon']) ?>"></i></span>
             <div>
                 <strong class="d-block text-success"><?= e(t('concern_shortcut_banner', ['concern' => $sc['display_name']])) ?></strong>
-                <small class="text-muted"><?= e(t('traditionally_used_for')) ?>: <?= e($sc['name_en']) ?> / <?= e($sc['name_si']) ?></small>
+                <small class="text-muted"><?= e($sc['name_en']) ?> / <?= e($sc['name_si']) ?></small>
             </div>
         </div>
         <a href="<?= e($sc['url']) ?>" class="btn btn-suwoda btn-sm text-nowrap ms-3">
-            Explore Guide <i class="bi bi-arrow-right ms-1"></i>
+            <?= e(t('explore_guide')) ?> <i class="bi bi-arrow-right ms-1"></i>
         </a>
     </div>
 <?php endif; ?>
@@ -35,7 +35,7 @@
 <?php if (!empty($results['did_you_mean'])): ?>
     <div class="alert alert-warning border-warning-subtle shadow-sm mb-4">
         <i class="bi bi-lightbulb-fill text-warning me-2"></i>
-        <span><?= e(t('did_you_mean', ['suggestion' => ''])) ?></span>
+        <span><?= e(t('did_you_mean_label')) ?></span>
         <a href="/search?q=<?= urlencode($results['did_you_mean']) ?>" class="fw-bold text-dark text-decoration-underline ms-1">
             <?= e($results['did_you_mean']) ?>
         </a>
@@ -48,16 +48,16 @@
         <div class="mb-3 text-muted">
             <i class="bi bi-search fs-1"></i>
         </div>
-        <h5 class="fw-bold text-dark mb-2">No matching products or herbs found</h5>
+        <h5 class="fw-bold text-dark mb-2"><?= e(t('no_matches_title')) ?></h5>
         <p class="text-muted small mx-auto mb-4" style="max-width: 500px;">
             <?= e(t('no_search_results', ['query' => $query])) ?>
         </p>
         <div class="d-flex flex-wrap justify-content-center gap-2">
             <a href="/dictionary" class="btn btn-outline-success btn-sm">
-                <i class="bi bi-journal-medical me-1"></i> Browse Herbal Dictionary
+                <i class="bi bi-journal-medical me-1"></i> <?= e(t('browse_dictionary')) ?>
             </a>
             <a href="/products" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-box-seam me-1"></i> Browse All Products
+                <i class="bi bi-box-seam me-1"></i> <?= e(t('browse_products')) ?>
             </a>
         </div>
     </div>
@@ -68,7 +68,7 @@
     <div class="mb-5">
         <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
             <h4 class="fw-bold text-success mb-0">
-                <i class="bi bi-flower1 me-2"></i>Herbal Knowledge &amp; Plant Profiles
+                <i class="bi bi-flower1 me-2"></i><?= e(t('search_herbs_title')) ?>
             </h4>
             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
                 <?= count($results['herbs']) ?>
@@ -89,11 +89,11 @@
                             </h6>
                             <small class="text-muted fst-italic mb-2"><?= e($h['scientific_name']) ?></small>
                             <p class="small text-secondary mb-3 flex-grow-1">
-                                <?= e(mb_strimwidth((string)$h['display_uses'], 0, 90, '...')) ?>
+                                <?= e(mb_strimwidth((string)($h['display_uses'] ?: t('uses_pending')), 0, 90, '...')) ?>
                             </p>
                             <div class="mt-auto">
                                 <a href="/herb/<?= (int)$h['herb_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                    View Herb Details
+                                    <?= e(t('explore_herb')) ?>
                                 </a>
                             </div>
                         </div>
@@ -109,7 +109,7 @@
     <div class="mb-5">
         <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
             <h4 class="fw-bold text-success mb-0">
-                <i class="bi bi-box-seam me-2"></i>Herbal Products &amp; Remedies
+                <i class="bi bi-box-seam me-2"></i><?= e(t('search_products_title')) ?>
             </h4>
             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
                 <?= count($results['products']) ?>
@@ -123,7 +123,7 @@
                             <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
                         </div>
                         <div class="card-body d-flex flex-column">
-                            <small class="text-muted"><?= e($p['display_category_name'] ?? 'Ayurvedic') ?></small>
+                            <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>
                             <h6 class="card-title fw-bold mt-1 mb-2">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="text-dark text-decoration-none">
                                     <?= e($p['display_name']) ?>
@@ -139,7 +139,7 @@
                             </div>
                             <div class="mt-auto">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                    View Product
+                                    <?= e(t('view_product')) ?>
                                 </a>
                             </div>
                         </div>

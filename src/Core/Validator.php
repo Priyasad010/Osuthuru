@@ -45,33 +45,33 @@ class Validator
         switch ($rule) {
             case 'required':
                 if ($value === null || $value === '' || (is_array($value) && empty($value))) {
-                    $this->addError($field, ucfirst(str_replace('_', ' ', $field)) . ' is required.');
+                    $this->addError($field, t('val_required', ['field' => self::label($field)]));
                 }
                 break;
 
             case 'email':
                 if (!empty($value) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    $this->addError($field, 'Please enter a valid email address.');
+                    $this->addError($field, t('val_email'));
                 }
                 break;
 
             case 'min':
                 $min = (int)($params[0] ?? 0);
                 if (!empty($value) && mb_strlen((string)$value) < $min) {
-                    $this->addError($field, ucfirst(str_replace('_', ' ', $field)) . " must be at least {$min} characters.");
+                    $this->addError($field, t('val_min', ['field' => self::label($field), 'count' => $min]));
                 }
                 break;
 
             case 'max':
                 $max = (int)($params[0] ?? 255);
                 if (!empty($value) && mb_strlen((string)$value) > $max) {
-                    $this->addError($field, ucfirst(str_replace('_', ' ', $field)) . " cannot exceed {$max} characters.");
+                    $this->addError($field, t('val_max', ['field' => self::label($field), 'count' => $max]));
                 }
                 break;
 
             case 'numeric':
                 if (!empty($value) && !is_numeric($value)) {
-                    $this->addError($field, ucfirst(str_replace('_', ' ', $field)) . ' must be a number.');
+                    $this->addError($field, t('val_numeric', ['field' => self::label($field)]));
                 }
                 break;
 
@@ -79,16 +79,23 @@ class Validator
                 $otherField = $params[0] ?? '';
                 $otherValue = $this->data[$otherField] ?? null;
                 if ($value !== $otherValue) {
-                    $this->addError($field, ucfirst(str_replace('_', ' ', $field)) . ' does not match.');
+                    $this->addError($field, t('val_matches', ['field' => self::label($field)]));
                 }
                 break;
 
             case 'in':
                 if (!empty($value) && !in_array($value, $params, true)) {
-                    $this->addError($field, 'The selected ' . str_replace('_', ' ', $field) . ' is invalid.');
+                    $this->addError($field, t('val_in', ['field' => self::label($field)]));
                 }
                 break;
         }
+    }
+
+    private static function label(string $field): string
+    {
+        $key = 'field_' . $field;
+        $label = t($key);
+        return $label !== $key ? $label : ucfirst(str_replace('_', ' ', $field));
     }
 
     public function addError(string $field, string $message): void

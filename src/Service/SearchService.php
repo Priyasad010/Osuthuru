@@ -10,12 +10,6 @@ use PDO;
 
 class SearchService
 {
-    private static array $knownTerms = [
-        'turmeric', 'neem', 'kohomba', 'gotukola', 'amla', 'nelli', 'aralu', 'ashwagandha',
-        'kaha', 'kottamalli', 'coriander', 'bovitiya', 'cinnamon', 'kurundu', 'aloe vera',
-        'komarika', 'pinda', 'mahanarayana', 'syrup', 'shampoo', 'soap', 'oil', 'tea'
-    ];
-
     public static function search(string $query, ?string $locale = null): array
     {
         $rawQuery = trim($query);
@@ -168,13 +162,13 @@ class SearchService
             ':like3' => $like,
             ':like4' => $like,
             ':like5' => $like,
-            ':ft1' => $query . '*',
+            ':ft1' => self::fulltextQuery($query),
             ':w_like1' => $like,
             ':w_like2' => $like,
             ':w_like3' => $like,
             ':w_like4' => $like,
             ':w_like5' => $like,
-            ':ft2' => $query . '*'
+            ':ft2' => self::fulltextQuery($query)
         ]);
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -232,12 +226,12 @@ class SearchService
             ':like2' => $like,
             ':like3' => $like,
             ':like4' => $like,
-            ':ft1' => $query . '*',
+            ':ft1' => self::fulltextQuery($query),
             ':w_like1' => $like,
             ':w_like2' => $like,
             ':w_like3' => $like,
             ':w_like4' => $like,
-            ':ft2' => $query . '*'
+            ':ft2' => self::fulltextQuery($query)
         ]);
 
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -275,27 +269,117 @@ class SearchService
         return $row;
     }
 
+    /**
+     * Turn user input into a safe BOOLEAN MODE expression. Operators such as
+     * + - ( ) " @ are syntax to MySQL, so only letters, marks and digits are kept.
+     */
+    private static function fulltextQuery(string $query): string
+    {
+        $words = preg_split('/[^\p{L}\p{M}\p{N}\x{200D}]+/u', $query, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        return implode(' ', array_map(fn($w) => $w . '*', $words));
+    }
+
+    /**
+     * Closest herb, product or health concern name to a query that found nothing.
+     */
     public static function computeDidYouMean(string $query): ?string
     {
-        $clean = strtolower(trim($query));
-        if (strlen($clean) < 3) {
+        $clean = mb_strtolower(trim($query));
+        $length = mb_strlen($clean);
+        if ($length < 3 || $length > 60) {
             return null;
         }
 
-        $bestWord = null;
-        $shortestDist = 999;
-        $querySoundex = soundex($clean);
+        // Allow fewer mistakes in short words
+        $maxDistance = $length <= 4 ? 1 : ($length <= 7 ? 2 : 3);
 
-        foreach (self::$knownTerms as $term) {
-            $dist = levenshtein($clean, $term);
-            if ($dist > 0 && $dist <= 3 && $dist < $shortestDist) {
-                $shortestDist = $dist;
-                $bestWord = $term;
-            } elseif (soundex($term) === $querySoundex && $bestWord === null && $clean !== $term) {
-                $bestWord = $term;
+        $bestTerm = null;
+        $bestDistance = $maxDistance + 1;
+        $soundexTerm = null;
+        $isAscii = !preg_match('/[^\x20-\x7E]/', $clean);
+
+        foreach (self::suggestionTerms() as $term) {
+            if ($term === $clean) {
+                continue;
+            }
+
+            $distance = self::editDistance($clean, $term);
+            if ($distance < $bestDistance) {
+                $bestDistance = $distance;
+                $bestTerm = $term;
+            }
+
+            if ($soundexTerm === null && $isAscii && !preg_match('/[^\x20-\x7E]/', $term)
+                && soundex($term) === soundex($clean)
+                && abs(strlen($term) - $length) <= 2) {
+                $soundexTerm = $term;
             }
         }
 
-        return $bestWord;
+        return $bestTerm ?? $soundexTerm;
+    }
+
+    /**
+     * Full names and single words taken from the catalogue.
+     */
+    private static function suggestionTerms(): array
+    {
+        $pdo = Database::getConnection();
+        // One query per column: the legacy tables use different collations, so no UNION
+        $sources = [
+            'SELECT name FROM `herb`',
+            'SELECT name_si FROM `herb`',
+            'SELECT scientific_name FROM `herb`',
+            'SELECT product_name FROM `product`',
+            'SELECT product_name_si FROM `product`',
+            'SELECT name_en FROM `health_concern`',
+            'SELECT name_si FROM `health_concern`',
+        ];
+        $names = [];
+        foreach ($sources as $sql) {
+            array_push($names, ...$pdo->query($sql)->fetchAll(PDO::FETCH_COLUMN));
+        }
+
+        $terms = [];
+        foreach ($names as $name) {
+            $name = mb_strtolower(trim((string)$name));
+            if ($name === '') {
+                continue;
+            }
+            $words = preg_split('/[\s()\[\],.&\/-]+/u', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            foreach (array_merge([$name], $words) as $term) {
+                if (mb_strlen($term) >= 3) {
+                    $terms[$term] = true;
+                }
+            }
+        }
+
+        $list = array_map('strval', array_keys($terms));
+        sort($list);
+        return $list;
+    }
+
+    /**
+     * Levenshtein distance counted in characters, so Sinhala text is compared correctly.
+     */
+    private static function editDistance(string $a, string $b): int
+    {
+        $x = mb_str_split($a);
+        $y = mb_str_split($b);
+        $previous = range(0, count($y));
+
+        foreach ($x as $i => $charA) {
+            $current = [$i + 1];
+            foreach ($y as $j => $charB) {
+                $current[] = min(
+                    $previous[$j + 1] + 1,
+                    $current[$j] + 1,
+                    $previous[$j] + ($charA === $charB ? 0 : 1)
+                );
+            }
+            $previous = $current;
+        }
+
+        return $previous[count($y)];
     }
 }

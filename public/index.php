@@ -35,6 +35,8 @@ use App\Core\Database;
 use App\Core\Validator;
 use App\Core\Mailer;
 use App\Core\Upload;
+use App\Core\Request;
+use App\Service\RegistrationService;
 use App\Repository\ProductRepo;
 use App\Repository\HerbRepo;
 use App\Service\SearchService;
@@ -63,7 +65,7 @@ if ($debug) {
 Auth::initSession();
 Lang::init();
 
-$clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+$clientIp = Request::clientIp($_SERVER);
 $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
@@ -132,7 +134,7 @@ if ($requestUri === '/login') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(419);
-            echo View::render('auth/login', ['error' => 'Invalid or expired CSRF token. Please try again.']);
+            echo View::render('auth/login', ['error' => t('err_csrf')]);
             exit;
         }
 
@@ -152,9 +154,26 @@ if ($requestUri === '/login') {
         exit;
     }
 
+    $success = null;
+    $error = null;
+    if (isset($_GET['registered'])) {
+        if ($_GET['registered'] === 'mailfail') {
+            $error = t('msg_registered_mail_failed');
+        } else {
+            $success = t('msg_registered');
+        }
+    } elseif (isset($_GET['verified'])) {
+        if ($_GET['verified'] === '1') {
+            $success = t('msg_verified');
+        } else {
+            $error = t('err_verify_invalid');
+        }
+    }
+
     echo View::render('auth/login', [
         'pageTitle' => t('nav_login'),
-        'success' => $_GET['registered'] ? 'Registration successful! You may now login.' : null
+        'success' => $success,
+        'error' => $error
     ]);
     exit;
 }
@@ -168,7 +187,7 @@ if ($requestUri === '/register') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(419);
-            echo View::render('auth/register', ['error' => 'Invalid or expired CSRF token. Please try again.']);
+            echo View::render('auth/register', ['error' => t('err_csrf')]);
             exit;
         }
 
@@ -186,40 +205,19 @@ if ($requestUri === '/register') {
             exit;
         }
 
-        $pdo = Database::getConnection();
-        $email = strtolower(trim((string)$_POST['email']));
+        $res = RegistrationService::register(
+            (string)$_POST['name'],
+            (string)$_POST['email'],
+            (string)$_POST['password'],
+            (string)($_POST['phone'] ?? '')
+        );
 
-        // Check if email already registered
-        $stmt = $pdo->prepare("SELECT user_id FROM `user` WHERE LOWER(email) = :email");
-        $stmt->execute([':email' => $email]);
-        if ($stmt->fetch()) {
-            echo View::render('auth/register', [
-                'error' => 'This email address is already registered.',
-                'old' => $_POST
-            ]);
+        if (!$res['ok']) {
+            echo View::render('auth/register', ['error' => $res['error'], 'old' => $_POST]);
             exit;
         }
 
-        // Create new user (hashed password only)
-        $passwordHash = password_hash((string)$_POST['password'], PASSWORD_DEFAULT);
-        $verifyToken = bin2hex(random_bytes(32));
-
-        $ins = $pdo->prepare("
-            INSERT INTO `user` (name, email, password, phone, status, verification_token)
-            VALUES (:name, :email, :password, :phone, 'active', :token)
-        ");
-        $ins->execute([
-            ':name' => trim((string)$_POST['name']),
-            ':email' => $email,
-            ':password' => $passwordHash,
-            ':phone' => trim((string)($_POST['phone'] ?? '')),
-            ':token' => $verifyToken
-        ]);
-
-        // Optional verification email dispatch
-        Mailer::sendVerification($email, trim((string)$_POST['name']), $verifyToken);
-
-        header('Location: /login?registered=1');
+        header('Location: /login?registered=' . ($res['mail_sent'] ? '1' : 'mailfail'));
         exit;
     }
 
@@ -228,13 +226,8 @@ if ($requestUri === '/register') {
 }
 
 if ($requestUri === '/verify') {
-    $token = (string)($_GET['token'] ?? '');
-    if (!empty($token)) {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare("UPDATE `user` SET status = 'active', verification_token = NULL WHERE verification_token = :token");
-        $stmt->execute([':token' => $token]);
-    }
-    header('Location: /login?verified=1');
+    $verified = RegistrationService::verify((string)($_GET['token'] ?? ''));
+    header('Location: /login?verified=' . ($verified ? '1' : '0'));
     exit;
 }
 
@@ -242,7 +235,7 @@ if ($requestUri === '/forgot-password') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(419);
-            echo View::render('auth/forgot_password', ['error' => 'Invalid CSRF token.']);
+            echo View::render('auth/forgot_password', ['error' => t('err_csrf')]);
             exit;
         }
 
@@ -256,7 +249,7 @@ if ($requestUri === '/forgot-password') {
         exit;
     }
 
-    echo View::render('auth/forgot_password', ['pageTitle' => 'Forgot Password']);
+    echo View::render('auth/forgot_password', ['pageTitle' => t('forgot_title')]);
     exit;
 }
 
@@ -264,7 +257,7 @@ if ($requestUri === '/reset-password') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(419);
-            echo View::render('auth/reset_password', ['error' => 'Invalid CSRF token.', 'token' => '']);
+            echo View::render('auth/reset_password', ['error' => t('err_csrf'), 'token' => '']);
             exit;
         }
 
@@ -273,12 +266,12 @@ if ($requestUri === '/reset-password') {
         $confirm = (string)($_POST['password_confirmation'] ?? '');
 
         if (strlen($password) < 8) {
-            echo View::render('auth/reset_password', ['error' => 'Password must be at least 8 characters.', 'token' => $token]);
+            echo View::render('auth/reset_password', ['error' => t('err_password_short'), 'token' => $token]);
             exit;
         }
 
         if ($password !== $confirm) {
-            echo View::render('auth/reset_password', ['error' => 'Passwords do not match.', 'token' => $token]);
+            echo View::render('auth/reset_password', ['error' => t('err_password_mismatch'), 'token' => $token]);
             exit;
         }
 
@@ -340,15 +333,13 @@ if (preg_match('#^/products/(\d+)$#', $requestUri, $m) && $requestMethod === 'GE
     $product = ProductRepo::findById($productId);
     if (!$product) {
         http_response_code(404);
-        echo "<h1>404 Product Not Found</h1>";
+        echo '<h1>' . e(t('err_product_404')) . '</h1>';
         exit;
     }
-    $herbs = HerbRepo::getHerbsByProduct($productId);
     $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
     echo View::render('shop/product_detail', [
         'pageTitle' => $product['display_name'] ?? $product['product_name'],
         'product' => $product,
-        'herbs' => $herbs,
         'isWishlisted' => in_array($productId, $wishlistIds, true)
     ]);
     exit;
@@ -370,7 +361,7 @@ if (preg_match('#^/herb/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET') 
     $herb = HerbRepo::findById($herbId);
     if (!$herb) {
         http_response_code(404);
-        echo "<h1>404 Herb Not Found</h1>";
+        echo '<h1>' . e(t('err_herb_404')) . '</h1>';
         exit;
     }
     $products = HerbRepo::getProductsByHerb($herbId);
@@ -389,7 +380,7 @@ if (preg_match('#^/concern/([a-z0-9-]+)$#', $requestUri, $m) && $requestMethod =
     $concern = HerbRepo::getConcernBySlug($slug);
     if (!$concern) {
         http_response_code(404);
-        echo "<h1>404 Health Concern Not Found</h1>";
+        echo '<h1>' . e(t('err_concern_404')) . '</h1>';
         exit;
     }
     $herbs = HerbRepo::getHerbsByConcern((int)$concern['concern_id']);
@@ -420,7 +411,7 @@ if ($requestUri === '/cart' && $requestMethod === 'GET') {
     Auth::requireUser();
     $pdo = Database::getConnection();
     $stmt = $pdo->prepare("
-        SELECT c.product_id, c.quantity, p.product_name, p.price, p.quantity AS stock,
+        SELECT c.product_id, c.quantity, p.product_name, p.product_name_si, p.price, p.quantity AS stock,
                (SELECT MAX(d.discount_percentage)
                 FROM discount d
                 WHERE d.product_id = p.product_id
@@ -437,7 +428,7 @@ if ($requestUri === '/cart' && $requestMethod === 'GET') {
     $cartItems = [];
     $subtotal = 0.0;
     foreach ($rows as $row) {
-        $enriched = ProductRepo::enrichWithSalePrice($row);
+        $enriched = ProductRepo::enrichWithSalePrice(ProductRepo::enrichLocale($row));
         $lineTotal = round((float)$enriched['effective_price'] * (int)$row['quantity'], 2);
         $enriched['line_total'] = $lineTotal;
         $subtotal += $lineTotal;
@@ -476,7 +467,7 @@ if ($requestUri === '/cart/add' && $requestMethod === 'POST') {
         $ins->execute([':uid' => Auth::id(), ':pid' => $pid, ':qty' => $qty]);
     }
 
-    $_SESSION['flash_success'] = 'Added to cart!';
+    $_SESSION['flash_success'] = t('flash_cart_added');
     header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/cart'));
     exit;
 }
@@ -515,7 +506,7 @@ if ($requestUri === '/checkout') {
     $pdo = Database::getConnection();
 
     $stmt = $pdo->prepare("
-        SELECT c.product_id, c.quantity, p.product_name, p.price, p.quantity AS stock,
+        SELECT c.product_id, c.quantity, p.product_name, p.product_name_si, p.price, p.quantity AS stock,
                (SELECT MAX(d.discount_percentage)
                 FROM discount d
                 WHERE d.product_id = p.product_id
@@ -537,7 +528,7 @@ if ($requestUri === '/checkout') {
     $cartItems = [];
     $subtotal = 0.0;
     foreach ($rows as $row) {
-        $enriched = ProductRepo::enrichWithSalePrice($row);
+        $enriched = ProductRepo::enrichWithSalePrice(ProductRepo::enrichLocale($row));
         $lineTotal = round((float)$enriched['effective_price'] * (int)$row['quantity'], 2);
         $enriched['line_total'] = $lineTotal;
         $subtotal += $lineTotal;
@@ -548,7 +539,7 @@ if ($requestUri === '/checkout') {
         if (!Csrf::validateRequest()) {
             http_response_code(419);
             echo View::render('shop/checkout', [
-                'error' => 'Invalid CSRF token.',
+                'error' => t('err_csrf'),
                 'cartItems' => $cartItems,
                 'subtotal' => $subtotal,
                 'zones' => DeliveryZoneService::getAllZones(),
@@ -629,7 +620,7 @@ if ($requestUri === '/checkout') {
     }
 
     echo View::render('shop/checkout', [
-        'pageTitle' => 'Checkout',
+        'pageTitle' => t('checkout_title'),
         'cartItems' => $cartItems,
         'subtotal' => $subtotal,
         'zones' => DeliveryZoneService::getAllZones()
@@ -640,7 +631,7 @@ if ($requestUri === '/checkout') {
 if ($requestUri === '/orders' && $requestMethod === 'GET') {
     Auth::requireUser();
     echo View::render('shop/orders', [
-        'pageTitle' => 'My Orders',
+        'pageTitle' => t('my_orders'),
         'orders' => OrderService::getUserOrders(Auth::id())
     ]);
     exit;
@@ -651,7 +642,7 @@ if (preg_match('#^/orders/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET'
     $order = OrderService::getOrderDetails((int)$m[1]);
     if (!$order || (int)$order['user_id'] !== Auth::id()) {
         http_response_code(404);
-        echo "<h1>404 Order Not Found</h1>";
+        echo '<h1>' . e(t('err_order_404')) . '</h1>';
         exit;
     }
 
@@ -660,7 +651,7 @@ if (preg_match('#^/orders/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET'
     unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
     echo View::render('shop/order_detail', [
-        'pageTitle' => 'Order #' . $order['order_id'],
+        'pageTitle' => t('order_number', ['id' => $order['order_id']]),
         'order' => $order,
         'flash' => $flash,
         'error' => $err
@@ -712,6 +703,12 @@ if (preg_match('#^/orders/(\d+)/upload-slip$#', $requestUri, $m) && $requestMeth
         exit('Order not found');
     }
 
+    if ($order['payment_method'] !== 'bank_transfer' || $order['payment_status'] !== 'unpaid' || $order['status'] === 'Cancelled') {
+        $_SESSION['flash_error'] = t('err_slip_not_allowed');
+        header('Location: /orders/' . $orderId);
+        exit;
+    }
+
     $uploadRes = Upload::process($_FILES['bank_slip'] ?? [], 'slips');
     if (!$uploadRes['ok']) {
         $_SESSION['flash_error'] = $uploadRes['error'];
@@ -719,7 +716,7 @@ if (preg_match('#^/orders/(\d+)/upload-slip$#', $requestUri, $m) && $requestMeth
         $pdo = Database::getConnection();
         $ins = $pdo->prepare("INSERT INTO bank_slip (order_id, file_path, status, created_at) VALUES (:oid, :path, 'submitted', NOW())");
         $ins->execute([':oid' => $orderId, ':path' => $uploadRes['path']]);
-        $_SESSION['flash_success'] = 'Bank slip uploaded! Admin will verify it shortly.';
+        $_SESSION['flash_success'] = t('flash_slip_uploaded');
     }
     header('Location: /orders/' . $orderId);
     exit;
@@ -728,7 +725,7 @@ if (preg_match('#^/orders/(\d+)/upload-slip$#', $requestUri, $m) && $requestMeth
 if ($requestUri === '/wishlist' && $requestMethod === 'GET') {
     Auth::requireUser();
     echo View::render('shop/wishlist', [
-        'pageTitle' => 'My Wishlist',
+        'pageTitle' => t('my_wishlist'),
         'products' => WishlistAndAlertService::getUserWishlistProducts(Auth::id())
     ]);
     exit;
@@ -742,7 +739,7 @@ if ($requestUri === '/wishlist/toggle' && $requestMethod === 'POST') {
     }
     $pid = (int)($_POST['product_id'] ?? 0);
     $added = WishlistAndAlertService::toggleWishlist(Auth::id(), $pid);
-    $_SESSION['flash_success'] = $added ? 'Added to wishlist.' : 'Removed from wishlist.';
+    $_SESSION['flash_success'] = $added ? t('flash_wishlist_added') : t('flash_wishlist_removed');
     header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/products'));
     exit;
 }
@@ -755,7 +752,7 @@ if ($requestUri === '/stock-alert' && $requestMethod === 'POST') {
     }
     $pid = (int)($_POST['product_id'] ?? 0);
     WishlistAndAlertService::subscribeStockAlert(Auth::id(), $pid);
-    $_SESSION['flash_success'] = 'You will be notified by email once this item is back in stock!';
+    $_SESSION['flash_success'] = t('flash_stock_alert');
     header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/products'));
     exit;
 }
@@ -772,7 +769,7 @@ if ($requestUri === '/admin/login') {
     if ($requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(419);
-            echo View::render('auth/admin_login', ['error' => 'Invalid CSRF token.']);
+            echo View::render('auth/admin_login', ['error' => t('err_csrf')]);
             exit;
         }
 
@@ -834,11 +831,13 @@ if (str_starts_with($requestUri, '/admin/')) {
         ")->fetchAll(PDO::FETCH_ASSOC);
 
         $flash = $_SESSION['flash_success'] ?? null;
-        unset($_SESSION['flash_success']);
+        $err = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
         echo View::render('admin/orders', [
             'pageTitle' => 'Manage Orders',
             'orders' => $orders,
+            'error' => $err,
             'flash' => $flash
         ]);
         exit;
@@ -854,8 +853,15 @@ if (str_starts_with($requestUri, '/admin/')) {
         $note = trim((string)($_POST['note'] ?? ''));
         $adminId = Auth::admin()['admin_id'] ?? null;
 
-        OrderService::updateStatus($orderId, $status, $note !== '' ? $note : null, $adminId);
-        $_SESSION['flash_success'] = "Order #{$orderId} updated to {$status}.";
+        $res = OrderService::updateStatus($orderId, $status, $note !== '' ? $note : null, $adminId);
+        if (!$res['ok']) {
+            $_SESSION['flash_error'] = $res['error'];
+        } else {
+            $_SESSION['flash_success'] = "Order #{$orderId} updated to {$status}.";
+            if (!empty($res['refund_needed'])) {
+                $_SESSION['flash_success'] .= ' This order was already paid: refund the customer.';
+            }
+        }
         header('Location: /admin/orders');
         exit;
     }
@@ -993,7 +999,10 @@ if (str_starts_with($requestUri, '/admin/')) {
         $slip = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($slip) {
-            if ($action === 'verify') {
+            $slipOrder = OrderService::getOrderDetails((int)$slip['order_id']);
+            if ($action === 'verify' && ($slipOrder['status'] ?? '') === 'Cancelled') {
+                $_SESSION['flash_error'] = "Order #{$slip['order_id']} is cancelled, so the slip cannot be verified.";
+            } elseif ($action === 'verify') {
                 $payRes = CheckoutService::confirmPayment((int)$slip['order_id']);
                 if ($payRes['ok']) {
                     $upd = $pdo->prepare("UPDATE bank_slip SET status = 'verified', reviewed_by = :aid WHERE slip_id = :id");
@@ -1010,6 +1019,30 @@ if (str_starts_with($requestUri, '/admin/')) {
             }
         }
         header('Location: /admin/bank-slips');
+        exit;
+    }
+
+    if ($requestUri === '/admin/herbs' && $requestMethod === 'GET') {
+        $flash = $_SESSION['flash_success'] ?? null;
+        unset($_SESSION['flash_success']);
+
+        echo View::render('admin/herbs', [
+            'pageTitle' => 'Herb Text',
+            'herbs' => HerbRepo::findAll(null, 'en'),
+            'flash' => $flash
+        ]);
+        exit;
+    }
+
+    if ($requestUri === '/admin/herbs/update' && $requestMethod === 'POST') {
+        if (!Csrf::validateRequest()) {
+            http_response_code(419);
+            exit('Invalid CSRF token');
+        }
+        $hid = (int)($_POST['herb_id'] ?? 0);
+        HerbRepo::updateUses($hid, (string)($_POST['uses'] ?? ''), (string)($_POST['uses_si'] ?? ''));
+        $_SESSION['flash_success'] = "Herb #{$hid} text saved.";
+        header('Location: /admin/herbs');
         exit;
     }
 

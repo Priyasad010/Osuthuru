@@ -40,7 +40,7 @@
 
             <div class="border-top pt-3">
                 <h6 class="fw-bold text-dark mb-2"><?= e(t('traditional_uses')) ?></h6>
-                <p class="text-secondary mb-0 leading-relaxed"><?= nl2br(e($herb['display_uses'])) ?></p>
+                <p class="text-secondary mb-0 leading-relaxed"><?= nl2br(e($herb['display_uses'] ?: t('uses_pending'))) ?></p>
             </div>
         </div>
     </div>
@@ -74,7 +74,7 @@
                             <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
                         </div>
                         <div class="card-body d-flex flex-column">
-                            <small class="text-muted"><?= e($p['display_category_name'] ?? 'Ayurvedic') ?></small>
+                            <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>
                             <h6 class="card-title fw-bold mt-1 mb-2">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="text-dark text-decoration-none">
                                     <?= e($p['display_name']) ?>
@@ -90,7 +90,7 @@
                             </div>
                             <div class="mt-auto">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                    View Product
+                                    <?= e(t('view_product')) ?>
                                 </a>
                             </div>
                         </div>

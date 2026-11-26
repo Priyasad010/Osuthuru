@@ -39,7 +39,7 @@ class CheckoutService
         array $shippingAndCoupon = []
     ): array {
         if (empty($items)) {
-            return ['ok' => false, 'error' => 'Your cart is empty.'];
+            return ['ok' => false, 'error' => t('cart_empty')];
         }
 
         $pdo = Database::getConnection();
@@ -55,7 +55,7 @@ class CheckoutService
                 $quantity = max(1, (int)$item['quantity']);
 
                 $stmt = $pdo->prepare("
-                    SELECT p.product_id, p.product_name, p.price, p.quantity,
+                    SELECT p.product_id, p.product_name, p.product_name_si, p.price, p.quantity,
                            (SELECT MAX(d.discount_percentage)
                             FROM discount d
                             WHERE d.product_id = p.product_id
@@ -70,11 +70,14 @@ class CheckoutService
                 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if (!$product) {
-                    throw new \RuntimeException("Product ID {$productId} not found.");
+                    throw new \RuntimeException(t('err_product_404'));
                 }
 
                 if ((int)$product['quantity'] < $quantity) {
-                    throw new \RuntimeException("Insufficient stock for {$product['product_name']} (Available: {$product['quantity']}).");
+                    throw new \RuntimeException(t('err_stock', [
+                        'name' => ProductRepo::enrichLocale($product)['display_name'],
+                        'available' => $product['quantity'],
+                    ]));
                 }
 
                 $enriched = ProductRepo::enrichWithSalePrice($product);
@@ -163,7 +166,7 @@ class CheckoutService
             // Redeem coupon if used
             if ($couponId !== null) {
                 if (!CouponService::redeem($couponId, $userId, $orderId)) {
-                    throw new \RuntimeException("Coupon could not be redeemed (usage limit reached).");
+                    throw new \RuntimeException(t('err_coupon_redeem'));
                 }
             }
 
@@ -220,10 +223,30 @@ class CheckoutService
                 ];
             }
 
+            // Payment arrived after cancellation: record it for a refund, leave stock alone
+            if ($order['status'] === 'Cancelled') {
+                $paid = $pdo->prepare("
+                    UPDATE `orders`
+                    SET payment_status = 'paid',
+                        stripe_session_id = COALESCE(:stripe_session_id, stripe_session_id)
+                    WHERE order_id = :order_id
+                ");
+                $paid->execute([':stripe_session_id' => $stripeSessionId, ':order_id' => $orderId]);
+                OrderService::recordHistory($orderId, 'Cancelled', 'Payment received after cancellation - refund required', null);
+                $pdo->commit();
+                return [
+                    'ok' => true,
+                    'already_paid' => false,
+                    'refund_needed' => true,
+                    'message' => "Order #{$orderId} was cancelled; payment recorded for refund."
+                ];
+            }
+
             // 2. Fetch order items and deduct stock atomically
             $itemsStmt = $pdo->prepare("SELECT * FROM `order_item` WHERE order_id = :order_id");
             $itemsStmt->execute([':order_id' => $orderId]);
-            $items = $itemsStmt->fetchAll();
+            // A COD order has already taken its stock at placement
+            $items = (int)$order['stock_deducted'] === 1 ? [] : $itemsStmt->fetchAll();
 
             $lockProductStmt = $pdo->prepare("SELECT quantity FROM `product` WHERE product_id = :product_id FOR UPDATE");
             $updateStockStmt = $pdo->prepare("
@@ -253,6 +276,7 @@ class CheckoutService
             $updateOrder = $pdo->prepare("
                 UPDATE `orders`
                 SET payment_status = 'paid',
+                    stock_deducted = 1,
                     stripe_session_id = COALESCE(:stripe_session_id, stripe_session_id)
                 WHERE order_id = :order_id
             ");
@@ -295,7 +319,7 @@ class CheckoutService
     {
         $stripeSecret = Env::get('STRIPE_SECRET');
         if (empty($stripeSecret) || str_starts_with($stripeSecret, 'sk_test_placeholder')) {
-            return ['ok' => false, 'error' => 'Stripe is not configured in this environment.'];
+            return ['ok' => false, 'error' => t('err_stripe_unconfigured')];
         }
 
         try {

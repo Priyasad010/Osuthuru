@@ -15,7 +15,7 @@
             </span>
             <h2 class="fw-bold text-success mb-1"><?= e($concern['display_name']) ?></h2>
             <p class="text-muted small mb-0">
-                <?= e(t('traditionally_used_for')) ?>: <?= e($concern['name_en']) ?> / <?= e($concern['name_si']) ?>
+                <?= e($concern['name_en']) ?> / <?= e($concern['name_si']) ?>
             </p>
         </div>
     </div>
@@ -24,17 +24,17 @@
 <!-- Educational Disclaimer on Concern Landing Page -->
 <div class="disclaimer-box mb-4">
     <i class="bi bi-shield-exclamation text-warning me-2 fs-6"></i>
-    <strong><?= e(t('traditionally_used_for')) ?>:</strong> <?= e(t('concern_disclaimer')) ?>
+    <?= e(t('concern_disclaimer')) ?>
 </div>
 
 <!-- Herbs for this Concern -->
 <div class="mb-5">
     <h4 class="fw-bold text-success mb-3">
-        <i class="bi bi-journal-medical me-2"></i>Herbal Remedies Traditionally Associated
+        <i class="bi bi-journal-medical me-2"></i><?= e(t('concern_herbs_title')) ?>
     </h4>
 
     <?php if (empty($herbs)): ?>
-        <p class="text-muted small">No specific herbs catalogued for this health concern yet.</p>
+        <p class="text-muted small"><?= e(t('concern_no_herbs')) ?></p>
     <?php else: ?>
         <div class="row g-3">
             <?php foreach ($herbs as $h): ?>
@@ -49,10 +49,10 @@
                             <i class="bi bi-flower1 text-success opacity-50"></i>
                         </div>
                         <small class="text-muted fst-italic mb-2"><?= e($h['scientific_name']) ?></small>
-                        <p class="small text-secondary mb-3 flex-grow-1"><?= e(mb_strimwidth((string)$h['display_uses'], 0, 100, '...')) ?></p>
+                        <p class="small text-secondary mb-3 flex-grow-1"><?= e(mb_strimwidth((string)($h['display_uses'] ?: t('uses_pending')), 0, 100, '...')) ?></p>
                         <div>
                             <a href="/herb/<?= (int)$h['herb_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                Explore Herb Details
+                                <?= e(t('explore_herb')) ?>
                             </a>
                         </div>
                     </div>
@@ -66,7 +66,7 @@
 <?php if (!empty($products)): ?>
     <div class="mb-5">
         <h4 class="fw-bold text-success mb-3">
-            <i class="bi bi-box-seam me-2"></i>Products Prepared with These Herbs
+            <i class="bi bi-box-seam me-2"></i><?= e(t('concern_products_title')) ?>
         </h4>
         <div class="row g-4">
             <?php foreach ($products as $p): ?>
@@ -76,7 +76,7 @@
                             <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
                         </div>
                         <div class="card-body d-flex flex-column">
-                            <small class="text-muted"><?= e($p['display_category_name'] ?? 'Herbal') ?></small>
+                            <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>
                             <h6 class="card-title fw-bold mt-1 mb-2">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="text-dark text-decoration-none">
                                     <?= e($p['display_name']) ?>
@@ -92,7 +92,7 @@
                             </div>
                             <div class="mt-auto">
                                 <a href="/products/<?= (int)$p['product_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                    View Product
+                                    <?= e(t('view_product')) ?>
                                 </a>
                             </div>
                         </div>

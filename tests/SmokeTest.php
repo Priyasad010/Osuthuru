@@ -55,6 +55,6 @@ class SmokeTest extends TestCase
         $html = View::render('home', ['pageTitle' => 'Test Title']);
         $this->assertStringContainsString('Suwoda HerbHub', $html);
         $this->assertStringContainsString('Disclaimer:', $html);
-        $this->assertStringContainsString('Phase 0: Foundation Running', $html);
+        $this->assertStringContainsString('Herb of the Day', $html);
     }
 }

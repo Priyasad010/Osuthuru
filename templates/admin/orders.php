@@ -9,6 +9,9 @@
 <?php if (!empty($flash)): ?>
     <div class="alert alert-success py-2 small"><?= e($flash) ?></div>
 <?php endif; ?>
+<?php if (!empty($error)): ?>
+    <div class="alert alert-danger py-2 small"><?= e($error) ?></div>
+<?php endif; ?>
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">

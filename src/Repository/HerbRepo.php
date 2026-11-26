@@ -168,6 +168,17 @@ class HerbRepo
         return array_map(fn($h) => self::enrich($h, $locale), $rows);
     }
 
+    public static function updateUses(int $herbId, string $uses, string $usesSi): bool
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("UPDATE `herb` SET uses = :uses, uses_si = :uses_si WHERE herb_id = :id");
+        return $stmt->execute([
+            ':uses' => trim($uses) !== '' ? trim($uses) : null,
+            ':uses_si' => trim($usesSi) !== '' ? trim($usesSi) : null,
+            ':id' => $herbId,
+        ]);
+    }
+
     public static function syncProductHerbs(int $productId, array $herbIds): void
     {
         $pdo = Database::getConnection();

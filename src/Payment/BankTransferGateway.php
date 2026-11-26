@@ -27,7 +27,7 @@ class BankTransferGateway implements PaymentGateway
             $userId = $stmt->fetchColumn();
 
             if (!$userId) {
-                return ['ok' => false, 'error' => "Order #{$orderId} not found."];
+                return ['ok' => false, 'error' => t('err_order_404')];
             }
 
             // Clear purchased items from cart
@@ -56,7 +56,7 @@ class BankTransferGateway implements PaymentGateway
             return [
                 'ok' => true,
                 'redirect_url' => "/orders/{$orderId}?placed=bank_transfer",
-                'message' => 'Order placed. Please upload your bank transfer slip for verification.'
+                'message' => t('msg_bank_placed')
             ];
         } catch (Throwable $e) {
             return ['ok' => false, 'error' => $e->getMessage()];

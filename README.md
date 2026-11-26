@@ -50,11 +50,18 @@
 - Mailpit Web UI: [http://localhost:8025](http://localhost:8025)
 - MySQL Database: `localhost:3306` (user: `app`, database: `suwoda`)
 
+## Behaviour to know about
+- **Email verification**: new accounts cannot log in until the emailed link is opened (see Mailpit in development). Logging in with the correct password sends the link again.
+- **Login lockout**: based on the connecting IP address. Behind a reverse proxy, configure the web server to set `REMOTE_ADDR` from that trusted proxy.
+- **Cancelled orders**: stock returns once, only if it had been taken. Cancelled is final, delivered orders cannot be cancelled, and a paid order that is cancelled must be refunded manually.
+- **Herb text**: no health text is seeded. Enter practitioner-reviewed text at `/admin/herbs`; empty entries show "awaiting review".
+- **Languages**: customer pages are in English and Sinhala. Admin pages, emails and PDF invoices are in English. Sinhala text still needs review by a native speaker.
+
 ## Project Phases
 - [x] **Phase 0: Foundation** (Docker, DB baseline migration, Core PSR-4 classes, base layout)
 - [x] **Phase 1: Security and core fixes** (Safe auth, admin guards, token reset, checkout correctness)
-- [ ] **Phase 2: Commerce for Sri Lanka** (COD, bank transfer, delivery zones, invoices, wishlist)
-- [ ] **Phase 3: Herbal knowledge and bilingual search** (Sinhala/English, concern pages, voice)
+- [x] **Phase 2: Commerce for Sri Lanka** (COD, bank transfer, delivery zones, invoices, wishlist)
+- [x] **Phase 3: Herbal knowledge and bilingual search** (Sinhala/English, concern pages, voice)
 - [ ] **Phase 4: Novelty A** (Dosha quiz, safety checker)
 - [ ] **Phase 5: Novelty B** (QR batch traceability, AI Assistant)
 - [ ] **Phase 6: Python intelligence service** (FastAPI recommender & sales forecast)
