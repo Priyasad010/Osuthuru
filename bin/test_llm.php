@@ -19,7 +19,7 @@ if ($client === null) {
     exit(1);
 }
 
-echo 'Calling ' . $client->url() . " ...\n";
+echo 'Models: ' . implode(', then ', $client->models()) . "\n";
 
 try {
     $start = microtime(true);
@@ -32,7 +32,7 @@ try {
         echo "The model answered, but not in the expected JSON form:\n" . mb_substr($raw, 0, 300) . "\n";
         exit(1);
     }
-    printf("OK in %.1f s. Reply: %s\n", microtime(true) - $start, $answer['reply']);
+    printf("OK in %.1f s from %s. Reply: %s\n", microtime(true) - $start, $client->answeredBy, $answer['reply']);
     exit(0);
 } catch (Throwable $e) {
     echo 'FAILED: ' . $e->getMessage() . "\n";

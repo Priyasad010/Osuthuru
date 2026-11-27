@@ -95,7 +95,8 @@ With `APP_DEBUG=true`, error details are visible to anyone on the network. In Do
 - More than 50 different scanning addresses raise a duplicate warning. Confirmed orders take packs from the batch that expires first.
 
 ### Shop assistant
-- Set `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3.8-flash` and `LLM_API_KEY` in `.env`, then check with `docker compose exec web php bin/test_llm.php`.
+- Set `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3.5-flash-lite` and `LLM_API_KEY` in `.env`, then check with `docker compose exec web php bin/test_llm.php`.
+- If the main model is busy, slow or withdrawn, `LLM_FALLBACK_MODEL` (default `gemini-3.5-flash`) is tried within the same 15-second limit.
 - The model receives only catalogue data and published safety notes. Limits: 500 characters, 20 questions per hour per address, 6 turns, 24-hour cache, 15-second timeout. Chat is deleted after 30 days.
 - Review unmatched questions and topic words at `/admin/assistant`.
 

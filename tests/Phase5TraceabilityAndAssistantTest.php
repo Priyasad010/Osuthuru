@@ -466,6 +466,20 @@ class Phase5TraceabilityAndAssistantTest extends TestCase
         GeminiClient::extractText(['candidates' => []]);
     }
 
+    public function testReplyLanguageAndProductIds(): void
+    {
+        $sinhala = new FakeLlm('{"reply":"හරි","product_ids":[]}');
+        $this->ask('මට නින්ද යන්නේ නැහැ', $sinhala, null, 'si');
+        $this->assertStringContainsString('write the whole reply in Sinhala script', $sinhala->system);
+
+        $singlish = new FakeLlm('{"reply":"Hari","product_ids":[]}');
+        $this->ask('mata ninda yanne naha', $singlish, null, 'sl');
+        $this->assertStringNotContainsString('write the whole reply in Sinhala script', $singlish->system);
+
+        $answer = AssistantService::parseAnswer('{"reply":"Try Gotukola Tea (id: 17) or Neem Oil (Product ID #1).","product_ids":[]}', []);
+        $this->assertSame('Try Gotukola Tea or Neem Oil.', $answer['reply']);
+    }
+
     public function testWidgetShowsPrivacyNotice(): void
     {
         $html = View::partial('assistant_widget');
