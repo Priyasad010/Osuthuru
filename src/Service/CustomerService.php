@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\FormRules;
+use App\Core\SessionGuard;
 use PDO;
 
 class CustomerService
@@ -61,6 +62,10 @@ class CustomerService
             ? "UPDATE `user` SET status = 'blocked' WHERE user_id = :id"
             : "UPDATE `user` SET status = IF(verification_token IS NULL, 'active', 'inactive') WHERE user_id = :id AND status = 'blocked'";
         Database::getConnection()->prepare($sql)->execute([':id' => $userId]);
+        // A later unblock must not revive the old sessions
+        if ($blocked) {
+            SessionGuard::revoke('user', $userId);
+        }
         return true;
     }
 
@@ -100,6 +105,8 @@ class CustomerService
         }
         $upd = $pdo->prepare('UPDATE `user` SET password = :password WHERE user_id = :id');
         $upd->execute([':password' => password_hash($new, PASSWORD_DEFAULT), ':id' => $userId]);
+        // Other devices must sign in again with the new password
+        SessionGuard::revoke('user', $userId, true);
         return ['ok' => true];
     }
 }

@@ -30,6 +30,7 @@ use App\Core\Env;
 use App\Core\Lang;
 use App\Core\View;
 use App\Core\Auth;
+use App\Core\SessionGuard;
 use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Validator;
@@ -83,6 +84,11 @@ Lang::init();
 
 $clientIp = Request::clientIp($_SERVER);
 $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+
+// 5. Is the signed-in session still good?
+if ($ended = SessionGuard::enforce((string)$requestUri)) {
+    $_SESSION['auth_notice'] = $ended;
+}
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 // PHP discards the whole form when an upload exceeds post_max_size
@@ -216,7 +222,8 @@ if ($requestUri === '/login') {
     // For example: "sign in to finish your order"
     $success = $_SESSION['flash_success'] ?? null;
     unset($_SESSION['flash_success']);
-    $error = null;
+    $error = isset($_SESSION['auth_notice']) ? t('session_' . $_SESSION['auth_notice']) : null;
+    unset($_SESSION['auth_notice']);
     if (isset($_GET['registered'])) {
         if ($_GET['registered'] === 'mailfail') {
             $error = t('msg_registered_mail_failed');
@@ -898,7 +905,9 @@ if ($requestUri === '/admin/login') {
         exit;
     }
 
-    echo View::render('auth/admin_login', ['pageTitle' => t('admin_login')]);
+    $notice = isset($_SESSION['auth_notice']) ? t('session_' . $_SESSION['auth_notice']) : null;
+    unset($_SESSION['auth_notice']);
+    echo View::render('auth/admin_login', ['pageTitle' => t('admin_login'), 'error' => $notice]);
     exit;
 }
 

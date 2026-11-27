@@ -20,6 +20,8 @@ Roadmap එකේ 7 වන කොටසේ කතා පිළිවෙළ, demo
 
 11. Bank transfer පෙන්වීමට කැමති නම් admin → **Shop Settings** හි බැංකු විස්තර (demo සඳහා පැහැදිලිව "DEMO" කියා) දමන්න. නැත්නම් checkout හි Cash on Delivery සහ PayHere පමණක් පෙනේ.
 
+12. **Session කාලය:** admin පිටු මිනිත්තු 30ක් භාවිත නොකළොත් logout වේ (customer පැය 2යි). Demo පටන් ගැනීමට මොහොතකට පෙර login වන්න.
+
 ## 2. Demo පිළිවෙළ
 
 | # | කාලය | කරන්න | කියන්න |

@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\Mailer;
+use App\Core\SessionGuard;
 use PDO;
 use Throwable;
 
@@ -117,6 +118,9 @@ class PasswordResetService
             $mark->execute([':id' => $reset['id']]);
 
             $pdo->commit();
+
+            // Whoever was signed in with the old password is signed out
+            SessionGuard::revoke('user', (int)$reset['user_id']);
 
             return ['ok' => true, 'message' => t('msg_reset_done')];
         } catch (Throwable $e) {

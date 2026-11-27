@@ -151,6 +151,8 @@ Sign in as an administrator and open **Shop Settings** to enter the bank account
 
 ## Security notes
 
+Sign-in uses a server-side session cookie (`HttpOnly`, `SameSite=Lax`, `Secure` over HTTPS), not tokens kept by scripts. `src/Core/SessionGuard.php` checks it on every request: customers are signed out after 2 idle hours, administrators after 30 idle minutes on admin pages, and everyone after 1 day. A password change or reset, a block, `create_admin.php`, or **Sign out other devices** ends the other sessions of that account. The session id changes at each sign-in and ids the server did not issue are refused.
+
 Folder listing is off. Bank slips cannot be opened by their address: an administrator views them through the application. Keep it that way if you move to another web server (Nginx ignores `.htaccess`).
 
 ## Behaviour to know about

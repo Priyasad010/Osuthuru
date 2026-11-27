@@ -24,6 +24,12 @@ class Auth
     public static function initSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            if (!headers_sent()) {
+                // Never adopt a session id the server did not create itself
+                ini_set('session.use_strict_mode', '1');
+                // Session files must outlive the longest sign-in; SessionGuard ends them
+                ini_set('session.gc_maxlifetime', (string)SessionGuard::MAX_AGE);
+            }
             session_name(self::sessionName($_SERVER));
             // Set secure session cookie parameters
             $params = session_get_cookie_params();
@@ -172,9 +178,10 @@ class Auth
         self::initSession();
         session_regenerate_id(true);
 
-        unset($user['password'], $user['verification_token']);
+        unset($user['password'], $user['verification_token'], $user['session_version']);
         $_SESSION['user_id'] = (int)$user['user_id'];
         $_SESSION['user'] = $user;
+        SessionGuard::start('user', (int)$user['user_id']);
     }
 
     public static function loginAdmin(array $admin): void
@@ -182,9 +189,10 @@ class Auth
         self::initSession();
         session_regenerate_id(true);
 
-        unset($admin['password']);
+        unset($admin['password'], $admin['session_version']);
         $_SESSION['admin_id'] = (int)$admin['admin_id'];
         $_SESSION['admin'] = $admin;
+        SessionGuard::start('admin', (int)$admin['admin_id']);
     }
 
     public static function logout(): void

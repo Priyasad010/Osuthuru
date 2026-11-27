@@ -32,6 +32,13 @@
     </div>
 </div>
 
+<form method="POST" action="/profile/sign-out-others" class="card border-0 shadow-sm p-4 mt-4">
+    <?= csrf_field() ?>
+    <h2 class="h5 fw-bold"><?= e(t('sign_out_others_title')) ?></h2>
+    <p class="small text-muted"><?= e(t('sign_out_others_text')) ?></p>
+    <div><button type="submit" class="btn btn-outline-success btn-sm"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i><?= e(t('sign_out_others_button')) ?></button></div>
+</form>
+
 <div class="card border-danger border-opacity-25 shadow-sm p-4 mt-4">
     <details>
         <summary class="fw-bold text-danger"><?= e(t('account_delete_title')) ?></summary>

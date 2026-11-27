@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\FormRules;
+use App\Core\SessionGuard;
 use PDO;
 use Throwable;
 
@@ -59,7 +60,7 @@ class AccountService
             $pdo->prepare("
                 UPDATE `user`
                 SET name = 'Deleted account', email = :email, password = :password, phone = NULL, address = NULL,
-                    status = 'blocked', verification_token = NULL
+                    status = 'blocked', verification_token = NULL, session_version = session_version + 1
                 WHERE user_id = :id
             ")->execute([
                 // .invalid addresses can never receive mail
@@ -112,6 +113,7 @@ class AccountService
         }
         $pdo->prepare('UPDATE admin SET password = :password WHERE admin_id = :id')
             ->execute([':password' => password_hash($new, PASSWORD_DEFAULT), ':id' => $adminId]);
+        SessionGuard::revoke('admin', $adminId, true);
 
         return ['ok' => true];
     }

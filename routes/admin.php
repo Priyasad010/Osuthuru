@@ -13,6 +13,7 @@ use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Pager;
 use App\Core\Request;
+use App\Core\SessionGuard;
 use App\Repository\ContactRepo;
 use App\Repository\SettingRepo;
 use App\Service\AccountService;
@@ -76,6 +77,14 @@ if ($requestUri === '/profile/delete' && $requestMethod === 'POST') {
     }
     Auth::logout();
     $to('/login?deleted=1');
+}
+
+if ($requestUri === '/profile/sign-out-others' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    $checkToken();
+    SessionGuard::revoke('user', Auth::id(), true);
+    $_SESSION['flash_success'] = t('signed_out_others');
+    $to('/profile');
 }
 
 if ($requestUri === '/profile' || $requestUri === '/profile/password') {
@@ -271,10 +280,11 @@ if ($requestMethod === 'POST') {
             if (!empty($changed['wrong_current'])) {
                 Auth::recordAttempt('admin-password', $ip, false);
             }
-            if ($changed['ok']) {
-                session_regenerate_id(true);
-            }
             $finish($changed, '/admin/password');
+        case '/admin/password/sign-out-others':
+            SessionGuard::revoke('admin', (int)(Auth::admin()['admin_id'] ?? 0), true);
+            $_SESSION['flash_success'] = t('signed_out_others');
+            $to('/admin/password');
         case '/admin/users/block':
             $finish(['ok' => CustomerService::setBlocked($id, $input('blocked') === '1')], '/admin/users/' . $id);
         case '/admin/products/save':

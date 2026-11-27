@@ -8,9 +8,7 @@ class Csrf
 
     public static function initSession(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Auth::initSession();
     }
 
     public static function getToken(): string

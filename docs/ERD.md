@@ -56,6 +56,7 @@ erDiagram
         varchar name
         varchar email
         varchar password
+        int session_version
     }
     assistant_cache {
         char question_hash PK
@@ -384,6 +385,7 @@ erDiagram
         varchar lang
         varchar verification_token
         timestamp created_at
+        int session_version
     }
     user_category {
         int userCategory_id PK

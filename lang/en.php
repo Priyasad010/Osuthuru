@@ -842,4 +842,10 @@ return [
     'page_returns_p4' => 'Money paid is returned by the way you paid or by bank transfer, usually within 14 days of agreeing the refund.',
     'page_returns_h5' => 'Recalled batches',
     'page_returns_p5' => 'If a batch is recalled, stop using it and contact us for a replacement or refund.',
+    'session_expired' => 'You were signed out because of inactivity. Please sign in again.',
+    'session_ended' => 'Your sign-in has ended, for example after a password change. Please sign in again.',
+    'sign_out_others_title' => 'Other devices',
+    'sign_out_others_text' => 'If you used a shared computer or lost a phone, sign it out here. This device stays signed in.',
+    'sign_out_others_button' => 'Sign out other devices',
+    'signed_out_others' => 'Your other devices have been signed out.',
 ];

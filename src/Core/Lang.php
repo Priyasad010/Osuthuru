@@ -10,9 +10,7 @@ class Lang
 
     public static function init(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Auth::initSession();
 
         // Language resolution: query param > session > cookie > default 'en'
         $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? $_COOKIE['osuthuru_lang'] ?? 'en';

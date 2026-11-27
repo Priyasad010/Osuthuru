@@ -32,7 +32,7 @@ try {
     $hash = password_hash($password, PASSWORD_DEFAULT);
 
     if ($existing) {
-        $update = $pdo->prepare("UPDATE `admin` SET name = :name, password = :password WHERE email = :email");
+        $update = $pdo->prepare("UPDATE `admin` SET name = :name, password = :password, session_version = session_version + 1 WHERE email = :email");
         $update->execute([
             ':name' => $name,
             ':password' => $hash,
