@@ -109,7 +109,8 @@ if ($requestMethod === 'GET') {
         }
         $pdf = BatchService::labelPdf($batch, (int)($_GET['count'] ?? 24));
         header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="labels-' . (int)$batch['batch_id'] . '.pdf"');
+        // Shown in the browser: browsers block downloads from plain-HTTP network addresses
+        header('Content-Disposition: inline; filename="labels-' . (int)$batch['batch_id'] . '.pdf"');
         echo $pdf;
         exit;
     }

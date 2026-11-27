@@ -96,7 +96,7 @@ $forms = array_merge([null], $batches);
 
         <?php if ($b): ?>
             <div class="d-flex flex-wrap gap-2 align-items-center border-top pt-2 mt-3">
-                <form method="GET" action="/admin/batches/labels" class="d-flex gap-1 align-items-center">
+                <form method="GET" action="/admin/batches/labels" target="_blank" class="d-flex gap-1 align-items-center">
                     <input type="hidden" name="id" value="<?= $id ?>">
                     <input type="number" name="count" value="24" min="1" max="<?= BatchService::MAX_LABELS ?>" class="form-control form-control-sm" style="width: 80px;" aria-label="<?= e(t('admin_label_count')) ?>">
                     <button type="submit" class="btn btn-outline-dark btn-sm"><i class="bi bi-printer me-1"></i><?= e(t('admin_labels')) ?></button>
