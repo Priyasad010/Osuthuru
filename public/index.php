@@ -266,6 +266,7 @@ if ($requestUri === '/register') {
             $errors['email'] = t('err_too_many');
         }
         if ($errors !== []) {
+            FormRules::$pageErrors = $errors;
             echo View::render('auth/register', ['error' => implode(' ', $errors), 'old' => $_POST]);
             exit;
         }
@@ -616,6 +617,7 @@ if ($requestUri === '/checkout') {
 
         $shippingErrors = FormRules::shipping($_POST);
         if ($shippingErrors !== []) {
+            FormRules::$pageErrors = $shippingErrors;
             echo View::render('shop/checkout', [
                 'error' => implode(' ', $shippingErrors),
                 'cartItems' => $cartItems,

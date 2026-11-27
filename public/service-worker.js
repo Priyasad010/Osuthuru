@@ -5,7 +5,7 @@
  * copies of the herb dictionary (fetched without cookies), so that nothing
  * about a signed-in customer is ever cached.
  */
-const VERSION = 'v7';
+const VERSION = 'v8';
 const SHELL = `osuthuru-shell-${VERSION}`;
 const DICTIONARY = `osuthuru-dictionary-${VERSION}`;
 const LANGUAGES = ['en', 'si'];

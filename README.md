@@ -133,7 +133,7 @@ An order becomes **paid** only when PayHere's signed notification reaches `/paym
 
 ## Form checks
 
-`src/Core/FormRules.php` and the services decide what is accepted. `public/assets/js/forms.js` shows the same rules next to each field in English or Sinhala; add a new form's fields to its `rules` list. Phone numbers are Sri Lankan (stored as `0XXXXXXXXX`), and new passwords need 8 to 72 characters with a letter and a number.
+`src/Core/FormRules.php` and the services decide what is accepted. `public/assets/js/forms.js` shows the same rules next to each field in English or Sinhala; add a new form's fields to its `rules` list. Person and district names take letters and spaces only (no digits or symbols, so initials are written without dots). Phone numbers are ten digits starting with `0`; a pasted `+94` number is converted. New passwords need 8 to 72 characters with a letter and a number. The same script marks required fields, shows hints, a password checklist and a show-password button.
 
 ## Shop settings and pages
 

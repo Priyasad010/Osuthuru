@@ -5,6 +5,22 @@ use App\Core\Lang;
 use App\Core\Csrf;
 
 $currentLang = Lang::getLocale();
+// The menu entry of the section being shown is highlighted.
+// This file shares its variables with the page that follows, hence the "menu" prefix.
+$menuState = function (string $link): string {
+    $menuPath = (string)parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+    $prefixes = ['/products' => ['/products'], '/dictionary' => ['/dictionary', '/herb/', '/concern/'], '/quiz' => ['/quiz']];
+    if ($link === '/') {
+        return $menuPath === '/' ? ' active' : '';
+    }
+    foreach ($prefixes[$link] ?? [] as $prefix) {
+        if (str_starts_with($menuPath, $prefix)) {
+            return ' active';
+        }
+    }
+    return '';
+};
+$cartCount = array_sum(\App\Service\CartService::quantities());
 $pageTitle = $pageTitle ?? t('app_name');
 ?>
 <!DOCTYPE html>
@@ -28,7 +44,7 @@ $pageTitle = $pageTitle ?? t('app_name');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap">
     <!-- Custom Theme -->
-    <link rel="stylesheet" href="/assets/css/style.css?v=15">
+    <link rel="stylesheet" href="/assets/css/style.css?v=17">
 </head>
 <body>
 <a class="skip-link" href="#content"><?= e(t('skip_to_content')) ?></a>
@@ -54,16 +70,16 @@ $pageTitle = $pageTitle ?? t('app_name');
             <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav me-auto mb-2 mb-xl-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="bi bi-house-door nav-icon me-1"></i><?= e(t('nav_home')) ?></a>
+                        <a class="nav-link<?= $menuState('/') ?>" href="/" <?= $menuState('/') !== '' ? 'aria-current="page"' : '' ?>><i class="bi bi-house-door nav-icon me-1"></i><?= e(t('nav_home')) ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/products"><i class="bi bi-grid nav-icon me-1"></i><?= e(t('nav_products')) ?></a>
+                        <a class="nav-link<?= $menuState('/products') ?>" href="/products" <?= $menuState('/products') !== '' ? 'aria-current="page"' : '' ?>><i class="bi bi-grid nav-icon me-1"></i><?= e(t('nav_products')) ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/dictionary"><i class="bi bi-journal-medical nav-icon me-1"></i><?= e(t('nav_dictionary')) ?></a>
+                        <a class="nav-link<?= $menuState('/dictionary') ?>" href="/dictionary" <?= $menuState('/dictionary') !== '' ? 'aria-current="page"' : '' ?>><i class="bi bi-journal-medical nav-icon me-1"></i><?= e(t('nav_dictionary')) ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/quiz"><i class="bi bi-clipboard2-pulse nav-icon me-1"></i><?= e(t('nav_quiz')) ?></a>
+                        <a class="nav-link<?= $menuState('/quiz') ?>" href="/quiz" <?= $menuState('/quiz') !== '' ? 'aria-current="page"' : '' ?>><i class="bi bi-clipboard2-pulse nav-icon me-1"></i><?= e(t('nav_quiz')) ?></a>
                     </li>
                 </ul>
 
@@ -107,8 +123,12 @@ $pageTitle = $pageTitle ?? t('app_name');
                     </div>
 
                     <!-- Cart -->
-                    <a href="/cart" class="btn btn-outline-light btn-sm position-relative" title="<?= e(t('nav_cart')) ?>" aria-label="<?= e(t('nav_cart')) ?>">
-                        <i class="bi bi-cart3"></i>
+                    <?php $cartLabel = $cartCount > 0 ? t('nav_cart_count', ['count' => $cartCount]) : t('nav_cart'); ?>
+                    <a href="/cart" class="btn btn-outline-light btn-sm position-relative" title="<?= e($cartLabel) ?>" aria-label="<?= e($cartLabel) ?>">
+                        <i class="bi bi-cart3" aria-hidden="true"></i>
+                        <?php if ($cartCount > 0): ?>
+                            <span class="cart-count" aria-hidden="true"><?= $cartCount > 99 ? '99+' : (int)$cartCount ?></span>
+                        <?php endif; ?>
                     </a>
 
                     <!-- Auth Links -->

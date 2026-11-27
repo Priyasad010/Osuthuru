@@ -53,6 +53,7 @@ if ($requestUri === '/contact') {
                 exit;
             }
             $error = $sent['error'];
+            \App\Core\FormRules::$pageErrors = $sent['fields'] ?? [];
         }
     } elseif (Auth::check()) {
         $user = Auth::user();

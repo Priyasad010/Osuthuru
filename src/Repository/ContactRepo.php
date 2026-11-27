@@ -18,7 +18,7 @@ class ContactRepo
     {
         $errors = FormRules::contact($data);
         if ($errors !== []) {
-            return ['ok' => false, 'error' => implode(' ', $errors)];
+            return ['ok' => false, 'error' => implode(' ', $errors), 'fields' => $errors];
         }
         $values = [];
         foreach (['name', 'email', 'subject', 'message'] as $field) {

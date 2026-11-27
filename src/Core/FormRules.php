@@ -17,22 +17,28 @@ class FormRules
 {
     public const MAX_CART_QUANTITY = 99;
 
-    /** A Sri Lankan phone number as 0XXXXXXXXX, or null. Spaces and dashes are allowed. */
+    /** Field messages of the form being shown again, for the page to place under each field. */
+    public static array $pageErrors = [];
+
+    /** A Sri Lankan phone number: exactly ten digits starting with 0, or null. */
     public static function phone(string $value): ?string
-    {
-        $digits = (string)preg_replace('/[\s\-()]/', '', trim($value));
-        $digits = (string)preg_replace('/^(\+94|0094|94)(?=\d{9}$)/', '0', $digits);
-
-        return preg_match('/^0[1-9]\d{8}$/', $digits) ? $digits : null;
-    }
-
-    /** Letters of any language (with Sinhala joiners), spaces, dots, apostrophes and hyphens. */
-    public static function isPersonName(string $value): bool
     {
         $value = trim($value);
 
-        return mb_strlen($value) >= 2 && mb_strlen($value) <= 100
-            && preg_match('/^\p{L}[\p{L}\p{M}\x{200C}\x{200D} .\'’\-]*$/u', $value) === 1;
+        return preg_match('/^0[1-9][0-9]{8}$/', $value) ? $value : null;
+    }
+
+    /** Letters of any language (with Sinhala joiners) and spaces; no digits or symbols. */
+    public static function isLetters(string $value): bool
+    {
+        return preg_match('/^\p{L}[\p{L}\p{M}\x{200C}\x{200D} ]*$/u', trim($value)) === 1;
+    }
+
+    public static function isPersonName(string $value): bool
+    {
+        $length = mb_strlen(trim($value));
+
+        return $length >= 2 && $length <= 100 && self::isLetters($value);
     }
 
     public static function isEmail(string $value): bool
@@ -141,7 +147,7 @@ class FormRules
         $get = self::reader($data);
         $errors = [];
 
-        if (!preg_match('/^\p{L}[\p{L}\p{M}\x{200D} .\-]{1,99}$/u', $get('district'))) {
+        if (!self::isPersonName($get('district'))) {
             $errors['district'] = t('err_district_name');
         }
         if (self::number($get('fee'), 0, 100000) === null) {

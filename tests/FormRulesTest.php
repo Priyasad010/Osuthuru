@@ -19,21 +19,20 @@ class FormRulesTest extends TestCase
 
     public function testPhoneNumbers(): void
     {
-        foreach (['0771234567', '077 123 4567', '077-1234567', '+94771234567', '94771234567', '0094771234567', '0112345678'] as $good) {
-            $this->assertNotNull(FormRules::phone($good), $good);
+        foreach (['0771234567', '0112345678', ' 0771234567 '] as $good) {
+            $this->assertSame(trim($good), FormRules::phone($good), $good);
         }
-        $this->assertSame('0771234567', FormRules::phone('+94 77 123 4567'));
-        foreach (['', '077123456', '07712345678', '1771234567', '0071234567', '07712a4567', '+1 555 010 9999'] as $bad) {
+        foreach (['', '077123456', '07712345678', '1771234567', '0071234567', '07712a4567', '077 123 4567', '077-1234567', '+94771234567', "077123456\u{0DE7}"] as $bad) {
             $this->assertNull(FormRules::phone($bad), $bad);
         }
     }
 
     public function testNamesEmailsAndPasswords(): void
     {
-        foreach (['Nimal Perera', "D'Silva", 'M. A. Fernando', 'නිමල් පෙරේරා', 'ශ්‍රීමතී'] as $good) {
+        foreach (['Nimal Perera', 'Kamal', 'නිමල් පෙරේරා', 'ශ්‍රීමතී'] as $good) {
             $this->assertTrue(FormRules::isPersonName($good), $good);
         }
-        foreach (['', 'A', '12345', '<b>x</b>', 'Name123', str_repeat('a', 101)] as $bad) {
+        foreach (['', 'A', '12345', '<b>x</b>', 'Name123', "D'Silva", 'M. A. Fernando', 'Anne-Marie', 'Kamal@', 'නිමල්2', str_repeat('a', 101)] as $bad) {
             $this->assertFalse(FormRules::isPersonName($bad), $bad);
         }
         $this->assertTrue(FormRules::isEmail('a@b.lk'));

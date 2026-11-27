@@ -252,6 +252,16 @@ class StoreFeaturesTest extends TestCase
         $this->assertSame(['page' => 1, 'pages' => 1, 'per' => 25, 'total' => 0, 'offset' => 0], Pager::of(0, 'x', 25));
     }
 
+    public function testPolicyPagesRenderInsideTheLayout(): void
+    {
+        // The header must not overwrite the page's own variables
+        foreach (['privacy' => 7, 'terms' => 6, 'returns' => 5] as $name => $sections) {
+            $html = View::render('pages/policy', ['pageTitle' => $name, 'name' => $name, 'sections' => $sections, 'draft' => true]);
+            $this->assertSame($sections, substr_count($html, '<h2 class="h5 fw-bold mt-4">'), $name);
+            $this->assertStringContainsString('</footer>', $html);
+        }
+    }
+
     public function testEveryNewPageHasText(): void
     {
         foreach (['privacy' => 7, 'terms' => 6, 'returns' => 5] as $name => $sections) {

@@ -170,7 +170,16 @@ main .card > .bg-light:first-child, main .card > .position-relative:first-child 
     background-color: var(--lotus) !important;
 }
 
-/* the two lines of the Sinhala name need room */
+/* the name and the line under it need room */
+.navbar-brand .lh-1 {
+    line-height: 1.35 !important;
+}
+
+.navbar-brand small {
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
 :lang(si) .navbar-brand .lh-1 {
     line-height: 1.45 !important;
 }
@@ -185,6 +194,78 @@ main .card > .bg-light:first-child, main .card > .position-relative:first-child 
     --bs-pagination-active-bg: var(--emerald);
     --bs-pagination-active-border-color: var(--emerald);
     --bs-pagination-border-color: var(--line);
+}
+
+/* ---------- usability ---------- */
+.required-mark {
+    color: #a51d4a;
+    font-weight: 700;
+}
+
+.required-legend {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.password-rules {
+    margin-bottom: 12px;
+}
+
+.password-rules li.met {
+    color: var(--emerald);
+    font-weight: 600;
+}
+
+.password-group > .form-control {
+    border-right: 0;
+}
+
+.password-group > .btn {
+    border-color: #c6ddd2;
+}
+
+.cart-count {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--saffron);
+    color: var(--ink);
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 19px;
+}
+
+/* fingers need larger targets than a mouse pointer */
+@media (pointer: coarse) {
+    .btn, .btn-sm, .form-select-sm, .form-control-sm, .page-link {
+        min-height: 44px;
+    }
+
+    .btn, .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn.d-none {
+        display: none;
+    }
+
+    footer li a {
+        display: inline-block;
+        padding: 6px 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        scroll-behavior: auto !important;
+        transition: none !important;
+    }
 }
 
 /* ---------- form messages ---------- */

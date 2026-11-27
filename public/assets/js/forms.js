@@ -15,8 +15,9 @@
     const email = { required: true, maxlength: '100', autocomplete: 'email' };
     const newPassword = { required: true, minlength: '8', maxlength: '72', 'data-rule': 'password', autocomplete: 'new-password' };
     const confirmPassword = { required: true, maxlength: '72', 'data-match': 'password', autocomplete: 'new-password' };
-    const person = { required: true, minlength: '2', maxlength: '100', 'data-rule': 'name' };
-    const phone = { type: 'tel', inputmode: 'tel', maxlength: '16', 'data-rule': 'phone' };
+    const person = { required: true, minlength: '2', maxlength: '100', 'data-rule': 'name', autocomplete: 'name' };
+    // longer than ten so that a pasted +94 number can be converted before it is cut
+    const phone = { type: 'tel', inputmode: 'numeric', maxlength: '16', 'data-rule': 'phone', autocomplete: 'tel-national' };
     const required = max => ({ required: true, maxlength: String(max) });
     const optional = max => ({ maxlength: String(max) });
 
@@ -40,7 +41,7 @@
             code: { required: true, maxlength: '30', pattern: '[A-Za-z0-9_\\-]{3,30}' }, value: Object.assign(money(1000000, '0.01'), { 'data-rule': 'coupon' }),
             min_order: money(10000000), max_uses: whole(1, 1000000), ends_at: { required: true, 'data-future': '1' }
         }],
-        [/^\/admin\/zones\/save$/, { district: { required: true, minlength: '2', maxlength: '100' }, fee: money(100000), free_over: money(10000000) }],
+        [/^\/admin\/zones\/save$/, { district: { required: true, minlength: '2', maxlength: '100', 'data-rule': 'name', autocomplete: 'off' }, fee: money(100000), free_over: money(10000000) }],
         [/^\/admin\/products\/stock$/, { quantity: whole(0, 100000) }],
         [/^\/admin\/products\/save$/, {
             product_name: required(255), product_name_si: optional(255), category_id: { required: true }, price: money(10000000, '0.01'),
@@ -173,12 +174,12 @@
         }
         switch (input.dataset.rule) {
             case 'name':
-                if (!/^\p{L}[\p{L}\p{M}‌‍ .'’-]*$/u.test(value)) {
+                if (!/^\p{L}[\p{L}\p{M}\u200c\u200d ]*$/u.test(value)) {
                     return text('name');
                 }
                 break;
             case 'phone':
-                if (!/^0[1-9]\d{8}$/.test(value.replace(/[\s()-]/g, '').replace(/^(\+94|0094|94)(?=\d{9}$)/, '0'))) {
+                if (!/^0[1-9]\d{8}$/.test(value)) {
                     return text('phone');
                 }
                 break;
@@ -226,32 +227,42 @@
 
     function show(input) {
         const message = problem(input);
-        let note = input.formErrorNote;
         if (!message) {
             input.classList.remove('is-invalid');
             input.removeAttribute('aria-invalid');
-            if (note) {
-                note.remove();
+            const box = input.formErrorNote;
+            if (box) {
+                const ids = (input.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== box.id);
+                if (ids.length) {
+                    input.setAttribute('aria-describedby', ids.join(' '));
+                } else {
+                    input.removeAttribute('aria-describedby');
+                }
+                box.remove();
                 input.formErrorNote = null;
-                input.removeAttribute('aria-describedby');
             }
             return true;
         }
-        if (!note) {
-            note = document.createElement('div');
-            note.className = 'field-error';
-            note.id = 'field-error-' + (++counter);
-            note.setAttribute('role', 'alert');
+        note(input, message);
+        return false;
+    }
+
+    function note(input, message) {
+        let box = input.formErrorNote;
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'field-error';
+            box.id = 'field-error-' + (++counter);
+            box.setAttribute('role', 'alert');
             // below the whole group for grouped controls, tick boxes and radios
             const anchor = input.closest('.input-group') || (input.type === 'radio' ? input.closest('fieldset, .card') : null) || input.closest('.form-check') || input;
-            anchor.insertAdjacentElement('afterend', note);
-            input.formErrorNote = note;
-            input.setAttribute('aria-describedby', note.id);
+            anchor.insertAdjacentElement('afterend', box);
+            input.formErrorNote = box;
+            describe(input, box.id);
         }
-        note.textContent = message;
+        box.textContent = message;
         input.classList.add('is-invalid');
         input.setAttribute('aria-invalid', 'true');
-        return false;
     }
 
     function checkAll(form) {
@@ -275,7 +286,183 @@
         return !bad.length;
     }
 
+    // ---------- fields that accept only certain characters ----------
+    const cleaners = {
+        name: value => value.replace(/[^\p{L}\p{M}\u200c\u200d ]/gu, '').replace(/^ +/, '').replace(/ {2,}/g, ' '),
+        phone: value => {
+            let digits = value.replace(/[^0-9]/g, '');
+            // a number pasted with the country code
+            if (/^(0094|94)\d{9}$/.test(digits)) {
+                digits = '0' + digits.slice(-9);
+            }
+            return digits.slice(0, 10);
+        }
+    };
+    const refusal = { name: 'name_only', phone: 'digits_only' };
+
+    /** Drop characters that do not belong, keep the cursor in place and say why. */
+    function filter(input) {
+        const clean = cleaners[input.dataset.rule];
+        if (!clean || !input.form || input.form.dataset.checked === undefined) {
+            return;
+        }
+        const before = input.value;
+        const after = clean(before);
+        if (after === before) {
+            if (input.formRefusal) {
+                input.formRefusal = false;
+                show(input);
+                if (input.formErrorNote && input.value.trim().length < 2) {
+                    input.classList.remove('is-invalid');
+                    input.formErrorNote.remove();
+                    input.formErrorNote = null;
+                }
+            }
+            return;
+        }
+        let cursor = null;
+        try {
+            cursor = clean(before.slice(0, input.selectionStart)).length;
+        } catch (e) { /* some input types have no cursor position */ }
+        input.value = after;
+        if (cursor !== null && input.selectionStart !== null) {
+            input.setSelectionRange(cursor, cursor);
+        }
+        input.formRefusal = false;
+        // spaces tidied away need no explanation
+        if (before.replace(/ /g, '') !== after.replace(/ /g, '')) {
+            input.formRefusal = true;
+            note(input, text(refusal[input.dataset.rule]));
+        }
+    }
+    document.addEventListener('input', event => {
+        // keyboards that build a letter from several keys finish first
+        if (!event.isComposing) {
+            filter(event.target);
+        }
+    }, true);
+    document.addEventListener('compositionend', event => filter(event.target), true);
+
+    // ---------- help before mistakes happen ----------
+    function describe(input, id) {
+        const ids = (input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean);
+        if (!ids.includes(id)) {
+            input.setAttribute('aria-describedby', ids.concat(id).join(' '));
+        }
+    }
+
+    function helpers(form) {
+        const fields = [...form.elements].filter(i => !['hidden', 'submit', 'button'].includes(i.type));
+        // mark what must be filled in, on forms with several fields
+        const needed = fields.filter(i => i.required && i.labels && i.labels.length && !['radio', 'checkbox'].includes(i.type));
+        if (needed.length > 1 && !/\/login$/.test(address(form))) {
+            needed.forEach(input => {
+                const label = input.labels[0];
+                if (!label.querySelector('.required-mark')) {
+                    const mark = document.createElement('span');
+                    mark.className = 'required-mark';
+                    mark.setAttribute('aria-hidden', 'true');
+                    mark.textContent = ' *';
+                    label.appendChild(mark);
+                }
+            });
+            if (fields.length > 3) {
+                const legend = document.createElement('p');
+                legend.className = 'form-text required-legend col-12';
+                legend.textContent = text('required_note');
+                form.prepend(legend);
+            }
+        }
+        fields.forEach((input, index) => {
+            if (input.dataset.rule === 'phone') {
+                const hint = document.createElement('div');
+                hint.className = 'form-text field-hint';
+                hint.id = 'hint-' + index + '-' + (input.name || 'f');
+                hint.textContent = text('hint_phone');
+                input.insertAdjacentElement('afterend', hint);
+                describe(input, hint.id);
+            }
+            if (input.type === 'password') {
+                const checklist = input.dataset.rule === 'password' ? passwordChecklist(input, index) : null;
+                passwordToggle(input);
+                if (checklist) {
+                    (input.closest('.input-group') || input).insertAdjacentElement('afterend', checklist);
+                }
+            }
+        });
+    }
+
+    function passwordToggle(input) {
+        const group = document.createElement('div');
+        group.className = 'input-group password-group';
+        ['mb-2', 'mb-3'].forEach(c => {
+            if (input.classList.contains(c)) {
+                input.classList.remove(c);
+                group.classList.add(c);
+            }
+        });
+        input.insertAdjacentElement('beforebegin', group);
+        group.appendChild(input);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-outline-secondary';
+        const paint = () => {
+            const hidden = input.type === 'password';
+            button.innerHTML = '<i class="bi ' + (hidden ? 'bi-eye' : 'bi-eye-slash') + '" aria-hidden="true"></i>';
+            button.setAttribute('aria-label', text(hidden ? 'show_password' : 'hide_password'));
+            button.setAttribute('aria-pressed', String(!hidden));
+            button.title = button.getAttribute('aria-label');
+        };
+        button.addEventListener('click', () => {
+            input.type = input.type === 'password' ? 'text' : 'password';
+            paint();
+        });
+        // never send the page with a password left readable
+        input.form.addEventListener('submit', () => { input.type = 'password'; paint(); });
+        paint();
+        group.appendChild(button);
+    }
+
+    function passwordChecklist(input, index) {
+        const list = document.createElement('ul');
+        list.className = 'password-rules list-unstyled form-text';
+        list.id = 'pw-rules-' + index;
+        const tests = [['pw_length', v => v.length >= 8], ['pw_letter', v => /\p{L}/u.test(v)], ['pw_number', v => /\d/.test(v)]];
+        const items = tests.map(([key]) => {
+            const item = document.createElement('li');
+            list.appendChild(item);
+            return item;
+        });
+        const update = () => tests.forEach(([key, passes], i) => {
+            const ok = passes(input.value);
+            items[i].classList.toggle('met', ok);
+            items[i].innerHTML = '<i class="bi ' + (ok ? 'bi-check-circle-fill' : 'bi-circle') + ' me-1" aria-hidden="true"></i>';
+            items[i].append(text(key));
+        });
+        input.addEventListener('input', update);
+        update();
+        describe(input, list.id);
+        return list;
+    }
+
     document.querySelectorAll('form').forEach(prepare);
+    document.querySelectorAll('form[data-checked]').forEach(helpers);
+
+    // messages the server returned, shown under their fields as well
+    const returned = document.getElementById('fieldErrors');
+    if (returned) {
+        let first = null;
+        Object.entries(JSON.parse(returned.textContent)).forEach(([name, message]) => {
+            const input = document.querySelector('main form[data-checked] [name="' + name + '"]');
+            if (input) {
+                note(input, message);
+                first = first || input;
+            }
+        });
+        if (first) {
+            first.focus();
+        }
+    }
 
     // capture: runs before the page's own submit handlers
     document.addEventListener('submit', event => {
@@ -299,6 +486,14 @@
             if (!event.defaultPrevented) {
                 form.dataset.sending = '';
                 form.querySelectorAll('[type="submit"]').forEach(b => b.setAttribute('aria-disabled', 'true'));
+                const pressed = event.submitter || form.querySelector('[type="submit"]');
+                if (pressed) {
+                    const spinner = document.createElement('span');
+                    spinner.className = 'spinner-border spinner-border-sm ms-2 sending-spinner';
+                    spinner.setAttribute('role', 'status');
+                    spinner.setAttribute('aria-label', text('wait'));
+                    pressed.appendChild(spinner);
+                }
             }
         }, 0);
     });
@@ -306,6 +501,7 @@
     window.addEventListener('pageshow', () => document.querySelectorAll('form[data-sending]').forEach(form => {
         delete form.dataset.sending;
         form.querySelectorAll('[aria-disabled]').forEach(b => b.removeAttribute('aria-disabled'));
+        form.querySelectorAll('.sending-spinner').forEach(spinner => spinner.remove());
     }));
 
     ['change', 'focusout'].forEach(type => document.addEventListener(type, event => {
@@ -316,7 +512,7 @@
     }));
     document.addEventListener('input', event => {
         const input = event.target;
-        if (input.classList && input.classList.contains('is-invalid')) {
+        if (input.classList && input.classList.contains('is-invalid') && !input.formRefusal) {
             show(input);
         }
     });

@@ -55,12 +55,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <?php
 $formMessages = [];
-foreach (['required', 'choose', 'tick', 'email', 'short', 'long', 'min', 'max', 'whole', 'number', 'date', 'pattern', 'name', 'phone', 'password', 'match', 'future', 'notfuture', 'after', 'notbefore', 'monthday', 'files', 'filetype', 'filesize'] as $formKey) {
+foreach (['required', 'choose', 'tick', 'email', 'short', 'long', 'min', 'max', 'whole', 'number', 'date', 'pattern', 'name', 'phone', 'password', 'match', 'future', 'notfuture', 'after', 'notbefore', 'monthday', 'files', 'filetype', 'filesize', 'name_only', 'digits_only', 'hint_phone', 'pw_length', 'pw_letter', 'pw_number', 'show_password', 'hide_password', 'required_note', 'wait'] as $formKey) {
     $formMessages[$formKey] = t('form_' . $formKey);
 }
 ?>
 <script type="application/json" id="formMessages"><?= json_encode($formMessages, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
-<script src="/assets/js/forms.js?v=2"></script>
+<?php if (\App\Core\FormRules::$pageErrors !== []): ?>
+<script type="application/json" id="fieldErrors"><?= json_encode(\App\Core\FormRules::$pageErrors, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<?php endif; ?>
+<script src="/assets/js/forms.js?v=4"></script>
 <script src="/assets/js/search.js?v=3"></script>
 <script src="/assets/js/pwa.js?v=2" defer></script>
 </body>
