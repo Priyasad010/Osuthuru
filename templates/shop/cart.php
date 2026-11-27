@@ -42,8 +42,8 @@
                                         <form method="POST" action="/cart/update" class="d-flex gap-1">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="product_id" value="<?= (int)$item['product_id'] ?>">
-                                            <input type="number" name="quantity" value="<?= (int)$item['quantity'] ?>" min="1" max="<?= (int)$item['stock'] ?>" class="form-control form-control-sm">
-                                            <button type="submit" class="btn btn-sm btn-outline-success" title="<?= e(t('update')) ?>"><i class="bi bi-check"></i></button>
+                                            <input type="number" name="quantity" value="<?= (int)$item['quantity'] ?>" min="1" max="<?= (int)$item['stock'] ?>" class="form-control form-control-sm" aria-label="<?= e(t('col_qty')) ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="<?= e(t('update')) ?>" aria-label="<?= e(t('update')) ?>"><i class="bi bi-check"></i></button>
                                         </form>
                                     </td>
                                     <td class="fw-semibold"><?= e(format_price($item['line_total'])) ?></td>

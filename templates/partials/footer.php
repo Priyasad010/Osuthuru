@@ -23,6 +23,7 @@
                     <li><a href="/dictionary"><?= e(t('nav_dictionary')) ?></a></li>
                     <li><a href="/blogs"><?= e(t('nav_blogs')) ?></a></li>
                 </ul>
+                <button type="button" id="installApp" class="btn btn-outline-light btn-sm mt-2 d-none"><i class="bi bi-phone me-1"></i><?= e(t('install_app')) ?></button>
             </div>
             <div class="col-6 col-md-4">
                 <h6 class="text-white mb-2"><?= e(t('contact_title')) ?></h6>
@@ -43,5 +44,6 @@
 <!-- Bootstrap JS Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/assets/js/search.js?v=3"></script>
+<script src="/assets/js/pwa.js" defer></script>
 </body>
 </html>

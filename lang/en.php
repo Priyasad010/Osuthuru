@@ -633,4 +633,8 @@ return [
     'admin_reviews' => 'Reviews',
     'seasonal_help' => 'Dates are month-day, for example 05-01. A range may pass the new year, for example 11-15 to 01-31.',
     'seasonal_err' => 'Enter a name, two valid dates (MM-DD) and a topic.',
+
+    'skip_to_content' => 'Skip to content',
+    'nav_menu' => 'Menu',
+    'install_app' => 'Install App',
 ];

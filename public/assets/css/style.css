@@ -300,3 +300,33 @@ footer {
     }
 }
 
+/* Keyboard users can jump past the menu */
+.skip-link {
+    position: fixed;
+    left: 8px;
+    top: -60px;
+    z-index: 2000;
+    background: #ffffff;
+    color: #0f5132;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.skip-link:focus {
+    top: 8px;
+}
+
+/* Menu and footer text with enough contrast on green */
+.navbar-custom .nav-link {
+    color: #ffffff;
+}
+
+footer .text-white-50 {
+    color: rgba(255, 255, 255, 0.82) !important;
+}
+
+footer .disclaimer-box {
+    color: #ffffff;
+}
+
