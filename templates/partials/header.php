@@ -109,6 +109,7 @@ $pageTitle = $pageTitle ?? t('app_name');
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
                                 <li><a class="dropdown-item" href="/orders"><i class="bi bi-receipt me-2"></i><?= e(t('my_orders')) ?></a></li>
+                                <li><a class="dropdown-item" href="/profile/categories"><i class="bi bi-stars me-2"></i><?= e(t('interests_title')) ?></a></li>
                                 <li><a class="dropdown-item" href="/wishlist"><i class="bi bi-heart me-2"></i><?= e(t('wishlist')) ?></a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>

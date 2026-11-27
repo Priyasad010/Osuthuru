@@ -538,4 +538,10 @@ return [
     'admin_keywords_help' => 'When a question contains one of these words (English, Sinhala or Singlish), the assistant looks in that topic. Click a word to remove it.',
     'admin_new_keyword' => 'New word',
     'go_back' => 'Go back',
+
+    'interests_title' => 'My Interests',
+    'interests_intro' => 'Choose the categories you like. We use them to suggest products.',
+    'interests_saved' => 'Your interests have been saved.',
+    'similar_title' => 'Similar Products',
+    'also_bought_title' => 'Customers Also Bought',
 ];

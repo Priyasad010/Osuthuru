@@ -9,6 +9,8 @@ services:
       - "8080:80" # open to the local network so phones can use the shop
     volumes:
       - .:/var/www/html
+      # Composer packages live in a Docker volume: much faster than the Windows folder
+      - vendor_data:/var/www/html/vendor
     environment:
       - APP_ENV=${APP_ENV:-development}
       - APP_DEBUG=${APP_DEBUG:-true}
@@ -52,6 +54,11 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./ml:/app
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-suwoda}
+      DB_ML_RO_USER: ${DB_ML_RO_USER:-ml_ro}
+      DB_ML_RO_PASS: ${DB_ML_RO_PASS:-ml_ro_secret}
     depends_on:
       - db
     networks:
@@ -69,6 +76,7 @@ services:
 
 volumes:
   db_data:
+  vendor_data:
 
 networks:
   suwoda-network:

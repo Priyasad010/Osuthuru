@@ -34,13 +34,22 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
 
 <?php if (!empty($recommended)): ?>
     <div class="mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h3 class="fw-bold text-success mb-0"><?= e(t('recommended_title')) ?></h3>
-            <a href="/quiz/result" class="btn btn-outline-success btn-sm"><?= e(t('quiz_result_title')) ?></a>
+            <div class="d-flex flex-wrap gap-2">
+                <?php if (\App\Core\Auth::check()): ?>
+                    <a href="/profile/categories" class="btn btn-outline-success btn-sm"><i class="bi bi-stars me-1"></i><?= e(t('interests_title')) ?></a>
+                <?php endif; ?>
+                <?php if (!empty($hasDosha)): ?>
+                    <a href="/quiz/result" class="btn btn-outline-success btn-sm"><?= e(t('quiz_result_title')) ?></a>
+                <?php endif; ?>
+            </div>
         </div>
         <?= \App\Core\View::partial('product_cards', ['products' => $recommended]) ?>
     </div>
-<?php elseif (!empty($quizLive)): ?>
+<?php endif; ?>
+
+<?php if (!empty($quizLive) && empty($hasDosha)): ?>
     <div class="card border-0 shadow-sm p-4 mb-5 d-flex flex-row flex-wrap justify-content-between align-items-center gap-2">
         <div>
             <h5 class="fw-bold text-success mb-1"><?= e(t('quiz_title')) ?></h5>

@@ -40,6 +40,7 @@ use App\Service\RegistrationService;
 use App\Repository\ProductRepo;
 use App\Repository\HerbRepo;
 use App\Repository\QuizRepo;
+use App\Service\RecommendationService;
 use App\Repository\BatchRepo;
 use App\Service\SafetyService;
 use App\Service\SearchService;
@@ -92,12 +93,12 @@ if ($requestUri === '/api/health' && $requestMethod === 'GET') {
 // HOME PAGE & LANGUAGE SWITCH
 // ----------------------------------------------------
 if ($requestUri === '/' || $requestUri === '') {
-    // Latest saved result for members, otherwise this session's quiz attempt
-    $saved = Auth::check() ? QuizRepo::history(Auth::id(), 1) : [];
-    $doshaResult = $saved[0] ?? $_SESSION['quiz_result'] ?? null;
+    $sessionDosha = $_SESSION['quiz_result'] ?? null;
+    $hasDosha = $sessionDosha || (Auth::check() && QuizRepo::history(Auth::id(), 1));
 
     echo View::render('home', [
-        'recommended' => $doshaResult ? QuizRepo::recommendedProducts($doshaResult) : [],
+        'recommended' => RecommendationService::forUser(Auth::id(), $sessionDosha, 4)['products'],
+        'hasDosha' => (bool)$hasDosha,
         'quizLive' => QuizRepo::isLive(),
         'pageTitle' => t('welcome_title'),
         'herbOfTheDay' => HerbRepo::getHerbOfTheDay(),
@@ -130,6 +131,9 @@ require $rootDir . '/routes/phase4.php';
 
 // QR VERIFICATION & ASSISTANT (PHASE 5)
 require $rootDir . '/routes/phase5.php';
+
+// RECOMMENDATIONS & PREFERENCES (PHASE 6)
+require $rootDir . '/routes/phase6.php';
 
 // ----------------------------------------------------
 // SEARCH & AUTOCOMPLETE (PHASE 3)
@@ -371,6 +375,7 @@ if (preg_match('#^/products/(\d+)$#', $requestUri, $m) && $requestMethod === 'GE
     unset($_SESSION['flash_success']);
 
     echo View::render('shop/product_detail', [
+        'related' => RecommendationService::forProduct($product, 4),
         'flash' => $flash,
         'pageTitle' => $product['display_name'] ?? $product['product_name'],
         'product' => $product,

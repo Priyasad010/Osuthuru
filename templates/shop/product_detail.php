@@ -81,4 +81,13 @@
     </div>
 </div>
 
+<?php foreach (['similar' => 'similar_title', 'also_bought' => 'also_bought_title'] as $group => $title): ?>
+    <?php if (!empty($related[$group])): ?>
+        <div class="mb-4">
+            <h4 class="fw-bold text-success mb-3"><?= e(t($title)) ?></h4>
+            <?= \App\Core\View::partial('product_cards', ['products' => $related[$group]]) ?>
+        </div>
+    <?php endif; ?>
+<?php endforeach; ?>
+
 <?= \App\Core\View::partial('safety_panel', ['productIds' => [(int)$product['product_id']], 'productId' => (int)$product['product_id']]) ?>

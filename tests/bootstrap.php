@@ -16,6 +16,8 @@ $testDatabase = 'suwoda_test';
 
 // Set before .env is loaded; existing values are not overwritten by it
 putenv("DB_NAME={$testDatabase}");
+putenv('ML_URL=');
+$_ENV['ML_URL'] = $_SERVER['ML_URL'] = '';
 $_ENV['DB_NAME'] = $_SERVER['DB_NAME'] = $testDatabase;
 Env::load($root);
 

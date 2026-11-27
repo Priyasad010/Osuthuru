@@ -33,6 +33,7 @@
    docker compose exec web composer install
    docker compose exec web php bin/migrate.php
    docker compose exec web php bin/seed.php
+   docker compose exec web php bin/grant_ml_user.php
    docker compose exec web php bin/create_admin.php
    ```
    `seed.php` loads the demo catalogue and is safe to run again. `create_admin.php` uses `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env`.
@@ -80,6 +81,19 @@
 
 Only the website is reachable from the network. MySQL, Mailpit and the ML service listen on `127.0.0.1`. With `APP_DEBUG=true`, error details are visible to anyone on the network. Voice search needs `localhost` or HTTPS, so its button is hidden on a phone over plain HTTP. In Docker, visitors may all appear to come from one address, which affects the assistant limit and duplicate-scan count during development.
 
+## Recommendations and forecasts (Python service)
+- The `ml/` service serves hybrid recommendations (product text, products bought together, popularity, chosen categories, dosha) and sales and stock forecasts. It is reachable only from this computer and the app containers.
+- If it is stopped or slow (3-second limit), PHP uses simple SQL results, so the shop keeps working.
+- Customers choose preferred categories under **My Interests**. The service reloads catalogue and sales data every 15 minutes; a customer's own choices apply immediately.
+- Its database user reads only the tables and columns it needs (`php bin/grant_ml_user.php`; run it again after adding tables it must read).
+- Evaluation (uses a separate database of **synthetic** orders):
+  ```bash
+  docker compose exec web php bin/build_eval_db.php
+  docker compose exec ml python -m app.evaluate --database suwoda_eval
+  ```
+  Results: [ml/reports/recommender_eval.md](ml/reports/recommender_eval.md).
+- PHP packages are kept in the `vendor_data` Docker volume. Run `docker compose exec web composer install` after cloning or changing `composer.lock`.
+
 ## Behaviour to know about
 - **Email verification**: new accounts cannot log in until the emailed link is opened (see Mailpit in development). Logging in with the correct password sends the link again.
 - **Login lockout**: based on the connecting IP address. Behind a reverse proxy, configure the web server to set `REMOTE_ADDR` from that trusted proxy.
@@ -97,5 +111,5 @@ Only the website is reachable from the network. MySQL, Mailpit and the ML servic
 - [x] **Phase 3: Herbal knowledge and bilingual search** (Sinhala/English, concern pages, voice)
 - [x] **Phase 4: Novelty A** (Dosha quiz, safety checker)
 - [x] **Phase 5: Novelty B** (QR batch traceability, AI Assistant)
-- [ ] **Phase 6: Python intelligence service** (FastAPI recommender & sales forecast)
+- [x] **Phase 6: Python intelligence service** (FastAPI recommender & sales forecast)
 - [ ] **Phase 7: Admin analytics, PWA, quality & polish**

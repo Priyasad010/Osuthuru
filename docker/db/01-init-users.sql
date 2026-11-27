@@ -7,6 +7,6 @@ GRANT ALL PRIVILEGES ON `suwoda`.* TO 'app'@'%';
 
 -- Create read-only user for Python ML service
 CREATE USER IF NOT EXISTS 'ml_ro'@'%' IDENTIFIED BY 'ml_ro_secret';
-GRANT SELECT ON `suwoda`.* TO 'ml_ro'@'%';
+-- Its table rights are granted after the migrations by: php bin/grant_ml_user.php
 
 FLUSH PRIVILEGES;
