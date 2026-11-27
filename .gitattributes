@@ -3,3 +3,4 @@
 docker/prod/* text eol=lf
 docker-compose.prod.yml text eol=lf
 .env.production.example text eol=lf
+.env.alwaysdata.example text eol=lf

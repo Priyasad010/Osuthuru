@@ -29,6 +29,10 @@ env/
 .DS_Store
 Thumbs.db
 
+# Written on shared hosting by bin/shared/deploy.sh
+/public/.user.ini
+composer.phar
+
 # Local HTTPS certificate for phone testing
 /docker/certs/
 /public/lan-ca.crt

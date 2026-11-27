@@ -82,6 +82,8 @@ On Windows, `pwsh bin/set_mail_password.ps1` writes the app password for you wit
 ## Hosting
 To put the shop on a server with HTTPS, follow [docs/HOSTING.md](docs/HOSTING.md) (in Sinhala; Oracle Cloud Always Free). It uses [docker-compose.prod.yml](docker-compose.prod.yml), which adds Caddy for certificates and publishes only ports 80 and 443. `bin/prod/make_env.sh` writes the settings, `bin/prod/deploy.sh` installs or updates, and `bin/prod/backup.sh` backs up the database and uploads.
 
+**Without a card (shared hosting, non-commercial):** [docs/HOSTING_ALWAYSDATA.md](docs/HOSTING_ALWAYSDATA.md) installs on alwaysdata's free plan without Docker or the ML service, using the scripts in `bin/shared/`. Tests pass on MariaDB 10.11. `PROXY_IP_HEADER` in `.env` is only for a host whose own proxy overwrites that header; `bin/shared/check_site.php` verifies that visitors cannot fake their address.
+
 ## Tests
 ```bash
 docker compose exec web composer test     # PHPUnit

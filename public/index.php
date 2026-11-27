@@ -72,6 +72,8 @@ if ($debug) {
     error_reporting(0);
 }
 
+$_SERVER = Request::applyProxy($_SERVER, (string)Env::get('PROXY_IP_HEADER', ''));
+
 // Basic browser protections for every page
 header_remove('X-Powered-By');
 header('X-Content-Type-Options: nosniff');
