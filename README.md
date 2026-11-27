@@ -77,7 +77,7 @@ MAIL_USER=you@gmail.com
 MAIL_PASS=your-app-password
 MAIL_FROM=you@gmail.com
 ```
-Then check with `docker compose exec web php bin/test_mail.php you@gmail.com`. Links in the e-mails use `APP_URL`. Tests always use Mailpit.
+On Windows, `pwsh bin/set_mail_password.ps1` writes the app password for you without showing it. Then check with `docker compose exec web php bin/test_mail.php you@gmail.com`. Links in the e-mails use `APP_URL`. Tests always use Mailpit.
 
 ## Hosting
 To put the shop on a server with HTTPS, follow [docs/HOSTING.md](docs/HOSTING.md) (in Sinhala; Oracle Cloud Always Free). It uses [docker-compose.prod.yml](docker-compose.prod.yml), which adds Caddy for certificates and publishes only ports 80 and 443. `bin/prod/make_env.sh` writes the settings, `bin/prod/deploy.sh` installs or updates, and `bin/prod/backup.sh` backs up the database and uploads.
