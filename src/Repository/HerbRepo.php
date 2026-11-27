@@ -65,6 +65,36 @@ class HerbRepo
         return self::enrich($selected, $locale);
     }
 
+    /**
+     * Herbs with a photograph and products on sale, those with the most products first,
+     * each carrying up to two of them.
+     */
+    public static function shelf(int $limit = 4, ?string $locale = null): array
+    {
+        $ids = Database::getConnection()->query("
+            SELECT ph.herb_id
+            FROM product_herb ph
+            JOIN product p ON p.product_id = ph.product_id AND p.quantity > 0
+            GROUP BY ph.herb_id
+            ORDER BY COUNT(*) DESC, ph.herb_id
+        ")->fetchAll(PDO::FETCH_COLUMN);
+
+        $shelf = [];
+        foreach ($ids as $id) {
+            $herb = self::findById((int)$id, $locale);
+            if (!$herb || image_url($herb['image'] ?? null) === null) {
+                continue;
+            }
+            $inStock = array_filter(self::getProductsByHerb((int)$id, $locale), fn($p) => (int)$p['quantity'] > 0);
+            $herb['products'] = array_slice(array_values($inStock), 0, 2);
+            $shelf[] = $herb;
+            if (count($shelf) >= $limit) {
+                break;
+            }
+        }
+        return $shelf;
+    }
+
     public static function getProductsByHerb(int $herbId, ?string $locale = null): array
     {
         $pdo = Database::getConnection();

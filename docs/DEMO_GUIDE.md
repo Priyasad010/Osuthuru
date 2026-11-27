@@ -22,10 +22,10 @@ Roadmap එකේ 7 වන කොටසේ කතා පිළිවෙළ, demo
 
 | # | කාලය | කරන්න | කියන්න |
 |---|---|---|---|
-| 1 | 0:45 | Home page → **සිං** → **EN** | "මුළු site එකම ඉංග්‍රීසි සහ සිංහල." |
+| 1 | 0:45 | Home page (banner එකේ herb එකක් තෝරන්න) → **සිං** → **EN** | "මුළු site එකම ඉංග්‍රීසි සහ සිංහල." |
 | 2 | 1:15 | **Dosha Quiz** → ප්‍රශ්න 12 → **See My Result** | "පිළිතුරු අනුව නිෂ්පාදන යෝජනා වෙනවා." |
 | 3 | 1:00 | Chat බොත්තම → `කොහොඹ ඇති නිෂ්පාදන මොනවාද?` → **Send** | "පිළිතුරු එන්නේ අපේ herb සහ product data වලින් පමණයි." |
-| 4 | 0:45 | **Herbal Dictionary** → Neem → එම herb පිටුවේ Neem Oil | "Dictionary එකයි shop එකයි එකම knowledge base එකක්." |
+| 4 | 0:45 | **Herbal Dictionary** → Neem → එම herb පිටුවේ Aliver Neem Oil | "Dictionary එකයි shop එකයි එකම knowledge base එකක්." |
 | 5 | 1:15 | **Add to Cart** → cart → **Check Safety** → *I am pregnant* → **Check** | "අවදානම් අවස්ථාවල warning එකක් එනවා. සෞඛ්‍ය පිළිතුරු database එකේ save වෙන්නේ නැහැ." |
 | 6 | 1:15 | **Proceed to Checkout** → warning tick → Cash on Delivery → **Place Order** → order timeline → Mailpit → admin **Manage Orders** හි status **Confirmed** → timeline සහ දෙවන email | "දේශීය ගෙවීම් ක්‍රම, order tracking සහ email." |
 | 7 | 0:45 | Phone camera එකෙන් labels දෙක scan කරන්න | "Genuine / Recalled, batch විස්තර සමඟ." |

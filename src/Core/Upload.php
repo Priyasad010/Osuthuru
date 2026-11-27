@@ -24,6 +24,21 @@ class Upload
         return self::store($file, $subfolder, ['application/pdf' => 'pdf'], 'err_upload_pdf');
     }
 
+    /**
+     * Locate a stored upload that is only ever sent through the application.
+     * @return array{path: string, mime: string}|null
+     */
+    public static function privateFile(string $stored, string $subfolder): ?array
+    {
+        $folder = realpath(dirname(__DIR__, 2) . '/public/uploads/' . $subfolder);
+        $file = realpath(dirname(__DIR__, 2) . '/public' . $stored);
+        if (!$folder || !$file || !str_starts_with($file, $folder . DIRECTORY_SEPARATOR) || !is_file($file)) {
+            return null;
+        }
+        $mime = (string)(new finfo(FILEINFO_MIME_TYPE))->file($file);
+        return isset(self::ALLOWED_MIME[$mime]) ? ['path' => $file, 'mime' => $mime] : null;
+    }
+
     private static function store(array $file, string $subfolder, array $allowed, string $formatError): array
     {
         if (!isset($file['error']) || is_array($file['error'])) {

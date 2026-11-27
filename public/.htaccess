@@ -1,3 +1,6 @@
+# Never list the contents of a folder
+Options -Indexes
+
 AddType application/manifest+json .webmanifest
 AddType application/x-x509-ca-cert .crt
 
@@ -12,6 +15,11 @@ AddType application/x-x509-ca-cert .crt
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Bank slips are private: administrators read them through the application.
+    # Nothing uploaded may ever run as a script.
+    RewriteRule ^uploads/slips(/|$) - [F,NC]
+    RewriteRule ^uploads/.*\.(php[0-9]?|phtml|phar)$ - [F,NC]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -25,4 +33,8 @@ AddType application/x-x509-ca-cert .crt
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
 </IfModule>

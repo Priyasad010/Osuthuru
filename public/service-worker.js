@@ -5,7 +5,7 @@
  * copies of the herb dictionary (fetched without cookies), so that nothing
  * about a signed-in customer is ever cached.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `suwoda-shell-${VERSION}`;
 const DICTIONARY = `suwoda-dictionary-${VERSION}`;
 const LANGUAGES = ['en', 'si'];
@@ -18,6 +18,8 @@ const SHELL_FILES = [
     '/assets/js/pwa.js',
     '/assets/js/safety.js',
     '/assets/js/assistant.js',
+    '/assets/js/shelf.js',
+    'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap',
     '/assets/images/Logo.jpg',
     '/assets/icons/icon-192.png',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',

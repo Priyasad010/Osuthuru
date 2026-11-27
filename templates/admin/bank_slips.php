@@ -36,7 +36,7 @@
                             <td class="fw-bold">#<?= (int)$s['order_id'] ?></td>
                             <td><?= e($s['user_name'] ?? t('admin_customer')) ?></td>
                             <td class="fw-semibold"><?= e(format_price((float)$s['total_price'])) ?></td>
-                            <td><a href="<?= e($s['file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><?= e(t('admin_view_slip')) ?></a></td>
+                            <td><a href="/admin/bank-slips/file?id=<?= (int)$s['slip_id'] ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><?= e(t('admin_view_slip')) ?></a></td>
                             <td>
                                 <span class="badge <?= $s['status'] === 'verified' ? 'bg-success' : ($s['status'] === 'rejected' ? 'bg-danger' : 'bg-warning text-dark') ?>">
                                     <?= e(t_or('slip_', $s['status'])) ?>

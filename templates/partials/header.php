@@ -20,12 +20,15 @@ $pageTitle = $pageTitle ?? t('app_name');
     <link rel="icon" type="image/jpeg" href="/assets/images/Logo.jpg">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-    <meta name="theme-color" content="#198754">
+    <meta name="theme-color" content="#04302b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Suwoda">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap">
     <!-- Custom Theme -->
-    <link rel="stylesheet" href="/assets/css/style.css?v=9">
+    <link rel="stylesheet" href="/assets/css/style.css?v=11">
 </head>
 <body>
 <a class="skip-link" href="#content"><?= e(t('skip_to_content')) ?></a>

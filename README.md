@@ -119,6 +119,10 @@ Catalogue pictures are in `public/assets/images/catalog/`. Plant and background 
 
 Where each price came from, and how sure we are, is listed in [docs/PRICE_SOURCES.md](docs/PRICE_SOURCES.md). On an existing install run `bin/migrate.php` and then `bin/seed.php` to get the pictures and the new products.
 
+## Security notes
+
+Folder listing is off. Bank slips cannot be opened by their address: an administrator views them through the application. Keep it that way if you move to another web server (Nginx ignores `.htaccess`).
+
 ## Behaviour to know about
 - **Time**: the application and database work in Asia/Colombo.
 - **Accounts**: email verification is required; five failed logins lock an email and address for 15 minutes; blocking a customer ends their access at once.

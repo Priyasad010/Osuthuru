@@ -7,6 +7,25 @@ use App\Core\Upload;
 
 class UploadTest extends TestCase
 {
+    public function testPrivateFilesStayInsideTheirFolder(): void
+    {
+        $this->assertNull(\App\Core\Upload::privateFile('/uploads/slips/../../index.php', 'slips'));
+        $this->assertNull(\App\Core\Upload::privateFile('/index.php', 'slips'));
+        $this->assertNull(\App\Core\Upload::privateFile('', 'slips'));
+
+        $dir = dirname(__DIR__) . '/public/uploads/slips';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $name = 'test-' . bin2hex(random_bytes(6)) . '.png';
+        file_put_contents("{$dir}/{$name}", base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='));
+        try {
+            $this->assertSame('image/png', \App\Core\Upload::privateFile("/uploads/slips/{$name}", 'slips')['mime']);
+        } finally {
+            unlink("{$dir}/{$name}");
+        }
+    }
+
     private array $tempFiles = [];
 
     protected function tearDown(): void

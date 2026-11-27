@@ -67,6 +67,12 @@ if ($debug) {
     error_reporting(0);
 }
 
+// Basic browser protections for every page
+header_remove('X-Powered-By');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
 // 4. Session & Language
 Auth::initSession();
 Lang::init();
@@ -992,6 +998,23 @@ if (str_starts_with($requestUri, '/admin/')) {
         exit;
     }
 
+    if ($requestUri === '/admin/bank-slips/file' && $requestMethod === 'GET') {
+        Auth::requireAdmin();
+        $find = Database::getConnection()->prepare('SELECT file_path FROM bank_slip WHERE slip_id = :id');
+        $find->execute([':id' => (int)($_GET['id'] ?? 0)]);
+        $file = Upload::privateFile((string)$find->fetchColumn(), 'slips');
+        if ($file === null) {
+            http_response_code(404);
+            exit(e(t('err_file_404')));
+        }
+        header('Content-Type: ' . $file['mime']);
+        header('Content-Length: ' . filesize($file['path']));
+        header('Content-Disposition: inline; filename="' . basename($file['path']) . '"');
+        header('Cache-Control: private, no-store');
+        readfile($file['path']);
+        exit;
+    }
+
     if ($requestUri === '/admin/bank-slips' && $requestMethod === 'GET') {
         $pdo = Database::getConnection();
         $slips = $pdo->query("
@@ -1094,5 +1117,5 @@ http_response_code(404);
 if (str_starts_with($requestUri, '/api/')) {
     json_response(['ok' => false, 'error' => 'Endpoint not found'], 404);
 } else {
-    echo "<h1>404 Not Found</h1><p>The page requested was not found.</p>";
+    echo View::render('not_found', ['pageTitle' => t('not_found_title')]);
 }

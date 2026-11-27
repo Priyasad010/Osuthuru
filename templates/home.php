@@ -5,32 +5,68 @@ use App\Repository\ProductRepo;
 $herbOfTheDay = $herbOfTheDay ?? HerbRepo::getHerbOfTheDay();
 $concerns = $concerns ?? HerbRepo::getAllConcerns();
 $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 4);
+$shelf = HerbRepo::shelf(4);
+$ranges = ProductRepo::getAllCategories(null, true);
 ?>
 
-<!-- Hero Banner -->
-<div class="card border-0 shadow-sm p-4 p-md-5 mb-5 text-white" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%); border-radius: 1rem;">
-    <div class="row align-items-center">
-        <div class="col-lg-8">
-            <span class="badge bg-white text-success px-3 py-2 rounded-pill mb-3 fw-semibold">
-                <i class="bi bi-patch-check-fill me-1 text-success"></i> <?= e(t('home_badge')) ?>
-            </span>
-            <h1 class="display-5 fw-bold mb-3"><?= e(t('welcome_title')) ?></h1>
-            <p class="lead opacity-90 mb-4"><?= e(t('welcome_subtitle')) ?></p>
-            
+<div class="hero bleed">
+    <div class="container hero-grid">
+        <div>
+            <h1><?= e(t('hero_line1')) ?> <span><?= e(t('hero_line2')) ?></span></h1>
+            <p><?= e(t('hero_text')) ?></p>
             <div class="d-flex flex-wrap gap-2">
-                <a href="/products" class="btn btn-light text-success fw-bold px-4 py-2">
-                    <i class="bi bi-box-seam me-1"></i> <?= e(t('nav_products')) ?>
-                </a>
-                <a href="/dictionary" class="btn btn-outline-light px-4 py-2">
-                    <i class="bi bi-journal-medical me-1"></i> <?= e(t('nav_dictionary')) ?>
-                </a>
+                <a href="/products" class="btn btn-saffron btn-lg px-4"><?= e(t('hero_shop')) ?></a>
+                <a href="/dictionary" class="btn btn-outline-light btn-lg px-4"><?= e(t('hero_herbs')) ?></a>
             </div>
         </div>
-        <div class="col-lg-4 text-center mt-4 mt-lg-0">
-            <i class="bi bi-flower1 opacity-25" style="font-size: 8rem; color: #b7e4c7;"></i>
-        </div>
+
+        <?php if ($shelf): ?>
+            <div class="shelf">
+                <?php foreach ($shelf as $i => $herb): ?>
+                    <div data-shelf-panel="<?= (int)$herb['herb_id'] ?>" <?= $i ? 'hidden' : '' ?>>
+                        <div class="shelf-photo">
+                            <img src="<?= e(image_url($herb['image'])) ?>" alt="<?= e($herb['display_name']) ?>" <?= $i ? 'loading="lazy"' : '' ?>>
+                            <div class="shelf-label">
+                                <a href="/herb/<?= (int)$herb['herb_id'] ?>"><?= e($herb['display_name']) ?></a>
+                                <i><?= e($herb['scientific_name']) ?></i>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+                <div class="shelf-picks" role="group" aria-label="<?= e(t('shelf_choose')) ?>">
+                    <?php foreach ($shelf as $i => $herb): ?>
+                        <button type="button" data-shelf-pick="<?= (int)$herb['herb_id'] ?>" aria-pressed="<?= $i ? 'false' : 'true' ?>"><?= e($herb['display_name']) ?></button>
+                    <?php endforeach; ?>
+                </div>
+                <?php foreach ($shelf as $i => $herb): ?>
+                    <div class="shelf-made" data-shelf-panel="<?= (int)$herb['herb_id'] ?>" <?= $i ? 'hidden' : '' ?>>
+                        <?php foreach ($herb['products'] as $p): ?>
+                            <a href="/products/<?= (int)$p['product_id'] ?>">
+                                <span class="thumb"><?= picture($p['image'] ?? null, '') ?></span>
+                                <span><strong><?= e($p['display_name']) ?></strong><br><?= e(format_price($p['effective_price'] ?? $p['price'])) ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <script src="/assets/js/shelf.js" defer></script>
+        <?php endif; ?>
     </div>
 </div>
+
+<?php if ($ranges): ?>
+    <div class="home-section mb-5">
+        <div class="home-head"><h2><?= e(t('ranges_title')) ?></h2></div>
+        <div class="ranges">
+            <?php foreach ($ranges as $range): ?>
+                <a href="/products?category=<?= (int)$range['category_id'] ?>">
+                    <span class="disc"><?= picture($range['image'] ?? null, '') ?></span>
+                    <?= e($range['display_name']) ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if (!empty($recommended)): ?>
     <div class="mb-5">
@@ -50,12 +86,13 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
 <?php endif; ?>
 
 <?php if (!empty($quizLive) && empty($hasDosha)): ?>
-    <div class="card border-0 shadow-sm p-4 mb-5 d-flex flex-row flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-            <h5 class="fw-bold text-success mb-1"><?= e(t('quiz_title')) ?></h5>
-            <p class="text-muted small mb-0"><?= e(t('quiz_intro')) ?></p>
+    <div class="quiz-band mb-5">
+        <div class="quiz-text">
+            <h2 class="mb-3"><?= e(t('quiz_title')) ?></h2>
+            <p class="mb-4"><?= e(t('quiz_intro')) ?></p>
+            <a href="/quiz" class="btn btn-saffron btn-lg px-4"><?= e(t('quiz_start')) ?></a>
         </div>
-        <a href="/quiz" class="btn btn-suwoda"><?= e(t('quiz_start')) ?></a>
+        <img src="/assets/images/catalog/banners/hero.jpg" alt="" loading="lazy">
     </div>
 <?php endif; ?>
 
@@ -73,65 +110,32 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
 
 <!-- Herb of the Day Feature -->
 <?php if (!empty($herbOfTheDay)): ?>
-    <div class="card border-0 shadow-sm mb-5 overflow-hidden" style="border-left: 6px solid #2d6a4f !important;">
-        <div class="card-body p-4">
-            <div class="row align-items-center g-4">
-                <div class="col-md-3 text-center">
-                    <div class="bg-success-subtle p-3 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 110px; height: 110px;">
-                        <i class="bi bi-flower1 text-success" style="font-size: 3.5rem;"></i>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge bg-success text-white px-2 py-1">
-                            <i class="bi bi-calendar-event me-1"></i><?= e(t('herb_of_the_day')) ?>
-                        </span>
-                        <?php if (!empty($herbOfTheDay['name_si']) && $herbOfTheDay['display_name'] !== $herbOfTheDay['name_si']): ?>
-                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1"><?= e($herbOfTheDay['name_si']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <h3 class="fw-bold text-success mb-1">
-                        <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="text-success text-decoration-none">
-                            <?= e($herbOfTheDay['display_name']) ?>
-                        </a>
-                    </h3>
-                    <p class="text-muted fst-italic small mb-2">
-                        <strong><?= e(t('scientific_name')) ?>:</strong> <?= e($herbOfTheDay['scientific_name']) ?>
-                    </p>
-                    <p class="text-secondary mb-3 small leading-relaxed">
-                        <?= e(mb_strimwidth((string)($herbOfTheDay['display_uses'] ?: t('uses_pending')), 0, 180, '...')) ?>
-                    </p>
-                    <div>
-                        <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="btn btn-outline-success btn-sm fw-semibold">
-                            <?= e(t('read_herb_profile')) ?> <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <div class="spotlight mb-5">
+        <div class="spot-photo align-self-stretch"><?= picture($herbOfTheDay['image'] ?? null, $herbOfTheDay['display_name'], 'text-success display-3') ?></div>
+        <div class="spot-text">
+            <span class="badge rounded-pill text-bg-warning mb-2"><?= e(t('herb_of_the_day')) ?></span>
+            <h3 class="mb-1"><a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="text-decoration-none text-reset"><?= e($herbOfTheDay['display_name']) ?></a></h3>
+            <p class="text-muted fst-italic small mb-2"><?= e($herbOfTheDay['scientific_name']) ?></p>
+            <p class="mb-3"><?= e(mb_strimwidth((string)($herbOfTheDay['display_uses'] ?: t('uses_pending')), 0, 180, '...')) ?></p>
+            <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="btn btn-suwoda"><?= e(t('read_herb_profile')) ?></a>
         </div>
     </div>
 <?php endif; ?>
 
-<!-- Shop by Health Concern Grid -->
+<!-- Shop by health concern -->
 <div class="mb-5">
-    <div class="text-center mb-4">
-        <h3 class="fw-bold text-success mb-2"><?= e(t('health_concerns_title')) ?></h3>
-        <p class="text-muted small mx-auto" style="max-width: 600px;"><?= e(t('health_concerns_subtitle')) ?></p>
+    <div class="home-head">
+        <div>
+            <h2><?= e(t('health_concerns_title')) ?></h2>
+            <p class="text-muted mb-0 mt-1"><?= e(t('health_concerns_subtitle')) ?></p>
+        </div>
     </div>
-
-    <div class="row g-3">
+    <div class="topics">
         <?php foreach ($concerns as $c): ?>
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="/concern/<?= e($c['slug']) ?>" class="card h-100 border-0 shadow-sm text-decoration-none p-3 text-center health-concern-card transition-all">
-                    <div class="bg-success-subtle text-success rounded-circle mx-auto p-3 mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
-                        <i class="bi <?= e($c['icon']) ?> fs-3"></i>
-                    </div>
-                    <h6 class="fw-bold text-dark mb-1"><?= e($c['display_name']) ?></h6>
-                    <?php if ($c['display_name'] !== $c['name_en']): ?>
-                        <small class="text-muted"><?= e($c['name_en']) ?></small>
-                    <?php endif; ?>
-                </a>
-            </div>
+            <a href="/concern/<?= e($c['slug']) ?>">
+                <span class="bubble"><i class="bi <?= e($c['icon']) ?>" aria-hidden="true"></i></span>
+                <span><?= e($c['display_name']) ?></span>
+            </a>
         <?php endforeach; ?>
     </div>
 </div>
@@ -149,38 +153,7 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
             </a>
         </div>
 
-        <div class="row g-4">
-            <?php foreach ($featuredProducts as $p): ?>
-                <div class="col-sm-6 col-md-3">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
-                            <?= picture($p['image'] ?? null, $p['display_name']) ?>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>
-                            <h6 class="card-title fw-bold mt-1 mb-2">
-                                <a href="/products/<?= (int)$p['product_id'] ?>" class="text-dark text-decoration-none">
-                                    <?= e($p['display_name']) ?>
-                                </a>
-                            </h6>
-                            <div class="mb-3">
-                                <?php if ($p['has_discount']): ?>
-                                    <span class="fw-bold text-success"><?= e(format_price($p['sale_price'])) ?></span>
-                                    <small class="text-muted text-decoration-line-through ms-1"><?= e(format_price($p['base_price'])) ?></small>
-                                <?php else: ?>
-                                    <span class="fw-bold text-success"><?= e(format_price($p['base_price'])) ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="mt-auto">
-                                <a href="/products/<?= (int)$p['product_id'] ?>" class="btn btn-outline-success btn-sm w-100">
-                                    <?= e(t('view_details')) ?>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
+        <?= \App\Core\View::partial('product_cards', ['products' => $featuredProducts]) ?>
     </div>
 <?php endif; ?>
 
@@ -202,6 +175,16 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
         </div>
     </div>
 <?php endif; ?>
+
+<div class="promises mb-5">
+    <?php foreach (['pay' => 'bi-cash-coin', 'pack' => 'bi-qr-code-scan', 'ask' => 'bi-chat-dots'] as $key => $icon): ?>
+        <div>
+            <i class="bi <?= $icon ?>" aria-hidden="true"></i>
+            <h3><?= e(t("promise_{$key}_title")) ?></h3>
+            <p><?= e(t("promise_{$key}_text")) ?></p>
+        </div>
+    <?php endforeach; ?>
+</div>
 
 <!-- Medical Disclaimer Banner -->
 <div class="disclaimer-box text-center mb-4">
