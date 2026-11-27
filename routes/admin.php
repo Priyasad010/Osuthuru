@@ -184,6 +184,7 @@ if ($requestMethod === 'GET') {
             'pageTitle' => $customer['name'],
             'customer' => $customer,
             'orders' => OrderService::getUserOrders((int)$m[1]),
+            'hasOpenOrders' => AccountService::hasOpenOrders((int)$m[1]),
         ]);
     }
 
@@ -285,6 +286,20 @@ if ($requestMethod === 'POST') {
             SessionGuard::revoke('admin', (int)(Auth::admin()['admin_id'] ?? 0), true);
             $_SESSION['flash_success'] = t('signed_out_others');
             $to('/admin/password');
+        case '/admin/users/delete':
+            $ip = Request::clientIp($_SERVER);
+            if (Auth::isLockedOut('admin-delete', $ip)) {
+                $finish(['ok' => false, 'error' => t('err_too_many')], '/admin/users/' . $id);
+            }
+            $removed = AccountService::purgeCustomer($id, $input('confirm_email'), (int)(Auth::admin()['admin_id'] ?? 0), $input('admin_password'));
+            if (!$removed['ok']) {
+                if (!empty($removed['wrong_password'])) {
+                    Auth::recordAttempt('admin-delete', $ip, false);
+                }
+                $finish($removed, '/admin/users/' . $id);
+            }
+            $_SESSION['flash_success'] = t('admin_user_deleted', ['orders' => $removed['orders']]);
+            $to('/admin/users');
         case '/admin/users/block':
             $finish(['ok' => CustomerService::setBlocked($id, $input('blocked') === '1')], '/admin/users/' . $id);
         case '/admin/products/save':

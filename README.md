@@ -162,6 +162,7 @@ Sign in as an administrator and open **Shop Settings** to enter the bank account
 - A paid order that is cancelled is listed as **Refund due** until an administrator returns the money and presses **Mark refunded**.
 - Visitors can fill a cart; they sign in at checkout and the cart moves into the account.
 - Customers can delete their account from the profile page once no order or refund is open. Orders are kept without personal details.
+- An administrator can erase a customer from **Customers → (name) → Delete account**, confirmed with the customer's email and the administrator password. Unlike the customer's own deletion, this removes **their orders too**, so past sales reports change; back up first. Blocked while an order or refund is open.
 - Administrators change their password under **Change Password**. `bin/create_admin.php` overwrites it with the value in `.env`.
 
 ## Security notes

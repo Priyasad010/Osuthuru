@@ -40,3 +40,27 @@ $blocked = $customer['status'] === 'blocked';
         </table>
     </div>
 </div>
+
+<div class="card border-danger shadow-sm p-3 mt-3">
+    <h3 class="h6 fw-bold text-danger"><?= e(t('admin_user_delete')) ?></h3>
+    <?php if (!empty($hasOpenOrders)): ?>
+        <p class="small mb-0"><?= e(t('admin_user_delete_open')) ?></p>
+    <?php else: ?>
+        <p class="small"><?= e(t('admin_user_delete_warning', ['orders' => count($orders)])) ?></p>
+        <form method="POST" action="/admin/users/delete" class="row g-2 align-items-start" onsubmit="return confirm(<?= e(json_encode(t('admin_user_delete_confirm'))) ?>);">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" value="<?= (int)$customer['user_id'] ?>">
+            <div class="col-md-5">
+                <label for="confirm_email" class="form-label small fw-semibold"><?= e(t('admin_user_delete_type', ['email' => (string)$customer['email']])) ?></label>
+                <input type="email" class="form-control form-control-sm" id="confirm_email" name="confirm_email" required maxlength="255" autocomplete="off">
+            </div>
+            <div class="col-md-4">
+                <label for="admin_password" class="form-label small fw-semibold"><?= e(t('admin_user_delete_password')) ?></label>
+                <input type="password" class="form-control form-control-sm" id="admin_password" name="admin_password" required maxlength="72" autocomplete="current-password">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-danger btn-sm"><?= e(t('admin_user_delete_button')) ?></button>
+            </div>
+        </form>
+    <?php endif; ?>
+</div>
