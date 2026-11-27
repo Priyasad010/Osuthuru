@@ -46,7 +46,7 @@
                                     <?= e($h['display_name']) ?>
                                 </a>
                             </h6>
-                            <i class="bi bi-flower1 text-success opacity-50"></i>
+                            <span class="rounded overflow-hidden flex-shrink-0 d-inline-flex align-items-center justify-content-center" style="width:56px;height:56px;"><?= picture($h['image'] ?? null, $h['display_name'], 'text-success opacity-50') ?></span>
                         </div>
                         <small class="text-muted fst-italic mb-2"><?= e($h['scientific_name']) ?></small>
                         <p class="small text-secondary mb-3 flex-grow-1"><?= e(mb_strimwidth((string)($h['display_uses'] ?: t('uses_pending')), 0, 100, '...')) ?></p>
@@ -73,7 +73,7 @@
                 <div class="col-sm-6 col-md-4 col-lg-3">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
-                            <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
+                            <?= picture($p['image'] ?? null, $p['display_name']) ?>
                         </div>
                         <div class="card-body d-flex flex-column">
                             <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>

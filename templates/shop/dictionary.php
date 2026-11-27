@@ -32,7 +32,7 @@
             <div class="col-sm-6 col-md-4 col-lg-3">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
-                        <i class="bi bi-flower1 text-success opacity-50 fs-1"></i>
+                        <?= picture($h['image'] ?? null, $h['display_name'], 'text-success opacity-50 fs-1') ?>
                     </div>
                     <div class="card-body d-flex flex-column">
                         <h6 class="fw-bold text-success mb-1">

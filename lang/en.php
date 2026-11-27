@@ -638,4 +638,7 @@ return [
     'nav_menu' => 'Menu',
     'install_app' => 'Install App',
     'install_ios_hint' => 'On iPhone or iPad: tap the Share button in Safari, then "Add to Home Screen".',
+    'credits_title' => 'Picture credits',
+    'credits_intro' => 'Plant and background photographs come from Wikimedia Commons under the licences below. Product pictures show the makers\' packaging.',
+    'credits_changed' => 'cropped and resized',
 ];

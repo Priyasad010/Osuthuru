@@ -105,10 +105,12 @@ class ProductRepo
         return $product;
     }
 
-    public static function getAllCategories(?string $locale = null): array
+    /** @param bool $onlyStocked leave out categories that have no products (for shoppers) */
+    public static function getAllCategories(?string $locale = null, bool $onlyStocked = false): array
     {
         $pdo = Database::getConnection();
-        $rows = $pdo->query("SELECT * FROM category ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+        $where = $onlyStocked ? 'WHERE EXISTS (SELECT 1 FROM product p WHERE p.category_id = c.category_id)' : '';
+        $rows = $pdo->query("SELECT c.* FROM category c {$where} ORDER BY c.name ASC")->fetchAll(PDO::FETCH_ASSOC);
         $isSi = ($locale ?? Lang::getLocale()) === 'si';
 
         return array_map(function($c) use ($isSi) {

@@ -638,4 +638,7 @@ return [
     'nav_menu' => 'මෙනුව',
     'install_app' => 'යෙදුම ස්ථාපනය කරන්න',
     'install_ios_hint' => 'iPhone හෝ iPad එකක: Safari හි Share බොත්තම තට්ටු කර "Add to Home Screen" තෝරන්න.',
+    'credits_title' => 'ඡායාරූප හිමිකම්',
+    'credits_intro' => 'ශාක සහ පසුබිම් ඡායාරූප Wikimedia Commons වෙතින් පහත බලපත්‍ර යටතේ ලබාගෙන ඇත. නිෂ්පාදන පින්තූරවල පෙනෙන්නේ නිෂ්පාදකයන්ගේ ඇසුරුම්ය.',
+    'credits_changed' => 'කපා ප්‍රමාණය වෙනස් කර ඇත',
 ];

@@ -55,6 +55,16 @@ if (preg_match('#^/reviews/(\d+)/helpful$#', $requestUri, $m) && $requestMethod 
     $redirectTo($productId ? "/products/{$productId}#reviews" : '/products');
 }
 
+// ---------------------------------------------------------------- Picture credits
+if ($requestUri === '/credits' && $requestMethod === 'GET') {
+    $file = dirname(__DIR__) . '/public/assets/images/catalog/credits.json';
+    echo View::render('credits', [
+        'pageTitle' => t('credits_title'),
+        'credits' => json_decode((string)@file_get_contents($file), true) ?: [],
+    ]);
+    exit;
+}
+
 // ---------------------------------------------------------------- Blog
 if (($requestUri === '/blogs' || $requestUri === '/blog') && $requestMethod === 'GET') {
     $tag = isset($_GET['tag']) && is_numeric($_GET['tag']) ? (int)$_GET['tag'] : null;

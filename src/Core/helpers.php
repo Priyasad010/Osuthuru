@@ -19,10 +19,10 @@ if (!function_exists('t')) {
 }
 
 if (!function_exists('image_url')) {
-    /** Web path of an uploaded picture, or null if no such file is served. */
+    /** Web path of an uploaded or catalogue picture, or null if no such file is served. */
     function image_url(?string $stored): ?string
     {
-        if (!$stored || !str_starts_with($stored, '/uploads/') || str_contains($stored, '..')) {
+        if (!$stored || !preg_match('#^/(uploads|assets/images/catalog)/#', $stored) || str_contains($stored, '..')) {
             return null;
         }
         return is_file(dirname(__DIR__, 2) . '/public' . $stored) ? $stored : null;
@@ -35,7 +35,8 @@ if (!function_exists('picture')) {
     {
         $url = image_url($stored);
         return $url !== null
-            ? '<img src="' . e($url) . '" alt="' . e($alt) . '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">'
+            ? '<img src="' . e($url) . '" alt="' . e($alt) . '" loading="lazy" style="width:100%;height:100%;object-fit:'
+                . (str_contains($url, '/herbs/') ? 'cover' : 'contain') . ';">'
             : '<i class="bi bi-flower1 ' . e($iconClass) . '" aria-hidden="true"></i>';
     }
 }

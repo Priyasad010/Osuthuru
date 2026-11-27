@@ -113,6 +113,12 @@ With `APP_DEBUG=true`, error details are visible to anyone on the network. In Do
   docker compose exec ml python -m app.evaluate --database suwoda_eval
   ```
 
+## Catalogue pictures and prices
+
+Catalogue pictures are in `public/assets/images/catalog/`. Plant and background photographs come from Wikimedia Commons and are credited on `/credits`. Product pictures show the makers' packaging and were carried over from V1: **get the makers' or the photographer's permission before running a real shop.** Admin uploads still go to `public/uploads/` and replace the catalogue picture.
+
+Where each price came from, and how sure we are, is listed in [docs/PRICE_SOURCES.md](docs/PRICE_SOURCES.md). On an existing install run `bin/migrate.php` and then `bin/seed.php` to get the pictures and the new products.
+
 ## Behaviour to know about
 - **Time**: the application and database work in Asia/Colombo.
 - **Accounts**: email verification is required; five failed logins lock an email and address for 15 minutes; blocking a customer ends their access at once.

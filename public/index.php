@@ -353,7 +353,7 @@ if ($requestUri === '/logout' && $requestMethod === 'POST') {
 if ($requestUri === '/products' && $requestMethod === 'GET') {
     $catId = isset($_GET['category']) && is_numeric($_GET['category']) ? (int)$_GET['category'] : null;
     $products = ProductRepo::findAll($catId);
-    $categories = ProductRepo::getAllCategories();
+    $categories = ProductRepo::getAllCategories(null, true);
     $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
 
     $flash = $_SESSION['flash_success'] ?? null;

@@ -61,7 +61,7 @@ if ($requestUri === '/profile/categories') {
 
     echo View::render('shop/categories', [
         'pageTitle' => t('interests_title'),
-        'categories' => ProductRepo::getAllCategories(),
+        'categories' => ProductRepo::getAllCategories(null, true),
         'selected' => RecommendationRepo::userCategories(Auth::id()),
         'flash' => $flash,
     ]);

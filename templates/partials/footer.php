@@ -22,6 +22,7 @@
                     <li><a href="/products"><?= e(t('nav_products')) ?></a></li>
                     <li><a href="/dictionary"><?= e(t('nav_dictionary')) ?></a></li>
                     <li><a href="/blogs"><?= e(t('nav_blogs')) ?></a></li>
+                    <li><a href="/credits"><?= e(t('credits_title')) ?></a></li>
                 </ul>
                 <button type="button" id="installApp" class="btn btn-outline-light btn-sm mt-2 d-none"><i class="bi bi-phone me-1"></i><?= e(t('install_app')) ?></button>
                 <p id="installHint" class="small text-white mt-2 mb-0 d-none" role="status"><?= e(t('install_ios_hint')) ?></p>

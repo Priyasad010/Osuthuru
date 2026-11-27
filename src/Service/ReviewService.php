@@ -164,7 +164,7 @@ class ReviewService
     private static function removeFiles(array $paths): void
     {
         foreach ($paths as $path) {
-            if (image_url($path) !== null) {
+            if (str_starts_with((string)$path, '/uploads/') && image_url($path) !== null) {
                 @unlink(dirname(__DIR__, 2) . '/public' . $path);
             }
         }

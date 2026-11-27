@@ -189,6 +189,10 @@ class Phase7ContentTest extends TestCase
         $this->assertNull(SeasonalRepo::current(new DateTimeImmutable('2026-04-30')));
         $season = SeasonalRepo::current(new DateTimeImmutable('2026-06-15'));
         $this->assertSame('P7 Season', $season['display_name']);
-        $this->assertContains(1, array_map('intval', array_column($season['products'], 'product_id')));
+        $shown = array_map('intval', array_column($season['products'], 'product_id'));
+        $linked = array_map('intval', $this->pdo->query("SELECT DISTINCT ph.product_id FROM product_herb ph JOIN herb_concern hc ON hc.herb_id = ph.herb_id WHERE hc.concern_id = {$digestion}")->fetchAll(\PDO::FETCH_COLUMN));
+        $this->assertNotEmpty($shown);
+        $this->assertLessThanOrEqual(4, count($shown));
+        $this->assertSame([], array_diff($shown, $linked));
     }
 }

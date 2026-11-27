@@ -5,7 +5,7 @@
  * copies of the herb dictionary (fetched without cookies), so that nothing
  * about a signed-in customer is ever cached.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `suwoda-shell-${VERSION}`;
 const DICTIONARY = `suwoda-dictionary-${VERSION}`;
 const LANGUAGES = ['en', 'si'];
@@ -51,7 +51,7 @@ async function saveDictionary() {
         const herbs = new Set(index.match(/\/herb\/\d+/g) || []);
         for (const path of herbs) {
             const page = await saveAnonymous(cache, path, lang);
-            (page && page.match(/\/uploads\/herbs\/[\w.-]+/g) || []).forEach(p => pictures.add(p));
+            (page && page.match(/\/(?:uploads|assets\/images\/catalog)\/herbs\/[\w.-]+/g) || []).forEach(p => pictures.add(p));
         }
     }
     const shell = await caches.open(SHELL);
