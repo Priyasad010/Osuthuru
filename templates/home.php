@@ -59,6 +59,18 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
     </div>
 <?php endif; ?>
 
+<?php if (!empty($season)): ?>
+    <div class="card border-0 shadow-sm p-4 mb-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h3 class="fw-bold text-success mb-0"><i class="bi bi-cloud-sun me-2"></i><?= e($season['display_name']) ?></h3>
+            <a href="/concern/<?= e($season['slug']) ?>" class="btn btn-outline-success btn-sm"><?= e(t('explore_guide')) ?></a>
+        </div>
+        <?php if (!empty($season['products'])): ?>
+            <?= \App\Core\View::partial('product_cards', ['products' => $season['products']]) ?>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+
 <!-- Herb of the Day Feature -->
 <?php if (!empty($herbOfTheDay)): ?>
     <div class="card border-0 shadow-sm mb-5 overflow-hidden" style="border-left: 6px solid #2d6a4f !important;">
@@ -166,6 +178,25 @@ $featuredProducts = $featuredProducts ?? array_slice(ProductRepo::findAll(), 0, 
                             </div>
                         </div>
                     </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($latestPosts)): ?>
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="fw-bold text-success mb-0"><?= e(t('nav_blogs')) ?></h3>
+            <a href="/blogs" class="btn btn-outline-success btn-sm"><?= e(t('view_all')) ?></a>
+        </div>
+        <div class="row g-3">
+            <?php foreach ($latestPosts as $post): ?>
+                <div class="col-md-4">
+                    <a href="/blog/<?= (int)$post['blog_id'] ?>" class="card h-100 border-0 shadow-sm p-3 text-decoration-none">
+                        <span class="fw-bold text-success"><?= e($post['display_title']) ?></span>
+                        <span class="small text-secondary"><?= e(mb_strimwidth((string)$post['display_content'], 0, 100, '...')) ?></span>
+                    </a>
                 </div>
             <?php endforeach; ?>
         </div>

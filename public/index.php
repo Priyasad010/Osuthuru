@@ -40,6 +40,8 @@ use App\Service\RegistrationService;
 use App\Repository\ProductRepo;
 use App\Repository\HerbRepo;
 use App\Repository\QuizRepo;
+use App\Repository\BlogRepo;
+use App\Repository\SeasonalRepo;
 use App\Service\RecommendationService;
 use App\Repository\BatchRepo;
 use App\Service\SafetyService;
@@ -97,6 +99,8 @@ if ($requestUri === '/' || $requestUri === '') {
     $hasDosha = $sessionDosha || (Auth::check() && QuizRepo::history(Auth::id(), 1));
 
     echo View::render('home', [
+        'season' => SeasonalRepo::current(),
+        'latestPosts' => BlogRepo::all(null, 3),
         'recommended' => RecommendationService::forUser(Auth::id(), $sessionDosha, 4)['products'],
         'hasDosha' => (bool)$hasDosha,
         'quizLive' => QuizRepo::isLive(),
@@ -136,6 +140,7 @@ require $rootDir . '/routes/phase5.php';
 require $rootDir . '/routes/phase6.php';
 
 // ADMIN ANALYTICS & CATALOGUE (PHASE 7)
+require $rootDir . '/routes/content.php';
 require $rootDir . '/routes/admin.php';
 
 // ----------------------------------------------------
@@ -377,7 +382,11 @@ if (preg_match('#^/products/(\d+)$#', $requestUri, $m) && $requestMethod === 'GE
     $flash = $_SESSION['flash_success'] ?? null;
     unset($_SESSION['flash_success']);
 
+    $flashError = $_SESSION['flash_error'] ?? null;
+    unset($_SESSION['flash_error']);
+
     echo View::render('shop/product_detail', [
+        'error' => $flashError,
         'related' => RecommendationService::forProduct($product, 4),
         'flash' => $flash,
         'pageTitle' => $product['display_name'] ?? $product['product_name'],

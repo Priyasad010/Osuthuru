@@ -28,7 +28,7 @@ $cards = [
 $links = [
     ['reports', 'bi-graph-up', 'admin_reports'], ['orders', 'bi-receipt', 'admin_orders'], ['users', 'bi-people', 'admin_users'],
     ['products', 'bi-box-seam', 'admin_products'], ['categories', 'bi-tags', 'admin_categories'], ['discounts', 'bi-percent', 'admin_discounts'],
-    ['herbs', 'bi-journal-medical', 'admin_herbs'], ['coupons', 'bi-ticket-perforated', 'admin_coupons'], ['zones', 'bi-truck', 'admin_zones'],
+    ['herbs', 'bi-journal-medical', 'admin_herbs'], ['blogs', 'bi-journal-richtext', 'admin_blogs'], ['seasonal', 'bi-cloud-sun', 'admin_seasonal'], ['reviews', 'bi-star', 'admin_reviews'], ['coupons', 'bi-ticket-perforated', 'admin_coupons'], ['zones', 'bi-truck', 'admin_zones'],
     ['bank-slips', 'bi-bank', 'admin_slips'], ['batches', 'bi-qr-code', 'admin_batches'], ['assistant', 'bi-chat-dots', 'admin_assistant'],
     ['quiz', 'bi-clipboard2-pulse', 'admin_quiz'], ['dosha', 'bi-diagram-3', 'admin_dosha'], ['safety', 'bi-shield-check', 'admin_safety'],
 ];

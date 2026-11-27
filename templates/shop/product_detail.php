@@ -9,6 +9,10 @@
     <div class="alert alert-success py-2 small" role="status"><?= e($flash) ?></div>
 <?php endif; ?>
 
+<?php if (!empty($error)): ?>
+    <div class="alert alert-danger py-2 small" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
+
 <div class="card border-0 shadow-sm p-4 mb-4">
     <div class="row g-4">
         <div class="col-md-5 text-center">
@@ -89,5 +93,7 @@
         </div>
     <?php endif; ?>
 <?php endforeach; ?>
+
+<?= \App\Core\View::partial('reviews', ['productId' => (int)$product['product_id']]) ?>
 
 <?= \App\Core\View::partial('safety_panel', ['productIds' => [(int)$product['product_id']], 'productId' => (int)$product['product_id']]) ?>

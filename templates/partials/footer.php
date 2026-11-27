@@ -21,6 +21,7 @@
                 <ul class="list-unstyled small mb-0">
                     <li><a href="/products"><?= e(t('nav_products')) ?></a></li>
                     <li><a href="/dictionary"><?= e(t('nav_dictionary')) ?></a></li>
+                    <li><a href="/blogs"><?= e(t('nav_blogs')) ?></a></li>
                 </ul>
             </div>
             <div class="col-6 col-md-4">
