@@ -288,6 +288,31 @@ class OrderService
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Tell the customer that the order was received. Each caller runs this once:
+     * at placement (cash on delivery, bank transfer) or at first payment (card).
+     * A mail problem never undoes the order.
+     */
+    public static function sendPlacedEmail(int $orderId): bool
+    {
+        try {
+            $stmt = Database::getConnection()->prepare("
+                SELECT o.status, u.email, u.name, u.lang
+                FROM `orders` o JOIN `user` u ON u.user_id = o.user_id
+                WHERE o.order_id = :id
+            ");
+            $stmt->execute([':id' => $orderId]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$order || empty($order['email'])) {
+                return false;
+            }
+            return self::sendStatusEmail($order['email'], $order['name'] ?? '', $orderId, (string)$order['status'], 'Order placed', (string)$order['lang']);
+        } catch (Throwable $e) {
+            error_log('Order email failed for order ' . $orderId . ': ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public static function sendStatusEmail(string $email, string $name, int $orderId, string $status, ?string $note = null, string $lang = 'en'): bool
     {
         return Lang::runIn($lang, function () use ($email, $name, $orderId, $status, $note) {

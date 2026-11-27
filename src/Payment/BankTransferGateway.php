@@ -3,6 +3,7 @@
 namespace App\Payment;
 
 use App\Core\Database;
+use App\Service\OrderService;
 use Throwable;
 
 class BankTransferGateway implements PaymentGateway
@@ -52,6 +53,8 @@ class BankTransferGateway implements PaymentGateway
                     ':file_path' => $context['slip_path']
                 ]);
             }
+
+            OrderService::sendPlacedEmail($orderId);
 
             return [
                 'ok' => true,

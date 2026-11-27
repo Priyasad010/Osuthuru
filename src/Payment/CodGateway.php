@@ -3,6 +3,7 @@
 namespace App\Payment;
 
 use App\Core\Database;
+use App\Service\OrderService;
 use PDO;
 use Throwable;
 
@@ -87,6 +88,7 @@ class CodGateway implements PaymentGateway
             ]);
 
             $pdo->commit();
+            OrderService::sendPlacedEmail($orderId);
 
             return [
                 'ok' => true,

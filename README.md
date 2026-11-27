@@ -138,4 +138,6 @@ With `APP_DEBUG=true`, error details are visible to anyone on the network. In Do
 
 Not built (stretch items in the roadmap): PayHere, leaf identification, review summaries, loyalty points and the recommendation click log.
 
-The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
+The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md). For the presentation, follow the [viva demo guide](docs/DEMO_GUIDE.md) (Sinhala).
+
+Customers get one email when an order is placed (card orders: when payment succeeds) and one for each later status change; in development they appear in Mailpit.

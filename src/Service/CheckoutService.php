@@ -298,6 +298,11 @@ class CheckoutService
 
             $pdo->commit();
 
+            // A cash order was announced when it was placed
+            if ($order['payment_method'] === 'card') {
+                OrderService::sendPlacedEmail($orderId);
+            }
+
             return [
                 'ok' => true,
                 'already_paid' => false,

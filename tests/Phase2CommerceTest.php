@@ -107,6 +107,11 @@ class Phase2CommerceTest extends TestCase
         $this->assertCount(3, $history); // Pending -> Confirmed -> Delivered
     }
 
+    public function testNoOrderEmailForAnUnknownOrder(): void
+    {
+        $this->assertFalse(\App\Service\OrderService::sendPlacedEmail(999999999));
+    }
+
     public function testDeliveryFeeChangesWithDistrictAndFreeOverThreshold(): void
     {
         $colomboSmall = DeliveryZoneService::calculateFee('Colombo', 1500.00);
