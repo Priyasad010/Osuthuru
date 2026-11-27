@@ -214,7 +214,8 @@ if ($requestUri === '/login') {
 
         echo View::render('auth/login', [
             'error' => $result['error'],
-            'email' => $email
+            'email' => $email,
+            'mailInbox' => empty($result['unverified']) ? null : Mailer::testInboxUrl()
         ]);
         exit;
     }
@@ -243,7 +244,8 @@ if ($requestUri === '/login') {
     echo View::render('auth/login', [
         'pageTitle' => t('nav_login'),
         'success' => $success,
-        'error' => $error
+        'error' => $error,
+        'mailInbox' => isset($_GET['registered']) ? Mailer::testInboxUrl() : null
     ]);
     exit;
 }
@@ -322,7 +324,9 @@ if ($requestUri === '/forgot-password') {
 
         echo View::render('auth/forgot_password', [
             'message' => $res['message'] ?? null,
-            'error' => $res['error'] ?? null
+            'error' => $res['error'] ?? null,
+            // Shown whether or not the address exists, so it reveals nothing
+            'mailInbox' => isset($res['message']) ? Mailer::testInboxUrl() : null
         ]);
         exit;
     }

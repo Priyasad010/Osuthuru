@@ -67,6 +67,18 @@ Open http://localhost:8080. The admin area is at `/admin/login`; `create_admin.p
 
 Only the website is reachable from the network; the others listen on `127.0.0.1`.
 
+### E-mail
+By default no e-mail leaves the computer: verification and password-reset messages arrive in Mailpit (http://localhost:8025), and the sign-in pages say so. To deliver to real inboxes, set these in `.env` (Gmail needs an [app password](https://myaccount.google.com/apppasswords), typed without spaces):
+
+```
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USER=you@gmail.com
+MAIL_PASS=your-app-password
+MAIL_FROM=you@gmail.com
+```
+Then check with `docker compose exec web php bin/test_mail.php you@gmail.com`. Links in the e-mails use `APP_URL`. Tests always use Mailpit.
+
 ## Tests
 ```bash
 docker compose exec web composer test     # PHPUnit

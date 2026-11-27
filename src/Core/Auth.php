@@ -106,6 +106,13 @@ class Auth
         }
     }
 
+    /** Lifts a lock after the owner has proved the address is theirs by e-mail. */
+    public static function clearAttempts(string $email): void
+    {
+        $stmt = Database::getConnection()->prepare("DELETE FROM login_attempts WHERE email = :email");
+        $stmt->execute([':email' => strtolower(trim($email))]);
+    }
+
     public static function attemptUser(string $email, string $password, string $ip): array
     {
         $cleanEmail = strtolower(trim($email));
@@ -136,8 +143,12 @@ class Auth
         if ($user['status'] !== 'active') {
             // Counted as an attempt so verification emails cannot be sent without limit
             self::recordAttempt($cleanEmail, $ip, false);
-            RegistrationService::resendVerification($user);
-            return ['ok' => false, 'error' => t('err_unverified')];
+            $sent = RegistrationService::resendVerification($user);
+            return [
+                'ok' => false,
+                'unverified' => true,
+                'error' => t($sent ? 'err_unverified' : 'err_unverified_mail_failed'),
+            ];
         }
 
         self::recordAttempt($cleanEmail, $ip, true);

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Core\Auth;
 use App\Core\Database;
 use App\Core\Lang;
 use App\Core\Mailer;
@@ -54,13 +55,22 @@ class RegistrationService
         }
 
         $pdo = Database::getConnection();
+        $find = $pdo->prepare("SELECT email FROM `user` WHERE verification_token = :token AND status = 'inactive'");
+        $find->execute([':token' => $token]);
+        $email = $find->fetchColumn();
+
         $stmt = $pdo->prepare("
             UPDATE `user` SET status = 'active', verification_token = NULL
             WHERE verification_token = :token AND status = 'inactive'
         ");
         $stmt->execute([':token' => $token]);
 
-        return $stmt->rowCount() === 1;
+        if ($stmt->rowCount() !== 1) {
+            return false;
+        }
+        // Sign-in attempts made while waiting for the e-mail must not keep the account locked
+        Auth::clearAttempts((string)$email);
+        return true;
     }
 
     public static function saveLanguage(int $userId, string $lang): void

@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Core\Auth;
 use App\Core\Database;
 use App\Core\Mailer;
 use App\Core\SessionGuard;
@@ -107,7 +108,15 @@ class PasswordResetService
 
             // 1. Update user password hash
             $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE `user` SET password = :password WHERE user_id = :user_id");
+            // Opening the e-mailed link also proves the address, so an unconfirmed account
+            // becomes active. The token is cleared first: MySQL assigns from left to right.
+            // Blocked accounts stay blocked.
+            $stmt = $pdo->prepare("
+                UPDATE `user` SET password = :password,
+                    verification_token = IF(status = 'inactive', NULL, verification_token),
+                    status = IF(status = 'inactive', 'active', status)
+                WHERE user_id = :user_id
+            ");
             $stmt->execute([
                 ':password' => $newHash,
                 ':user_id' => $reset['user_id']
@@ -121,6 +130,7 @@ class PasswordResetService
 
             // Whoever was signed in with the old password is signed out
             SessionGuard::revoke('user', (int)$reset['user_id']);
+            Auth::clearAttempts((string)$reset['email']);
 
             return ['ok' => true, 'message' => t('msg_reset_done')];
         } catch (Throwable $e) {

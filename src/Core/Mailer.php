@@ -8,9 +8,27 @@ use Throwable;
 
 class Mailer
 {
+    /** Why the last message was not sent; empty after a success. Never contains the password. */
+    public static string $lastError = '';
+
+    /**
+     * Address of the local test inbox, or null when real e-mail is being sent.
+     * The pages show it so nobody waits for a message that never leaves this computer.
+     */
+    public static function testInboxUrl(): ?string
+    {
+        if (Env::get('APP_ENV', 'development') === 'production' || Env::get('MAIL_HOST', 'mailpit') !== 'mailpit') {
+            return null;
+        }
+        return 'http://localhost:8025';
+    }
+
     public static function send(string $toEmail, string $toName, string $subject, string $htmlBody, string $textBody = ''): bool
     {
         $mail = new PHPMailer(true);
+        self::$lastError = '';
+        // A mail server that does not answer must not leave the page waiting for minutes
+        $mail->Timeout = 15;
 
         try {
             $host = Env::get('MAIL_HOST', 'mailpit');
@@ -49,9 +67,9 @@ class Mailer
             $mail->send();
             return true;
         } catch (Throwable $e) {
-            if (Env::get('APP_DEBUG', false)) {
-                error_log("Mailer Error: " . $e->getMessage());
-            }
+            self::$lastError = $e->getMessage();
+            // Logged on the live server too, otherwise missing e-mail cannot be traced
+            error_log('Mailer Error: ' . self::$lastError);
             return false;
         }
     }

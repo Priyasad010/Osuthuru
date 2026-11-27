@@ -16,6 +16,8 @@
                     <div class="alert alert-success py-2 small"><?= e($success) ?></div>
                 <?php endif; ?>
 
+                <?php include __DIR__ . '/../partials/test_inbox.php'; ?>
+
                 <form method="POST" action="/login">
                     <?= csrf_field() ?>
 
