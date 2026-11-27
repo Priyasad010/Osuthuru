@@ -141,14 +141,19 @@ class ReviewService
     }
 
     /** Newest reviews for moderation. */
-    public static function latest(int $limit = 100): array
+    public static function count(): int
+    {
+        return (int)Database::getConnection()->query('SELECT COUNT(*) FROM review')->fetchColumn();
+    }
+
+    public static function latest(int $limit = 100, int $offset = 0): array
     {
         return Database::getConnection()->query('
             SELECT r.*, u.name AS user_name, p.product_name
             FROM review r
             LEFT JOIN `user` u ON u.user_id = r.user_id
             LEFT JOIN product p ON p.product_id = r.product_id
-            ORDER BY r.review_id DESC LIMIT ' . max(1, $limit))->fetchAll(PDO::FETCH_ASSOC);
+            ORDER BY r.review_id DESC LIMIT ' . max(1, $limit) . ' OFFSET ' . max(0, $offset))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function delete(int $reviewId): void

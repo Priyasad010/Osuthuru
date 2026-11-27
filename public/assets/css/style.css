@@ -175,6 +175,18 @@ main .card > .bg-light:first-child, main .card > .position-relative:first-child 
     line-height: 1.45 !important;
 }
 
+.pagination {
+    --bs-pagination-color: var(--emerald);
+    --bs-pagination-hover-color: var(--emerald-dark);
+    --bs-pagination-hover-bg: var(--mint);
+    --bs-pagination-focus-color: var(--emerald-dark);
+    --bs-pagination-focus-bg: var(--mint);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(8, 122, 85, 0.25);
+    --bs-pagination-active-bg: var(--emerald);
+    --bs-pagination-active-border-color: var(--emerald);
+    --bs-pagination-border-color: var(--line);
+}
+
 /* ---------- form messages ---------- */
 .field-error {
     flex: 0 0 100%;

@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Repository\ProductRepo;
+use App\Repository\SettingRepo;
 use App\Service\DeliveryZoneService;
 use DateTimeImmutable;
 
@@ -148,6 +149,51 @@ class FormRules
         }
         if (self::number($get('free_over'), 0, 10000000) === null) {
             $errors['free_over'] = t('err_amount');
+        }
+        return $errors;
+    }
+
+    public static function contact(array $data): array
+    {
+        $get = self::reader($data);
+        $errors = [];
+        if (!self::isPersonName($get('name'))) {
+            $errors['name'] = t('err_name_invalid');
+        }
+        if (!self::isEmail($get('email'))) {
+            $errors['email'] = t('val_email');
+        }
+        if (mb_strlen($get('subject')) < 3 || mb_strlen($get('subject')) > 150) {
+            $errors['subject'] = t('err_subject');
+        }
+        if (mb_strlen($get('message')) < 10 || mb_strlen($get('message')) > 2000) {
+            $errors['message'] = t('err_message');
+        }
+        return $errors;
+    }
+
+    /** Shop details; every one may be left empty, but not half-filled bank details. */
+    public static function settings(array $values): array
+    {
+        $errors = [];
+        foreach (SettingRepo::FIELDS as $name => $max) {
+            if (mb_strlen($values[$name] ?? '') > $max) {
+                $errors[$name] = t('err_setting_long', ['field' => t('setting_' . $name), 'max' => $max]);
+            }
+        }
+        $bank = array_filter([$values['bank_name'] ?? '', $values['bank_account_name'] ?? '', $values['bank_account_number'] ?? ''], fn($v) => $v !== '');
+        if ($bank !== [] && count($bank) < 3) {
+            $errors['bank'] = t('err_bank_incomplete');
+        }
+        $number = $values['bank_account_number'] ?? '';
+        if ($number !== '' && !preg_match('/^[0-9][0-9 \-]{4,29}$/', $number)) {
+            $errors['bank_account_number'] = t('err_bank_number');
+        }
+        if (($values['support_email'] ?? '') !== '' && !self::isEmail($values['support_email'])) {
+            $errors['support_email'] = t('val_email');
+        }
+        if (($values['support_phone'] ?? '') !== '' && self::phone($values['support_phone']) === null) {
+            $errors['support_phone'] = t('err_phone_invalid');
         }
         return $errors;
     }

@@ -8,25 +8,38 @@ use PDO;
 
 class CustomerService
 {
-    public static function list(string $search = ''): array
+    public static function list(string $search = '', int $limit = 200, int $offset = 0): array
     {
+        [$where, $params] = self::matching($search);
         $sql = "
             SELECT u.user_id, u.name, u.email, u.phone, u.status, u.created_at,
                    COUNT(o.order_id) AS orders,
                    COALESCE(SUM(CASE WHEN " . ReportService::SALE . " THEN o.total_price END), 0) AS spent
             FROM `user` u
             LEFT JOIN orders o ON o.user_id = u.user_id
-        ";
-        $params = [];
-        if (trim($search) !== '') {
-            $sql .= ' WHERE u.name LIKE :name OR u.email LIKE :email';
-            $params = [':name' => '%' . trim($search) . '%', ':email' => '%' . trim($search) . '%'];
-        }
-        $sql .= ' GROUP BY u.user_id, u.name, u.email, u.phone, u.status, u.created_at ORDER BY u.user_id DESC LIMIT 200';
+            {$where}
+            GROUP BY u.user_id, u.name, u.email, u.phone, u.status, u.created_at
+            ORDER BY u.user_id DESC LIMIT " . max(1, $limit) . ' OFFSET ' . max(0, $offset);
 
         $stmt = Database::getConnection()->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function countMatching(string $search = ''): int
+    {
+        [$where, $params] = self::matching($search);
+        $stmt = Database::getConnection()->prepare("SELECT COUNT(*) FROM `user` u {$where}");
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
+    }
+
+    private static function matching(string $search): array
+    {
+        if (trim($search) === '') {
+            return ['', []];
+        }
+        return ['WHERE u.name LIKE :name OR u.email LIKE :email', [':name' => '%' . trim($search) . '%', ':email' => '%' . trim($search) . '%']];
     }
 
     public static function find(int $userId): ?array

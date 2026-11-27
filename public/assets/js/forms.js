@@ -72,7 +72,16 @@
         [/^\/admin\/safety\/entry$/, { herb_id: { required: true }, flag_id: { required: true }, note_en: optional(2000), note_si: optional(2000), source_note: optional(500) }],
         [/^\/admin\/assistant\/keyword$/, { keyword: { required: true, minlength: '2', maxlength: '100' } }],
         [/^\/admin\/orders\/status$/, { note: optional(255) }],
-        [/^\/admin\/(orders|reports)$/, { to: { 'data-not-before': 'from' } }]
+        [/^\/admin\/(orders|reports)$/, { to: { 'data-not-before': 'from' } }],
+        [/^\/contact$/, { name: person, email: email, subject: { required: true, minlength: '3', maxlength: '150' }, message: { required: true, minlength: '10', maxlength: '2000' } }],
+        [/^\/products$/, { min: { step: '0.01', min: '0', max: '10000000' }, max: { step: '0.01', min: '0', max: '10000000' } }],
+        [/^\/admin\/settings\/save$/, {
+            bank_name: optional(100), bank_branch: optional(100), bank_account_name: optional(150),
+            bank_account_number: { maxlength: '30', pattern: '[0-9][0-9 \\-]{4,29}' }, support_email: { maxlength: '100' },
+            support_phone: phone, business_address: optional(300)
+        }],
+        [/^\/admin\/password\/change$/, { current_password: { required: true }, password: newPassword, password_confirmation: confirmPassword }],
+        [/^\/profile\/delete$/, { password: { required: true }, confirm: { required: true } }]
     ];
 
     const address = form => new URL(form.getAttribute('action') || location.pathname, location.origin).pathname;

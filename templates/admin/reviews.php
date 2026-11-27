@@ -18,3 +18,7 @@
         </div>
     </div>
 <?php endforeach; ?>
+
+<?php if (!empty($pager)): ?>
+    <?= View::partial('pagination', ['pager' => $pager, 'path' => '/admin/reviews', 'query' => []]) ?>
+<?php endif; ?>

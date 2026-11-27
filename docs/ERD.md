@@ -130,6 +130,15 @@ erDiagram
         int concern_id FK
         varchar keyword
     }
+    contact_message {
+        int message_id PK
+        varchar name
+        varchar email
+        varchar subject
+        varchar message
+        tinyint handled
+        timestamp created_at
+    }
     coupon {
         int coupon_id PK
         varchar code
@@ -233,6 +242,7 @@ erDiagram
         enum payment_status
         enum payment_method
         varchar stripe_session_id
+        varchar payment_reference
         varchar shipping_name
         varchar shipping_phone
         text shipping_address
@@ -351,6 +361,10 @@ erDiagram
         char start_mmdd
         char end_mmdd
         int concern_id FK
+    }
+    site_setting {
+        varchar name PK
+        varchar value
     }
     stock_alert {
         int alert_id PK

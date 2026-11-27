@@ -50,6 +50,8 @@ use App\Service\SearchService;
 use App\Service\PasswordResetService;
 use App\Service\CheckoutService;
 use App\Service\PayHereService;
+use App\Service\CartService;
+use App\Service\ProductListing;
 use App\Service\DeliveryZoneService;
 use App\Service\CouponService;
 use App\Service\OrderService;
@@ -146,6 +148,7 @@ require $rootDir . '/routes/phase6.php';
 
 // ADMIN ANALYTICS & CATALOGUE (PHASE 7)
 require $rootDir . '/routes/content.php';
+require $rootDir . '/routes/pages.php';
 require $rootDir . '/routes/admin.php';
 
 // ----------------------------------------------------
@@ -195,7 +198,11 @@ if ($requestUri === '/login') {
         $result = Auth::attemptUser($email, $password, $clientIp);
         if ($result['ok']) {
             RegistrationService::saveLanguage(Auth::id(), Lang::getLocale());
-            header('Location: /');
+            CartService::mergeGuestCart();
+            // Only an address this application stored itself is followed
+            $next = ($_SESSION['after_login'] ?? '') === '/checkout' ? '/checkout' : '/';
+            unset($_SESSION['after_login'], $_SESSION['flash_success']);
+            header('Location: ' . $next);
             exit;
         }
 
@@ -206,7 +213,9 @@ if ($requestUri === '/login') {
         exit;
     }
 
-    $success = null;
+    // For example: "sign in to finish your order"
+    $success = $_SESSION['flash_success'] ?? null;
+    unset($_SESSION['flash_success']);
     $error = null;
     if (isset($_GET['registered'])) {
         if ($_GET['registered'] === 'mailfail') {
@@ -214,6 +223,8 @@ if ($requestUri === '/login') {
         } else {
             $success = t('msg_registered');
         }
+    } elseif (isset($_GET['deleted'])) {
+        $success = t('account_deleted');
     } elseif (isset($_GET['verified'])) {
         if ($_GET['verified'] === '1') {
             $success = t('msg_verified');
@@ -368,8 +379,9 @@ if ($requestUri === '/logout' && $requestMethod === 'POST') {
 // PHASE 2 & 3: STOREFRONT & HERBAL KNOWLEDGE
 // ----------------------------------------------------
 if ($requestUri === '/products' && $requestMethod === 'GET') {
-    $catId = isset($_GET['category']) && is_numeric($_GET['category']) ? (int)$_GET['category'] : null;
-    $products = ProductRepo::findAll($catId);
+    $listing = ProductListing::browse($_GET);
+    $catId = $listing['category'];
+    $products = $listing['products'];
     $categories = ProductRepo::getAllCategories(null, true);
     $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
 
@@ -381,6 +393,7 @@ if ($requestUri === '/products' && $requestMethod === 'GET') {
         'error' => $problem,
         'pageTitle' => t('nav_products'),
         'products' => $products,
+        'listing' => $listing,
         'categories' => $categories,
         'selectedCategory' => $catId,
         'wishlistIds' => $wishlistIds,
@@ -478,110 +491,51 @@ if (preg_match('#^/concern/([a-z0-9-]+)$#', $requestUri, $m) && $requestMethod =
 }
 
 if ($requestUri === '/cart' && $requestMethod === 'GET') {
-    Auth::requireUser();
-    $pdo = Database::getConnection();
-    $stmt = $pdo->prepare("
-        SELECT c.product_id, c.quantity, p.product_name, p.product_name_si, p.price, p.quantity AS stock,
-               (SELECT MAX(d.discount_percentage)
-                FROM discount d
-                WHERE d.product_id = p.product_id
-                  AND (d.start_date IS NULL OR d.start_date <= NOW())
-                  AND (d.end_date IS NULL OR d.end_date >= NOW())
-               ) AS active_discount_percentage
-        FROM cart c
-        JOIN product p ON p.product_id = c.product_id
-        WHERE c.user_id = :uid
-    ");
-    $stmt->execute([':uid' => Auth::id()]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $cartItems = [];
-    $subtotal = 0.0;
-    foreach ($rows as $row) {
-        $enriched = ProductRepo::enrichWithSalePrice(ProductRepo::enrichLocale($row));
-        $lineTotal = round((float)$enriched['effective_price'] * (int)$row['quantity'], 2);
-        $enriched['line_total'] = $lineTotal;
-        $subtotal += $lineTotal;
-        $cartItems[] = $enriched;
-    }
-
+    $cart = CartService::contents();
     echo View::render('shop/cart', [
         'pageTitle' => t('nav_cart'),
-        'cartItems' => $cartItems,
-        'subtotal' => $subtotal,
+        'cartItems' => $cart['items'],
+        'subtotal' => $cart['subtotal'],
         'zones' => DeliveryZoneService::getAllZones()
     ]);
     exit;
 }
 
-if ($requestUri === '/cart/add' && $requestMethod === 'POST') {
-    Auth::requireUser();
+if (in_array($requestUri, ['/cart/add', '/cart/update', '/cart/remove'], true) && $requestMethod === 'POST') {
     if (!Csrf::validateRequest()) {
         http_response_code(403);
         exit(e(t('err_csrf')));
     }
-
     $pid = (int)($_POST['product_id'] ?? 0);
-    $quantity = is_string($_POST['quantity'] ?? null) ? $_POST['quantity'] : '1';
-    $pdo = Database::getConnection();
+    $quantity = is_string($_POST['quantity'] ?? null) ? $_POST['quantity'] : ($requestUri === '/cart/add' ? '1' : '');
 
-    $check = $pdo->prepare("SELECT cart_id, quantity FROM cart WHERE user_id = :uid AND product_id = :pid");
-    $check->execute([':uid' => Auth::id(), ':pid' => $pid]);
-    $existing = $check->fetch(PDO::FETCH_ASSOC);
-
-    if ($problem = FormRules::cartProblem($pid, $quantity, (int)($existing['quantity'] ?? 0))) {
-        $_SESSION['flash_error'] = $problem;
+    if ($requestUri === '/cart/remove') {
+        CartService::remove($pid);
+    } elseif ($requestUri === '/cart/update') {
+        if ($problem = CartService::update($pid, $quantity)) {
+            $_SESSION['flash_error'] = $problem;
+        }
+    } else {
+        if ($problem = CartService::add($pid, $quantity)) {
+            $_SESSION['flash_error'] = $problem;
+        } else {
+            $_SESSION['flash_success'] = t('flash_cart_added');
+        }
         header('Location: ' . back_path('/cart'));
         exit;
     }
-
-    if ($existing) {
-        $upd = $pdo->prepare("UPDATE cart SET quantity = quantity + :qty WHERE cart_id = :cid");
-        $upd->execute([':qty' => (int)$quantity, ':cid' => $existing['cart_id']]);
-    } else {
-        $ins = $pdo->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (:uid, :pid, :qty)");
-        $ins->execute([':uid' => Auth::id(), ':pid' => $pid, ':qty' => (int)$quantity]);
-    }
-
-    $_SESSION['flash_success'] = t('flash_cart_added');
-    header('Location: ' . back_path('/cart'));
-    exit;
-}
-
-if ($requestUri === '/cart/update' && $requestMethod === 'POST') {
-    Auth::requireUser();
-    if (!Csrf::validateRequest()) {
-        http_response_code(403);
-        exit(e(t('err_csrf')));
-    }
-    $pid = (int)($_POST['product_id'] ?? 0);
-    $quantity = is_string($_POST['quantity'] ?? null) ? $_POST['quantity'] : '';
-    if ($problem = FormRules::cartProblem($pid, $quantity)) {
-        $_SESSION['flash_error'] = $problem;
-    } else {
-        $pdo = Database::getConnection();
-        $upd = $pdo->prepare("UPDATE cart SET quantity = :qty WHERE user_id = :uid AND product_id = :pid");
-        $upd->execute([':qty' => (int)$quantity, ':uid' => Auth::id(), ':pid' => $pid]);
-    }
-    header('Location: /cart');
-    exit;
-}
-
-if ($requestUri === '/cart/remove' && $requestMethod === 'POST') {
-    Auth::requireUser();
-    if (!Csrf::validateRequest()) {
-        http_response_code(403);
-        exit(e(t('err_csrf')));
-    }
-    $pid = (int)($_POST['product_id'] ?? 0);
-    $pdo = Database::getConnection();
-    $del = $pdo->prepare("DELETE FROM cart WHERE user_id = :uid AND product_id = :pid");
-    $del->execute([':uid' => Auth::id(), ':pid' => $pid]);
     header('Location: /cart');
     exit;
 }
 
 if ($requestUri === '/checkout') {
+    // A visitor signs in first; the cart is kept and checkout follows
+    if (!Auth::check() && CartService::quantities() !== []) {
+        $_SESSION['after_login'] = '/checkout';
+        $_SESSION['flash_success'] = t('login_to_checkout');
+        header('Location: /login');
+        exit;
+    }
     Auth::requireUser();
     $pdo = Database::getConnection();
 

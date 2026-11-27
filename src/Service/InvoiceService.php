@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Core\Lang;
+use App\Repository\SettingRepo;
 use App\Repository\ProductRepo;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -64,6 +65,8 @@ class InvoiceService
         }
         $lang = e(Lang::getLocale());
         $free = e(t('free'));
+        // The shop's own contact details, or the contact page until they are entered
+        $contact = e(implode(' · ', array_filter([SettingRepo::get('support_email'), SettingRepo::get('support_phone')])) ?: url('contact'));
         // Browser view: load a Sinhala font and offer printing or saving as PDF
         $fontLink = $forBrowser
             ? "<link href='https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;700&display=swap' rel='stylesheet'>"
@@ -144,7 +147,7 @@ class InvoiceService
             </table>
 
             <div class='footer'>
-                {$l['thanks']} support@osuthuru.lk
+                {$l['thanks']} {$contact}
             </div>
         </body>
         </html>

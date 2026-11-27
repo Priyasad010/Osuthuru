@@ -31,3 +31,20 @@
         </div>
     </div>
 </div>
+
+<div class="card border-danger border-opacity-25 shadow-sm p-4 mt-4">
+    <details>
+        <summary class="fw-bold text-danger"><?= e(t('account_delete_title')) ?></summary>
+        <p class="small mt-2"><?= e(t('account_delete_text')) ?></p>
+        <form method="POST" action="/profile/delete" style="max-width: 420px;">
+            <?= csrf_field() ?>
+            <label class="form-label small fw-semibold" for="delete_password"><?= e(t('password')) ?></label>
+            <input type="password" class="form-control mb-2" id="delete_password" name="password" autocomplete="current-password" required>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="delete_confirm" name="confirm" value="1" required>
+                <label class="form-check-label small" for="delete_confirm"><?= e(t('account_delete_confirm')) ?></label>
+            </div>
+            <button type="submit" class="btn btn-danger btn-sm"><?= e(t('account_delete_button')) ?></button>
+        </form>
+    </details>
+</div>

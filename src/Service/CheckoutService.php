@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\Env;
+use App\Repository\SettingRepo;
 use App\Repository\ProductRepo;
 use App\Payment\PaymentGateway;
 use App\Payment\StripeGateway;
@@ -21,7 +22,11 @@ class CheckoutService
     /** Payment methods a customer can choose now; online ones need their keys in .env. */
     public static function availableMethods(): array
     {
-        $methods = ['cod', 'bank_transfer'];
+        $methods = ['cod'];
+        // Offered only when customers can be told which account to pay
+        if (SettingRepo::bankConfigured()) {
+            $methods[] = 'bank_transfer';
+        }
         if (PayHereService::isConfigured()) {
             $methods[] = 'payhere';
         }

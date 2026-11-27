@@ -18,16 +18,60 @@
     <div class="alert alert-success py-2 small"><?= e($flash) ?></div>
 <?php endif; ?>
 
-<!-- Category Filter -->
-<div class="mb-4 d-flex flex-wrap gap-2">
-    <a href="/products" class="btn btn-sm <?= empty($selectedCategory) ? 'btn-brand' : 'btn-outline-success' ?>"><?= e(t('filter_all')) ?></a>
+<?php
+use App\Core\Pager;
+
+$listing = $listing ?? ['filters' => [], 'sort' => 'newest', 'pager' => ['page' => 1, 'pages' => 1, 'total' => count($products)]];
+$chosen = $listing['filters'];
+?>
+<!-- Category Filter: keeps the sort order and price range -->
+<div class="mb-3 d-flex flex-wrap gap-2">
+    <a href="<?= e(Pager::url('/products', ['category' => ''] + $chosen, 1)) ?>" class="btn btn-sm <?= empty($selectedCategory) ? 'btn-brand' : 'btn-outline-success' ?>"><?= e(t('filter_all')) ?></a>
     <?php foreach ($categories as $cat): ?>
-        <a href="/products?category=<?= (int)$cat['category_id'] ?>"
+        <a href="<?= e(Pager::url('/products', ['category' => (string)(int)$cat['category_id']] + $chosen, 1)) ?>"
            class="btn btn-sm <?= ($selectedCategory ?? 0) === (int)$cat['category_id'] ? 'btn-brand' : 'btn-outline-success' ?>">
             <?= e($cat['display_name']) ?>
         </a>
     <?php endforeach; ?>
 </div>
+
+<form method="GET" action="/products" class="card border-0 shadow-sm p-3 mb-3 row g-2 flex-row align-items-end mx-0">
+    <?php if (!empty($chosen['category'])): ?><input type="hidden" name="category" value="<?= e($chosen['category']) ?>"><?php endif; ?>
+    <div class="col-12 col-md-4">
+        <label class="form-label small mb-1" for="sort"><?= e(t('sort_label')) ?></label>
+        <select class="form-select form-select-sm" id="sort" name="sort">
+            <?php foreach (\App\Service\ProductListing::SORTS as $sort): ?>
+                <option value="<?= $sort ?>" <?= $listing['sort'] === $sort ? 'selected' : '' ?>><?= e(t('sort_' . $sort)) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="min"><?= e(t('price_min')) ?></label>
+        <input type="number" class="form-control form-control-sm" id="min" name="min" value="<?= e($chosen['min'] ?? '') ?>">
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small mb-1" for="max"><?= e(t('price_max')) ?></label>
+        <input type="number" class="form-control form-control-sm" id="max" name="max" value="<?= e($chosen['max'] ?? '') ?>">
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="stock" name="stock" value="1" <?= !empty($chosen['stock']) ? 'checked' : '' ?>>
+            <label class="form-check-label small" for="stock"><?= e(t('filter_in_stock')) ?></label>
+        </div>
+    </div>
+    <div class="col-6 col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-brand btn-sm flex-fill"><?= e(t('filter_apply')) ?></button>
+        <a href="/products" class="btn btn-outline-secondary btn-sm" title="<?= e(t('filter_reset')) ?>" aria-label="<?= e(t('filter_reset')) ?>"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+    </div>
+</form>
+<p class="small text-muted" role="status"><?= e(t('results_count', ['count' => $listing['pager']['total']])) ?></p>
+
+<?php if (empty($products)): ?>
+    <div class="card border-0 shadow-sm p-5 text-center">
+        <p class="mb-3"><?= e(t('no_products_match')) ?></p>
+        <div><a href="/products" class="btn btn-brand"><?= e(t('filter_reset')) ?></a></div>
+    </div>
+<?php endif; ?>
 
 <div class="row g-4">
     <?php foreach ($products as $p): ?>
@@ -101,3 +145,5 @@
         </div>
     <?php endforeach; ?>
 </div>
+
+<?= \App\Core\View::partial('pagination', ['pager' => $listing['pager'] + ['per' => 0], 'path' => '/products', 'query' => $chosen]) ?>

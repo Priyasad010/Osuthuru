@@ -18,6 +18,7 @@ use App\Repository\QuizRepo;
 use App\Repository\SafetyRepo;
 use App\Service\DoshaService;
 use App\Service\SafetyService;
+use App\Service\CartService;
 
 $postString = fn(string $key): string => isset($_POST[$key]) && is_string($_POST[$key]) ? $_POST[$key] : '';
 $postArray = fn(string $key): array => isset($_POST[$key]) && is_array($_POST[$key]) ? $_POST[$key] : [];
@@ -38,11 +39,7 @@ $requireCsrf = function (bool $json = false): void {
     exit(e(t('err_csrf')));
 };
 
-$cartProductIds = function (): array {
-    $stmt = Database::getConnection()->prepare("SELECT product_id FROM cart WHERE user_id = :uid");
-    $stmt->execute([':uid' => Auth::id()]);
-    return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-};
+$cartProductIds = fn(): array => CartService::productIds();
 
 // ---------------------------------------------------------------- Dosha quiz
 
@@ -142,9 +139,7 @@ if ($requestUri === '/quiz/save' && $requestMethod === 'POST') {
 if ($requestUri === '/api/safety/check' && $requestMethod === 'POST') {
     $requireCsrf(true);
     $productId = (int)$postString('product_id');
-    if ($productId <= 0) {
-        Auth::requireUser(); // cart check
-    }
+    // Without a product the visitor's or customer's own cart is checked
     $selected = SafetyService::setAnswers($postArray('flags'));
     $ids = $productId > 0 ? [$productId] : $cartProductIds();
     json_response(['ok' => true, 'data' => SafetyService::check($ids, $selected)]);

@@ -25,6 +25,10 @@
     <div class="alert alert-danger py-2 small"><?= e($error) ?></div>
 <?php endif; ?>
 
+<?php if (\App\Service\OrderService::needsRefund($order)): ?>
+    <div class="alert alert-warning small" role="status"><?= e(t('flash_refund_due')) ?></div>
+<?php endif; ?>
+
 <div class="row g-4">
     <div class="col-lg-8">
         <!-- Items Card -->
@@ -117,6 +121,7 @@
                         <span class="badge bg-info text-dark"><?= e(t_or('slip_', $order['bank_slip']['status'])) ?></span>
                     </p>
                 <?php endif; ?>
+                <div class="small mb-3"><?= \App\Core\View::partial('bank_details') ?></div>
                 <form method="POST" action="/orders/<?= (int)$order['order_id'] ?>/upload-slip" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
                     <?= csrf_field() ?>
                     <input aria-label="<?= e(t('bank_slip_title')) ?>" type="file" name="bank_slip" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" required>

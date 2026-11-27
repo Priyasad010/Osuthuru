@@ -135,6 +135,20 @@ An order becomes **paid** only when PayHere's signed notification reaches `/paym
 
 `src/Core/FormRules.php` and the services decide what is accepted. `public/assets/js/forms.js` shows the same rules next to each field in English or Sinhala; add a new form's fields to its `rules` list. Phone numbers are Sri Lankan (stored as `0XXXXXXXXX`), and new passwords need 8 to 72 characters with a letter and a number.
 
+## Shop settings and pages
+
+Sign in as an administrator and open **Shop Settings** to enter the bank account and contact details. **Bank transfer is offered only after the bank, account name and number are saved.** Nothing is invented: empty details are simply not shown.
+
+`/privacy`, `/terms` and `/returns` are **drafts**. Check them (the return period and refund times are business decisions), edit the `page_...` entries in `lang/en.php` and `lang/si.php`, then tick the review box in Shop Settings to remove the draft notice. Contact page messages appear under **Messages**.
+
+## Orders and payments
+
+- Bank transfer, card and PayHere orders stay at Pending until paid. For a bank transfer, verify the slip, or press **Payment received** on the order.
+- A paid order that is cancelled is listed as **Refund due** until an administrator returns the money and presses **Mark refunded**.
+- Visitors can fill a cart; they sign in at checkout and the cart moves into the account.
+- Customers can delete their account from the profile page once no order or refund is open. Orders are kept without personal details.
+- Administrators change their password under **Change Password**. `bin/create_admin.php` overwrites it with the value in `.env`.
+
 ## Security notes
 
 Folder listing is off. Bank slips cannot be opened by their address: an administrator views them through the application. Keep it that way if you move to another web server (Nginx ignores `.htaccess`).

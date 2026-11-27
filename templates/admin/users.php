@@ -31,3 +31,7 @@
         </table>
     </div>
 </div>
+
+<?php if (!empty($pager)): ?>
+    <?= View::partial('pagination', ['pager' => $pager, 'path' => '/admin/users', 'query' => ['q' => $search ?? '']]) ?>
+<?php endif; ?>

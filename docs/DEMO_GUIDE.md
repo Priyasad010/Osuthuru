@@ -18,6 +18,8 @@ Roadmap එකේ 7 වන කොටසේ කතා පිළිවෙළ, demo
 9. "Expired" පෙන්වීමට කැමති නම්: එම පිටුවේ අලුත් batch එකක් add කරන්න. Manufactured දිනය පසුගිය අවුරුද්ද, expiry දිනය ඊයේ.
 10. Dashboard හි **Low stock** list එක demo data වල හිස්ය. පෙන්වීමට කැමති නම් **Manage Products & Stock** හි එක් product එකක stock එක 2 කරන්න (පසුව ආපසු දාන්න).
 
+11. Bank transfer පෙන්වීමට කැමති නම් admin → **Shop Settings** හි බැංකු විස්තර (demo සඳහා පැහැදිලිව "DEMO" කියා) දමන්න. නැත්නම් checkout හි Cash on Delivery සහ PayHere පමණක් පෙනේ.
+
 ## 2. Demo පිළිවෙළ
 
 | # | කාලය | කරන්න | කියන්න |

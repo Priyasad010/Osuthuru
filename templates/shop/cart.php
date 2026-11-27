@@ -100,6 +100,9 @@
                     <span id="estTotalText" class="text-nowrap"><?= e(format_price($subtotal)) ?></span>
                 </div>
 
+                <?php if (!\App\Core\Auth::check()): ?>
+                    <p class="small text-muted"><?= e(t('cart_guest_note')) ?></p>
+                <?php endif; ?>
                 <a href="/checkout" class="btn btn-brand w-100 py-2 fw-semibold">
                     <?= e(t('proceed_checkout')) ?> <i class="bi bi-arrow-right ms-1"></i>
                 </a>

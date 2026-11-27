@@ -111,7 +111,12 @@ if ($requestMethod === 'GET') {
         exit;
     }
     if ($requestUri === '/admin/reviews') {
-        echo View::render('admin/reviews', $takeNotices() + ['pageTitle' => t('admin_reviews'), 'reviews' => ReviewService::latest()]);
+        $pager = \App\Core\Pager::of(ReviewService::count(), $_GET['page'] ?? 1, 25);
+        echo View::render('admin/reviews', $takeNotices() + [
+            'pageTitle' => t('admin_reviews'),
+            'reviews' => ReviewService::latest($pager['per'], $pager['offset']),
+            'pager' => $pager,
+        ]);
         exit;
     }
 }

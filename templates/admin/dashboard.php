@@ -30,6 +30,7 @@ $links = [
     ['products', 'bi-box-seam', 'admin_products'], ['categories', 'bi-tags', 'admin_categories'], ['discounts', 'bi-percent', 'admin_discounts'],
     ['herbs', 'bi-journal-medical', 'admin_herbs'], ['blogs', 'bi-journal-richtext', 'admin_blogs'], ['seasonal', 'bi-cloud-sun', 'admin_seasonal'], ['reviews', 'bi-star', 'admin_reviews'], ['coupons', 'bi-ticket-perforated', 'admin_coupons'], ['zones', 'bi-truck', 'admin_zones'],
     ['bank-slips', 'bi-bank', 'admin_slips'], ['batches', 'bi-qr-code', 'admin_batches'], ['assistant', 'bi-chat-dots', 'admin_assistant'],
+    ['messages', 'bi-envelope', 'admin_messages'], ['settings', 'bi-gear', 'admin_settings'], ['password', 'bi-key', 'admin_password'],
     ['quiz', 'bi-clipboard2-pulse', 'admin_quiz'], ['dosha', 'bi-diagram-3', 'admin_dosha'], ['safety', 'bi-shield-check', 'admin_safety'],
 ];
 ?>
@@ -49,6 +50,16 @@ $links = [
         <a href="/admin/<?= $path ?>" class="btn btn-outline-success btn-sm"><i class="bi <?= $icon ?> me-1"></i><?= e(t($key)) ?></a>
     <?php endforeach; ?>
 </nav>
+
+<?php if (!empty($refundsDue)): ?>
+    <div class="alert alert-danger py-2 small" role="alert"><?= e(t('dash_refunds', ['count' => $refundsDue])) ?> <a href="/admin/orders?refund=1" class="alert-link"><?= e(t('view_details')) ?></a></div>
+<?php endif; ?>
+<?php if (!empty($openMessages)): ?>
+    <div class="alert alert-info py-2 small"><?= e(t('dash_messages', ['count' => $openMessages])) ?> <a href="/admin/messages" class="alert-link"><?= e(t('view_details')) ?></a></div>
+<?php endif; ?>
+<?php if (!\App\Repository\SettingRepo::bankConfigured()): ?>
+    <div class="alert alert-warning py-2 small"><?= e(t('dash_no_bank')) ?> <a href="/admin/settings" class="alert-link"><?= e(t('admin_settings')) ?></a></div>
+<?php endif; ?>
 
 <div class="row row-cols-2 row-cols-lg-5 g-3 mb-4">
     <?php foreach ($cards as [$key, $value, $href]): ?>

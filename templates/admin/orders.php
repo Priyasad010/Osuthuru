@@ -42,6 +42,12 @@
         </select>
     </div>
     <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('report_show')) ?></button></div>
+    <div class="col-12">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="refund" name="refund" value="1" <?= ($filters['refund'] ?? '') === '1' ? 'checked' : '' ?>>
+            <label class="form-check-label small" for="refund"><?= e(t('filter_refunds')) ?></label>
+        </div>
+    </div>
 </form>
 
 <div class="card border-0 shadow-sm">
@@ -72,6 +78,20 @@
                             <span class="badge <?= $o['payment_status'] === 'paid' ? 'bg-success' : 'bg-warning text-dark' ?>">
                                 <?= e(t_or('payment_', $o['payment_status'])) ?>
                             </span>
+                            <?php if (OrderService::needsRefund($o)): ?>
+                                <span class="badge bg-danger d-block mt-1"><?= e(t('refund_due')) ?></span>
+                                <form method="POST" action="/admin/orders/refunded" class="mt-1" onsubmit="return confirm(<?= e(json_encode(t('admin_refunded_confirm'))) ?>);">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= (int)$o['order_id'] ?>">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"><?= e(t('admin_mark_refunded')) ?></button>
+                                </form>
+                            <?php elseif ($o['payment_method'] === 'bank_transfer' && $o['payment_status'] !== 'paid' && $o['status'] !== 'Cancelled'): ?>
+                                <form method="POST" action="/admin/orders/paid" class="mt-1" onsubmit="return confirm(<?= e(json_encode(t('admin_paid_confirm'))) ?>);">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= (int)$o['order_id'] ?>">
+                                    <button type="submit" class="btn btn-outline-success btn-sm"><?= e(t('admin_mark_paid')) ?></button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                         <td class="fw-semibold"><?= e(format_price((float)$o['total_price'])) ?></td>
                         <td><span class="badge bg-info text-dark"><?= e(t_or('status_', $o['status'])) ?></span></td>
@@ -94,3 +114,7 @@
         </table>
     </div>
 </div>
+
+<?php if (!empty($pager)): ?>
+    <?= \App\Core\View::partial('pagination', ['pager' => $pager, 'path' => '/admin/orders', 'query' => $filters]) ?>
+<?php endif; ?>

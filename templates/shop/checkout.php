@@ -61,6 +61,7 @@ $safety = \App\Service\SafetyService::currentResult($productIds);
                     </label>
                 </div>
 
+                <?php if (\App\Repository\SettingRepo::bankConfigured()): ?>
                 <div class="form-check mb-2">
                     <input class="form-check-input" type="radio" name="payment_method" id="pm_bank" value="bank_transfer" onchange="toggleBankSlipBox()">
                     <label class="form-check-label fw-semibold" for="pm_bank">
@@ -70,12 +71,13 @@ $safety = \App\Service\SafetyService::currentResult($productIds);
 
                 <div id="bankSlipUploadBox" class="bg-light p-3 rounded border mb-3 d-none">
                     <p class="small text-muted mb-2">
-                        <strong><?= e(t('bank_details_label')) ?></strong> <?= e(t('bank_details')) ?>
+                        <?= \App\Core\View::partial('bank_details') ?>
                     </p>
                     <label for="bank_slip" class="form-label small fw-semibold"><?= e(t('upload_slip_optional')) ?></label>
                     <input type="file" class="form-control form-control-sm" id="bank_slip" name="bank_slip" accept=".jpg,.jpeg,.png,.webp">
                 </div>
 
+                <?php endif; ?>
                 <?php $methods = \App\Service\CheckoutService::availableMethods(); ?>
                 <?php foreach (['payhere' => ['pay_payhere', 'bi-phone'], 'card' => ['pay_card', 'bi-credit-card']] as $code => [$label, $icon]): ?>
                     <?php if (in_array($code, $methods, true)): ?>
@@ -143,8 +145,10 @@ $safety = \App\Service\SafetyService::currentResult($productIds);
 
 <script>
     function toggleBankSlipBox() {
-        const isBank = document.getElementById('pm_bank').checked;
-        document.getElementById('bankSlipUploadBox').classList.toggle('d-none', !isBank);
+        const bank = document.getElementById('pm_bank');
+        if (bank) {
+            document.getElementById('bankSlipUploadBox').classList.toggle('d-none', !bank.checked);
+        }
     }
 
     function recalcCheckoutTotals() {

@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 use App\Core\Auth;
 use App\Core\Csrf;
+use App\Core\Pager;
+use App\Core\Request;
+use App\Repository\ContactRepo;
+use App\Repository\SettingRepo;
+use App\Service\AccountService;
 use App\Core\Database;
 use App\Core\Upload;
 use App\Core\View;
@@ -54,6 +59,25 @@ $page = function (string $template, array $data) use ($notices): never {
 };
 
 // ---------------------------------------------------------------- Customer profile
+if ($requestUri === '/profile/delete' && $requestMethod === 'POST') {
+    Auth::requireUser();
+    $checkToken();
+    $ip = Request::clientIp($_SERVER);
+    if (Auth::isLockedOut('account-delete', $ip)) {
+        $finish(['ok' => false, 'error' => t('err_too_many')], '/profile');
+    }
+    if ($input('confirm') !== '1') {
+        $finish(['ok' => false, 'error' => t('account_err_confirm')], '/profile');
+    }
+    $deleted = AccountService::deleteCustomer(Auth::id(), $input('password'));
+    if (!$deleted['ok']) {
+        Auth::recordAttempt('account-delete', $ip, false);
+        $finish($deleted, '/profile');
+    }
+    Auth::logout();
+    $to('/login?deleted=1');
+}
+
 if ($requestUri === '/profile' || $requestUri === '/profile/password') {
     Auth::requireUser();
     if ($requestMethod === 'POST') {
@@ -72,7 +96,7 @@ if ($requestUri === '/profile' || $requestUri === '/profile/password') {
 }
 
 // ---------------------------------------------------------------- Admin
-$sections = ['dashboard', 'reports', 'orders', 'users', 'products', 'categories', 'discounts', 'herbs'];
+$sections = ['dashboard', 'reports', 'orders', 'users', 'products', 'categories', 'discounts', 'herbs', 'settings', 'password', 'messages'];
 if (!preg_match('#^/admin(?:/(' . implode('|', $sections) . '))?(?:/|$)#', $requestUri, $match) || $requestUri === '/admin/login') {
     return;
 }
@@ -93,6 +117,8 @@ if ($requestMethod === 'GET') {
             'top' => ReportService::topProducts($from, $until),
             'categories' => ReportService::categorySales($from, $until),
             'lowStock' => ReportService::lowStock(),
+            'refundsDue' => OrderService::refundsDue(),
+            'openMessages' => ContactRepo::count(true),
             'expiring' => BatchRepo::expiringWithin(30),
         ]);
     }
@@ -120,16 +146,24 @@ if ($requestMethod === 'GET') {
     }
 
     if ($requestUri === '/admin/orders') {
-        $filters = ['from' => $query('from'), 'to' => $query('to'), 'status' => $query('status'), 'method' => $query('method')];
+        $filters = ['from' => $query('from'), 'to' => $query('to'), 'status' => $query('status'), 'method' => $query('method'), 'refund' => $query('refund')];
+        $pager = Pager::of(OrderService::countMatching($filters), $query('page'), 25);
         $page('admin/orders', [
             'pageTitle' => t('admin_orders'),
-            'orders' => OrderService::search($filters),
+            'orders' => OrderService::search($filters, $pager['per'], $pager['offset']),
             'filters' => $filters,
+            'pager' => $pager,
         ]);
     }
 
     if ($requestUri === '/admin/users') {
-        $page('admin/users', ['pageTitle' => t('admin_users'), 'users' => CustomerService::list($query('q')), 'search' => $query('q')]);
+        $pager = Pager::of(CustomerService::countMatching($query('q')), $query('page'), 25);
+        $page('admin/users', [
+            'pageTitle' => t('admin_users'),
+            'users' => CustomerService::list($query('q'), $pager['per'], $pager['offset']),
+            'search' => $query('q'),
+            'pager' => $pager,
+        ]);
     }
 
     if (preg_match('#^/admin/users/(\d+)$#', $requestUri, $m)) {
@@ -170,6 +204,23 @@ if ($requestMethod === 'GET') {
         ]);
     }
 
+    if ($requestUri === '/admin/settings') {
+        $page('admin/settings', ['pageTitle' => t('admin_settings'), 'settings' => SettingRepo::all()]);
+    }
+
+    if ($requestUri === '/admin/password') {
+        $page('admin/password', ['pageTitle' => t('admin_password')]);
+    }
+
+    if ($requestUri === '/admin/messages') {
+        $pager = Pager::of(ContactRepo::count(), $query('page'), 25);
+        $page('admin/messages', [
+            'pageTitle' => t('admin_messages'),
+            'messages' => ContactRepo::page($pager['page'], $pager['per']),
+            'pager' => $pager,
+        ]);
+    }
+
     if ($requestUri === '/admin/herbs') {
         $herbs = HerbRepo::findAll(null, 'en');
         foreach ($herbs as &$h) {
@@ -199,6 +250,31 @@ if ($requestMethod === 'POST') {
     };
 
     switch ($requestUri) {
+        case '/admin/orders/paid':
+            $finish(OrderService::markBankPayment($id, (int)(Auth::admin()['admin_id'] ?? 0) ?: null), '/admin/orders');
+        case '/admin/orders/refunded':
+            $finish(OrderService::markRefunded($id, (int)(Auth::admin()['admin_id'] ?? 0) ?: null), '/admin/orders');
+        case '/admin/settings/save':
+            $finish(SettingRepo::save($_POST), '/admin/settings');
+        case '/admin/messages/handled':
+            ContactRepo::setHandled($id, $input('handled') === '1');
+            $finish(['ok' => true], '/admin/messages');
+        case '/admin/messages/delete':
+            ContactRepo::delete($id);
+            $finish(['ok' => true], '/admin/messages');
+        case '/admin/password/change':
+            $ip = Request::clientIp($_SERVER);
+            if (Auth::isLockedOut('admin-password', $ip)) {
+                $finish(['ok' => false, 'error' => t('err_too_many')], '/admin/password');
+            }
+            $changed = AccountService::changeAdminPassword((int)(Auth::admin()['admin_id'] ?? 0), $input('current_password'), $input('password'), $input('password_confirmation'));
+            if (!empty($changed['wrong_current'])) {
+                Auth::recordAttempt('admin-password', $ip, false);
+            }
+            if ($changed['ok']) {
+                session_regenerate_id(true);
+            }
+            $finish($changed, '/admin/password');
         case '/admin/users/block':
             $finish(['ok' => CustomerService::setBlocked($id, $input('blocked') === '1')], '/admin/users/' . $id);
         case '/admin/products/save':

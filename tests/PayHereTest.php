@@ -159,9 +159,9 @@ class PayHereTest extends TestCase
 
     public function testOnlineMethodsAppearOnlyWithTheirKeys(): void
     {
-        $this->assertSame(['cod', 'bank_transfer', 'payhere'], CheckoutService::availableMethods());
+        $this->assertSame(['cod', 'payhere'], CheckoutService::availableMethods());
         $_ENV['PAYHERE_SECRET'] = '';
-        $this->assertSame(['cod', 'bank_transfer'], CheckoutService::availableMethods());
+        $this->assertSame(['cod'], CheckoutService::availableMethods());
         $this->assertFalse(CheckoutService::getGateway('payhere')->initiatePayment(1, 1.0)['ok']);
     }
 }

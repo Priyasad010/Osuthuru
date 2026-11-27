@@ -19,6 +19,61 @@ class OrderService
         'Cancelled'
     ];
 
+    /** Methods that must be paid for before the order is worked on. */
+    public const PREPAID = ['card', 'payhere', 'bank_transfer'];
+
+    public static function awaitingPayment(array $order): bool
+    {
+        return in_array($order['payment_method'] ?? '', self::PREPAID, true) && ($order['payment_status'] ?? '') !== 'paid';
+    }
+
+    /** Money was taken for an order that will not be delivered. */
+    public static function needsRefund(array $order): bool
+    {
+        return ($order['status'] ?? '') === 'Cancelled' && ($order['payment_status'] ?? '') === 'paid';
+    }
+
+    public static function refundsDue(): int
+    {
+        return (int)Database::getConnection()
+            ->query("SELECT COUNT(*) FROM `orders` WHERE status = 'Cancelled' AND payment_status = 'paid'")->fetchColumn();
+    }
+
+    /** An administrator has received a bank transfer that came without a usable slip. */
+    public static function markBankPayment(int $orderId, ?int $adminId = null): array
+    {
+        $order = self::getOrderDetails($orderId);
+        if (!$order || $order['payment_method'] !== 'bank_transfer' || $order['payment_status'] === 'paid' || $order['status'] === 'Cancelled') {
+            return ['ok' => false, 'error' => t('admin_err_not_payable')];
+        }
+        $paid = CheckoutService::confirmPayment($orderId);
+        if (!$paid['ok']) {
+            return $paid;
+        }
+        self::recordHistory($orderId, (string)$order['status'], 'Payment received', $adminId);
+        return ['ok' => true];
+    }
+
+    /** Record that the money of a cancelled order has been given back. */
+    public static function markRefunded(int $orderId, ?int $adminId = null): array
+    {
+        $update = Database::getConnection()->prepare(
+            "UPDATE `orders` SET payment_status = 'refunded' WHERE order_id = :id AND status = 'Cancelled' AND payment_status = 'paid'"
+        );
+        $update->execute([':id' => $orderId]);
+        if ($update->rowCount() !== 1) {
+            return ['ok' => false, 'error' => t('admin_err_no_refund')];
+        }
+        self::recordHistory($orderId, 'Cancelled', 'Refund recorded', $adminId);
+        $order = self::getOrderDetails($orderId);
+        if ($order && !empty($order['user_email'])) {
+            $lang = Database::getConnection()->prepare('SELECT lang FROM `user` WHERE user_id = :id');
+            $lang->execute([':id' => $order['user_id']]);
+            self::sendStatusEmail($order['user_email'], (string)$order['user_name'], $orderId, 'Cancelled', 'Refund recorded', (string)$lang->fetchColumn());
+        }
+        return ['ok' => true];
+    }
+
     public static function recordHistory(int $orderId, string $status, ?string $note = null, ?int $adminId = null): void
     {
         $pdo = Database::getConnection();
@@ -75,6 +130,11 @@ class OrderService
                 throw new \RuntimeException(t('admin_err_delivered', ['id' => $orderId]));
             }
 
+            // Nothing is prepared or sent before an online or bank payment arrives
+            if (!in_array($newStatus, ['Pending', 'Cancelled'], true) && self::awaitingPayment($order)) {
+                throw new \RuntimeException(t('admin_err_unpaid', ['id' => $orderId]));
+            }
+
             // For COD orders: marking as Delivered sets payment_status = 'paid'
             $paymentStatus = $order['payment_status'];
             if ($order['payment_method'] === 'cod' && $newStatus === 'Delivered') {
@@ -102,6 +162,9 @@ class OrderService
 
             // Record history row
             self::recordHistory($orderId, $newStatus, $note, $adminId);
+            if ($newStatus === 'Cancelled' && $paymentStatus === 'paid') {
+                self::recordHistory($orderId, 'Cancelled', 'Paid order cancelled - refund required', $adminId);
+            }
 
             $pdo->commit();
 
@@ -159,6 +222,10 @@ class OrderService
             $upd->execute([':oid' => $orderId]);
 
             self::recordHistory($orderId, 'Cancelled', $reason, null);
+            $refund = $order['payment_status'] === 'paid';
+            if ($refund) {
+                self::recordHistory($orderId, 'Cancelled', 'Paid order cancelled - refund required', null);
+            }
 
             $pdo->commit();
 
@@ -166,7 +233,12 @@ class OrderService
                 self::sendStatusEmail($order['user_email'], $order['user_name'] ?? '', $orderId, 'Cancelled', $reason, (string)$order['user_lang']);
             }
 
-            return ['ok' => true, 'message' => t('flash_order_cancelled', ['id' => $orderId])];
+            $message = t('flash_order_cancelled', ['id' => $orderId]);
+            return [
+                'ok' => true,
+                'refund_needed' => $refund,
+                'message' => $refund ? $message . ' ' . t('flash_refund_due') : $message,
+            ];
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -258,7 +330,29 @@ class OrderService
     }
 
     /** Admin order list; empty or invalid filters are ignored. */
-    public static function search(array $filters = []): array
+    public static function search(array $filters = [], int $limit = 500, int $offset = 0): array
+    {
+        [$where, $params] = self::conditions($filters);
+        $stmt = Database::getConnection()->prepare("
+            SELECT o.*, u.name AS user_name
+            FROM orders o JOIN `user` u ON u.user_id = o.user_id
+            {$where}
+            ORDER BY o.order_date DESC, o.order_id DESC
+            LIMIT " . max(1, $limit) . " OFFSET " . max(0, $offset));
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function countMatching(array $filters = []): int
+    {
+        [$where, $params] = self::conditions($filters);
+        $stmt = Database::getConnection()->prepare("SELECT COUNT(*) FROM orders o JOIN `user` u ON u.user_id = o.user_id {$where}");
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
+    }
+
+    /** @return array{0: string, 1: array} the WHERE clause and its values */
+    private static function conditions(array $filters): array
     {
         $where = [];
         $params = [];
@@ -276,16 +370,11 @@ class OrderService
             $where[] = 'o.payment_method = :method';
             $params[':method'] = $filters['method'];
         }
+        if (($filters['refund'] ?? '') === '1') {
+            $where[] = "o.status = 'Cancelled' AND o.payment_status = 'paid'";
+        }
 
-        $stmt = Database::getConnection()->prepare("
-            SELECT o.*, u.name AS user_name
-            FROM orders o JOIN `user` u ON u.user_id = o.user_id
-            " . ($where ? 'WHERE ' . implode(' AND ', $where) : '') . "
-            ORDER BY o.order_date DESC, o.order_id DESC
-            LIMIT 500
-        ");
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return [$where ? 'WHERE ' . implode(' AND ', $where) : '', $params];
     }
 
     /**
