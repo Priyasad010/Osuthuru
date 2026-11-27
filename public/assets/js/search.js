@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 2. Voice Search via Browser Web Speech API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition && voiceBtn) {
+    if (SpeechRecognition && voiceBtn && window.isSecureContext !== false) {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;

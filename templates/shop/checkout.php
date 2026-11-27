@@ -149,14 +149,15 @@ $safety = \App\Service\SafetyService::currentResult($productIds);
         const fee = parseFloat(opt.dataset.fee || '0');
         const freeOver = parseFloat(opt.dataset.freeOver || '0');
         const appliedFee = (freeOver > 0 && subtotal >= freeOver) ? 0 : fee;
+        const money = v => 'Rs. ' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         document.getElementById('chkDistrictName').textContent = opt.value;
-        document.getElementById('chkDeliveryFee').textContent = appliedFee === 0 ? <?= json_encode(t('free')) ?> : 'Rs. ' + appliedFee.toFixed(2);
-        const freeOverText = <?= json_encode(t('free_over_note')) ?>.replace(':amount', 'Rs. ' + freeOver.toFixed(2));
+        document.getElementById('chkDeliveryFee').textContent = appliedFee === 0 ? <?= json_encode(t('free')) ?> : money(appliedFee);
+        const freeOverText = <?= json_encode(t('free_over_note')) ?>.replace(':amount', money(freeOver));
         document.getElementById('chkFreeOverNote').textContent = freeOver > 0
             ? (appliedFee === 0 ? <?= json_encode(t('free_unlocked')) ?> : freeOverText)
             : '';
-        document.getElementById('chkGrandTotal').textContent = 'Rs. ' + (subtotal + appliedFee).toFixed(2);
+        document.getElementById('chkGrandTotal').textContent = money(subtotal + appliedFee);
     }
 
     recalcCheckoutTotals();

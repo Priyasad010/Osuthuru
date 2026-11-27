@@ -15,6 +15,17 @@ class Upload
 
     public static function process(array $file, string $subfolder = 'images'): array
     {
+        return self::store($file, $subfolder, self::ALLOWED_MIME, 'err_upload_format');
+    }
+
+    /** PDF documents (lab reports), same size limit. */
+    public static function processPdf(array $file, string $subfolder = 'reports'): array
+    {
+        return self::store($file, $subfolder, ['application/pdf' => 'pdf'], 'err_upload_pdf');
+    }
+
+    private static function store(array $file, string $subfolder, array $allowed, string $formatError): array
+    {
         if (!isset($file['error']) || is_array($file['error'])) {
             return ['ok' => false, 'error' => t('err_upload_param')];
         }
@@ -32,11 +43,11 @@ class Upload
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($file['tmp_name']);
 
-        if (!array_key_exists($mime, self::ALLOWED_MIME)) {
-            return ['ok' => false, 'error' => t('err_upload_format')];
+        if (!array_key_exists($mime, $allowed)) {
+            return ['ok' => false, 'error' => t($formatError)];
         }
 
-        $extension = self::ALLOWED_MIME[$mime];
+        $extension = $allowed[$mime];
 
         // 3. Generate random file name
         $randomName = bin2hex(random_bytes(16)) . '.' . $extension;

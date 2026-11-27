@@ -53,6 +53,8 @@ $admin = Auth::admin();
             <a href="/admin/quiz" class="btn btn-outline-success btn-sm"><i class="bi bi-clipboard2-pulse me-1"></i> <?= e(t('admin_quiz')) ?></a>
             <a href="/admin/dosha" class="btn btn-outline-success btn-sm"><i class="bi bi-diagram-3 me-1"></i> <?= e(t('admin_dosha')) ?></a>
             <a href="/admin/safety" class="btn btn-outline-success btn-sm"><i class="bi bi-shield-check me-1"></i> <?= e(t('admin_safety')) ?></a>
+            <a href="/admin/batches" class="btn btn-outline-success btn-sm"><i class="bi bi-qr-code me-1"></i> <?= e(t('admin_batches')) ?></a>
+            <a href="/admin/assistant" class="btn btn-outline-success btn-sm"><i class="bi bi-chat-dots me-1"></i> <?= e(t('admin_assistant')) ?></a>
             <a href="/admin/orders" class="btn btn-outline-success btn-sm"><i class="bi bi-receipt me-1"></i> <?= e(t('admin_orders')) ?></a>
             <a href="/admin/coupons" class="btn btn-outline-success btn-sm"><i class="bi bi-ticket-perforated me-1"></i> <?= e(t('admin_coupons')) ?></a>
             <a href="/admin/zones" class="btn btn-outline-success btn-sm"><i class="bi bi-truck me-1"></i> <?= e(t('admin_zones')) ?></a>
@@ -60,3 +62,16 @@ $admin = Auth::admin();
         </div>
     </div>
 </div>
+
+<?php if (!empty($expiring)): ?>
+    <div class="card border-0 shadow-sm mt-4 border-start border-4 border-warning">
+        <div class="card-body">
+            <h5 class="fw-bold text-warning-emphasis"><i class="bi bi-calendar-x me-1"></i><?= e(t('admin_expiring')) ?></h5>
+            <ul class="mb-0 small">
+                <?php foreach ($expiring as $b): ?>
+                    <li><a href="/admin/batches" class="text-reset"><?= e($b['batch_code']) ?></a> · <?= e($b['product_name']) ?> · <?= e($b['expires_on']) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
+<?php endif; ?>

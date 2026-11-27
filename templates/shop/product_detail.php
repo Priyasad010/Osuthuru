@@ -5,6 +5,10 @@
     </a>
 </div>
 
+<?php if (!empty($flash)): ?>
+    <div class="alert alert-success py-2 small" role="status"><?= e($flash) ?></div>
+<?php endif; ?>
+
 <div class="card border-0 shadow-sm p-4 mb-4">
     <div class="row g-4">
         <div class="col-md-5 text-center">

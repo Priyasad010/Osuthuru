@@ -47,7 +47,19 @@
                         <?php foreach ($order['items'] as $item): ?>
                             <?php $itemsSubtotal += (float)$item['subtotal']; ?>
                             <tr>
-                                <td class="fw-semibold"><?= e(\App\Repository\ProductRepo::enrichLocale($item)['display_name']) ?></td>
+                                <td class="fw-semibold">
+                                    <?= e(\App\Repository\ProductRepo::enrichLocale($item)['display_name']) ?>
+                                    <?php if (!empty($item['batch_token'])): ?>
+                                        <div class="small fw-normal">
+                                            <a href="/verify?t=<?= e($item['batch_token']) ?>" class="text-success">
+                                                <i class="bi bi-qr-code me-1"></i><?= e(t('batch_code')) ?>: <?= e($item['batch_code']) ?>
+                                            </a>
+                                            <?php if ($item['batch_status'] === 'recalled'): ?>
+                                                <span class="badge bg-danger"><?= e(t('verify_recalled')) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-end"><?= (int)$item['quantity'] ?></td>
                                 <td class="text-end"><?= e(format_price((float)$item['unit_price'])) ?></td>
                                 <td class="text-end"><?= e(format_price((float)$item['subtotal'])) ?></td>

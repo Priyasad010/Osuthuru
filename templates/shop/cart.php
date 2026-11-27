@@ -18,7 +18,7 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
+                    <table class="table align-middle mb-0 cart-table">
                         <thead class="table-light">
                             <tr>
                                 <th><?= e(t('col_product')) ?></th>
@@ -89,9 +89,9 @@
                     <span id="estDeliveryText" class="fw-semibold">-</span>
                 </div>
                 <hr>
-                <div class="d-flex justify-content-between fw-bold fs-5 text-success mb-3">
+                <div class="d-flex flex-wrap justify-content-between gap-2 fw-bold fs-5 text-success mb-3">
                     <span><?= e(t('estimated_total')) ?></span>
-                    <span id="estTotalText"><?= e(format_price($subtotal)) ?></span>
+                    <span id="estTotalText" class="text-nowrap"><?= e(format_price($subtotal)) ?></span>
                 </div>
 
                 <a href="/checkout" class="btn btn-suwoda w-100 py-2 fw-semibold">
@@ -115,8 +115,9 @@
             const fee = parseFloat(opt.dataset.fee || '0');
             const freeOver = parseFloat(opt.dataset.freeOver || '0');
             const appliedFee = (freeOver > 0 && subtotal >= freeOver) ? 0 : fee;
-            document.getElementById('estDeliveryText').textContent = appliedFee === 0 ? <?= json_encode(t('free')) ?> : 'Rs. ' + appliedFee.toFixed(2);
-            document.getElementById('estTotalText').textContent = 'Rs. ' + (subtotal + appliedFee).toFixed(2);
+            const money = v => 'Rs. ' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('estDeliveryText').textContent = appliedFee === 0 ? <?= json_encode(t('free')) ?> : money(appliedFee);
+            document.getElementById('estTotalText').textContent = money(subtotal + appliedFee);
         }
         updateCartDeliveryEstimate();
     </script>

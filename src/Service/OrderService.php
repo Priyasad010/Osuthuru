@@ -94,6 +94,10 @@ class OrderService
 
             if ($newStatus === 'Cancelled') {
                 self::restoreStock($orderId, $order);
+                BatchService::release($orderId);
+            } elseif ($newStatus !== 'Pending') {
+                // Confirmed or later: assign batches, first expiry first out
+                BatchService::allocate($orderId);
             }
 
             // Record history row
@@ -149,6 +153,7 @@ class OrderService
             }
 
             self::restoreStock($orderId, $order);
+            BatchService::release($orderId);
 
             $upd = $pdo->prepare("UPDATE `orders` SET status = 'Cancelled' WHERE order_id = :oid");
             $upd->execute([':oid' => $orderId]);
@@ -226,9 +231,11 @@ class OrderService
         }
 
         $itemsStmt = $pdo->prepare("
-            SELECT oi.*, p.product_name, p.product_name_si, p.image
+            SELECT oi.*, p.product_name, p.product_name_si, p.image,
+                   b.batch_code, b.public_token AS batch_token, b.status AS batch_status, b.expires_on AS batch_expires_on
             FROM `order_item` oi
             JOIN `product` p ON p.product_id = oi.product_id
+            LEFT JOIN `product_batch` b ON b.batch_id = oi.batch_id
             WHERE oi.order_id = :oid
         ");
         $itemsStmt->execute([':oid' => $orderId]);

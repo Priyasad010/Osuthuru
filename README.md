@@ -61,6 +61,25 @@
 - Safety answers are kept in the visitor's session only (and in the browser's `localStorage` if they ask). They are never written to the database. An `avoid` match must be acknowledged at checkout.
 - Quiz answers are not stored; signed-in users can save their percentage scores.
 
+## QR traceability
+- Create batches at `/admin/batches` (dates, source, supplier, packs, PDF lab report up to 2 MB), then download a label sheet. Each QR opens `/verify?t=...`, which shows **Genuine**, **Expired** or **Recalled**.
+- A code scanned from more than 50 different addresses shows a possible-duplicate warning. Scans store salted hashes only.
+- Confirmed orders take packs from the batch that expires first; cancelling returns them.
+
+## Shop assistant
+- Put your key in `.env` (`LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3.8-flash`, `LLM_API_KEY=...`), then check it with `docker compose exec web php bin/test_llm.php`.
+- Without a key, or when the call fails, it answers with matching catalogue items.
+- The model receives only catalogue data and **published** safety notes. Limits: 500 characters, 20 questions per hour per address, last 6 turns, 24-hour cache, 15-second timeout.
+- Chat is deleted after 30 days (during assistant use, on the admin page, or with `php bin/purge_chat.php`).
+- Review unmatched questions and edit topic words at `/admin/assistant`.
+
+## Using a phone
+1. In PowerShell run `pwsh bin/set_lan_url.ps1`. It sets `APP_URL` to this PC's network address (add `-Local` to undo).
+2. Open that address on a phone on the same network. Print QR labels afterwards, and again if the address changes.
+3. If the page does not load, allow inbound port 8080 in the firewall, on trusted networks only.
+
+Only the website is reachable from the network. MySQL, Mailpit and the ML service listen on `127.0.0.1`. With `APP_DEBUG=true`, error details are visible to anyone on the network. Voice search needs `localhost` or HTTPS, so its button is hidden on a phone over plain HTTP. In Docker, visitors may all appear to come from one address, which affects the assistant limit and duplicate-scan count during development.
+
 ## Behaviour to know about
 - **Email verification**: new accounts cannot log in until the emailed link is opened (see Mailpit in development). Logging in with the correct password sends the link again.
 - **Login lockout**: based on the connecting IP address. Behind a reverse proxy, configure the web server to set `REMOTE_ADDR` from that trusted proxy.
@@ -77,6 +96,6 @@
 - [x] **Phase 2: Commerce for Sri Lanka** (COD, bank transfer, delivery zones, invoices, wishlist)
 - [x] **Phase 3: Herbal knowledge and bilingual search** (Sinhala/English, concern pages, voice)
 - [x] **Phase 4: Novelty A** (Dosha quiz, safety checker)
-- [ ] **Phase 5: Novelty B** (QR batch traceability, AI Assistant)
+- [x] **Phase 5: Novelty B** (QR batch traceability, AI Assistant)
 - [ ] **Phase 6: Python intelligence service** (FastAPI recommender & sales forecast)
 - [ ] **Phase 7: Admin analytics, PWA, quality & polish**

@@ -17,20 +17,21 @@ $pageTitle = $pageTitle ?? t('app_name');
     <!-- Bootstrap 5.3 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="icon" type="image/jpeg" href="/assets/images/Logo.jpg">
     <!-- Custom Theme -->
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css?v=7">
 </head>
 <body>
 
 <header>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
-        <div class="container">
+    <nav class="navbar navbar-expand-xl navbar-dark navbar-custom fixed-top">
+        <div class="container-fluid px-3 px-xxl-5">
             <!-- Brand -->
             <a class="navbar-brand d-flex align-items-center gap-2" href="/">
                 <img src="/assets/images/Logo.jpg" alt="Suwoda Logo" width="45" height="45" class="rounded-circle">
                 <div class="d-flex flex-column">
                     <span class="fw-bold fs-5 lh-1"><?= e(t('app_name')) ?></span>
-                    <small class="text-white-50 fs-8 lh-1 d-none d-sm-inline"><?= e(t('tagline')) ?></small>
+                    <small class="text-white-50 fs-8 lh-1 d-none d-sm-inline d-xl-none"><?= e(t('tagline')) ?></small>
                 </div>
             </a>
 
@@ -41,23 +42,23 @@ $pageTitle = $pageTitle ?? t('app_name');
 
             <!-- Nav Items -->
             <div class="collapse navbar-collapse" id="suwodaNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-2 mb-xl-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i><?= e(t('nav_home')) ?></a>
+                        <a class="nav-link" href="/"><i class="bi bi-house-door nav-icon me-1"></i><?= e(t('nav_home')) ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/products"><i class="bi bi-grid me-1"></i><?= e(t('nav_products')) ?></a>
+                        <a class="nav-link" href="/products"><i class="bi bi-grid nav-icon me-1"></i><?= e(t('nav_products')) ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/dictionary"><i class="bi bi-journal-medical me-1"></i><?= e(t('nav_dictionary')) ?></a>
+                        <a class="nav-link" href="/dictionary"><i class="bi bi-journal-medical nav-icon me-1"></i><?= e(t('nav_dictionary')) ?></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/quiz"><i class="bi bi-clipboard2-pulse me-1"></i><?= e(t('nav_quiz')) ?></a>
+                        <a class="nav-link" href="/quiz"><i class="bi bi-clipboard2-pulse nav-icon me-1"></i><?= e(t('nav_quiz')) ?></a>
                     </li>
                 </ul>
 
                 <!-- Search Bar with Autocomplete & Voice Search -->
-                <form class="d-flex position-relative me-lg-3 my-2 my-lg-0" action="/search" method="GET" style="min-width: 280px; max-width: 360px;">
+                <form class="d-flex position-relative me-xl-3 my-2 my-xl-0 nav-search" action="/search" method="GET">
                     <div class="input-group input-group-sm">
                         <input type="text" name="q" id="globalSearchInput" class="form-control"
                                placeholder="<?= e(t('search_placeholder')) ?>"
@@ -103,7 +104,7 @@ $pageTitle = $pageTitle ?? t('app_name');
                     <!-- Auth Links -->
                     <?php if (Auth::check()): ?>
                         <div class="dropdown">
-                            <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <button class="btn btn-light btn-sm dropdown-toggle nav-user" type="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle me-1"></i><?= e(Auth::user()['name'] ?? t('user_fallback')) ?>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow">

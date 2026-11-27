@@ -329,7 +329,7 @@ class Phase4DoshaAndSafetyTest extends TestCase
     public function testNoNonStandardStatusCodes(): void
     {
         $root = dirname(__DIR__);
-        foreach (['/public/index.php', '/routes/phase4.php'] as $file) {
+        foreach (['/public/index.php', '/routes/phase4.php', '/routes/phase5.php'] as $file) {
             $this->assertStringNotContainsString('419', file_get_contents($root . $file), $file);
         }
     }

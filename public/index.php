@@ -40,6 +40,7 @@ use App\Service\RegistrationService;
 use App\Repository\ProductRepo;
 use App\Repository\HerbRepo;
 use App\Repository\QuizRepo;
+use App\Repository\BatchRepo;
 use App\Service\SafetyService;
 use App\Service\SearchService;
 use App\Service\PasswordResetService;
@@ -70,6 +71,15 @@ Lang::init();
 $clientIp = Request::clientIp($_SERVER);
 $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+// PHP discards the whole form when an upload exceeds post_max_size
+if ($requestMethod === 'POST' && $_POST === [] && $_FILES === []
+    && str_starts_with((string)($_SERVER['CONTENT_TYPE'] ?? ''), 'multipart/form-data')
+    && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 1048576) {
+    http_response_code(413);
+    echo View::render('upload_too_large', ['pageTitle' => t('err_upload_size')]);
+    exit;
+}
 
 // ----------------------------------------------------
 // PUBLIC API & HEALTH
@@ -117,6 +127,9 @@ if ($requestUri === '/lang' && $requestMethod === 'POST') {
 // DOSHA QUIZ & SAFETY CHECKER (PHASE 4)
 // ----------------------------------------------------
 require $rootDir . '/routes/phase4.php';
+
+// QR VERIFICATION & ASSISTANT (PHASE 5)
+require $rootDir . '/routes/phase5.php';
 
 // ----------------------------------------------------
 // SEARCH & AUTOCOMPLETE (PHASE 3)
@@ -354,7 +367,11 @@ if (preg_match('#^/products/(\d+)$#', $requestUri, $m) && $requestMethod === 'GE
         exit;
     }
     $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
+    $flash = $_SESSION['flash_success'] ?? null;
+    unset($_SESSION['flash_success']);
+
     echo View::render('shop/product_detail', [
+        'flash' => $flash,
         'pageTitle' => $product['display_name'] ?? $product['product_name'],
         'product' => $product,
         'isWishlisted' => in_array($productId, $wishlistIds, true)
@@ -850,7 +867,8 @@ if (str_starts_with($requestUri, '/admin/')) {
 
         echo View::render('admin/dashboard', [
             'pageTitle' => t('admin_dashboard'),
-            'stats' => $stats
+            'stats' => $stats,
+            'expiring' => BatchRepo::expiringWithin(30)
         ]);
         exit;
     }
