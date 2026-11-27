@@ -637,4 +637,5 @@ return [
     'skip_to_content' => 'අන්තර්ගතයට යන්න',
     'nav_menu' => 'මෙනුව',
     'install_app' => 'යෙදුම ස්ථාපනය කරන්න',
+    'install_ios_hint' => 'iPhone හෝ iPad එකක: Safari හි Share බොත්තම තට්ටු කර "Add to Home Screen" තෝරන්න.',
 ];

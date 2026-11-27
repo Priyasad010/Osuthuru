@@ -239,6 +239,25 @@ class Phase7AdminTest extends TestCase
         $this->assertSame(0, (int)$this->pdo->query("SELECT COUNT(*) FROM herb_concern WHERE herb_id = {$herb['id']}")->fetchColumn());
     }
 
+    public function testHealthTopicsCanBeRenamed(): void
+    {
+        $before = $this->pdo->query('SELECT name_en, name_si, slug FROM health_concern WHERE concern_id = 1')->fetch();
+        try {
+            $this->assertFalse(\App\Repository\HerbRepo::renameConcern(1, '', 'x'));
+            $this->assertTrue(\App\Repository\HerbRepo::renameConcern(1, 'New name', 'නව නම'));
+            $after = $this->pdo->query('SELECT name_en, name_si, slug FROM health_concern WHERE concern_id = 1')->fetch();
+            $this->assertSame(['New name', 'නව නම', $before['slug']], [$after['name_en'], $after['name_si'], $after['slug']]);
+        } finally {
+            \App\Repository\HerbRepo::renameConcern(1, $before['name_en'], $before['name_si']);
+        }
+    }
+
+    public function testHttpsUsesItsOwnSessionCookie(): void
+    {
+        $this->assertSame('PHPSESSID', \App\Core\Auth::sessionName([]));
+        $this->assertSame('SUWODA_SECURE', \App\Core\Auth::sessionName(['HTTPS' => 'on']));
+    }
+
     public function testOnlyServedUploadsAreShownAsPictures(): void
     {
         $this->assertNull(image_url('../uploads/products/x.png'));

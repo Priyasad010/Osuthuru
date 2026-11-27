@@ -215,6 +215,8 @@ if ($requestMethod === 'POST') {
             $finish(CatalogService::deleteDiscount($id), '/admin/discounts');
         case '/admin/herbs/save':
             $finish(CatalogService::saveHerb($id, $withImage($_POST, 'herbs', '/admin/herbs')), '/admin/herbs');
+        case '/admin/herbs/topic':
+            $finish(['ok' => HerbRepo::renameConcern($id, $input('name_en'), $input('name_si'))], '/admin/herbs');
         case '/admin/herbs/delete':
             $finish(CatalogService::deleteHerb($id), '/admin/herbs');
     }

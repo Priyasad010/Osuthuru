@@ -28,3 +28,7 @@ env/
 *.swo
 .DS_Store
 Thumbs.db
+
+# Local HTTPS certificate for phone testing
+/docker/certs/
+/public/lan-ca.crt

@@ -58,3 +58,18 @@ $concerns = $concerns ?? [];
         <?php endif; ?>
     </details>
 <?php endforeach; ?>
+
+<?php if (!empty($concerns)): ?>
+    <h4 class="fw-bold text-success mt-4 mb-3"><?= e(t('suggest_concerns')) ?></h4>
+    <?php foreach ($concerns as $c): ?>
+        <?php $cid = (int)$c['concern_id']; ?>
+        <form method="POST" action="/admin/herbs/topic" class="card border-0 shadow-sm p-2 mb-2 row g-2 flex-row mx-0">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" value="<?= $cid ?>">
+            <div class="col-md-5"><input type="text" class="form-control form-control-sm" name="name_en" maxlength="150" value="<?= e($c['name_en']) ?>" aria-label="<?= e(t('admin_flag_en')) ?>" required></div>
+            <div class="col-md-5"><input type="text" class="form-control form-control-sm" name="name_si" maxlength="150" value="<?= e($c['name_si']) ?>" aria-label="<?= e(t('admin_flag_si')) ?>" required></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
+        </form>
+    <?php endforeach; ?>
+<?php endif; ?>
+

@@ -7,10 +7,12 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80" # open to the local network so phones can use the shop
+      - "8443:443" # used only after bin/setup_https.ps1
     volumes:
       - .:/var/www/html
       # Composer packages live in a Docker volume: much faster than the Windows folder
       - vendor_data:/var/www/html/vendor
+      - ./docker/web/ssl-lan.conf:/etc/apache2/conf-enabled/ssl-lan.conf:ro
     environment:
       - APP_ENV=${APP_ENV:-development}
       - APP_DEBUG=${APP_DEBUG:-true}

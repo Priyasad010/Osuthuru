@@ -1,5 +1,16 @@
 /** Register the service worker (secure pages only) and offer installation. */
 (function () {
+    // iPhones and iPads have no install prompt: show how to add the app by hand
+    const apple = /iphone|ipad|ipod/i.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const installed = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    const hint = document.getElementById('installHint');
+    const installButton = document.getElementById('installApp');
+    if (apple && !installed && hint && installButton) {
+        installButton.classList.remove('d-none');
+        installButton.addEventListener('click', () => hint.classList.toggle('d-none'));
+    }
+
     if (!('serviceWorker' in navigator) || !window.isSecureContext) {
         return;
     }

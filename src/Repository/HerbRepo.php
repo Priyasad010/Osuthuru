@@ -179,6 +179,18 @@ class HerbRepo
         ]);
     }
 
+    /** Rename a health topic; its web address does not change. */
+    public static function renameConcern(int $concernId, string $nameEn, string $nameSi): bool
+    {
+        $nameEn = trim($nameEn);
+        $nameSi = trim($nameSi);
+        if ($nameEn === '' || $nameSi === '' || mb_strlen($nameEn) > 150 || mb_strlen($nameSi) > 150) {
+            return false;
+        }
+        $stmt = Database::getConnection()->prepare("UPDATE `health_concern` SET name_en = :en, name_si = :si WHERE concern_id = :id");
+        return $stmt->execute([':en' => $nameEn, ':si' => $nameSi, ':id' => $concernId]);
+    }
+
     public static function syncProductHerbs(int $productId, array $herbIds): void
     {
         $pdo = Database::getConnection();

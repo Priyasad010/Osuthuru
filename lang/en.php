@@ -637,4 +637,5 @@ return [
     'skip_to_content' => 'Skip to content',
     'nav_menu' => 'Menu',
     'install_app' => 'Install App',
+    'install_ios_hint' => 'On iPhone or iPad: tap the Share button in Safari, then "Add to Home Screen".',
 ];

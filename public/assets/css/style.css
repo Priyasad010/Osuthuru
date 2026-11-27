@@ -330,3 +330,13 @@ footer .disclaimer-box {
     color: #ffffff;
 }
 
+@media (display-mode: standalone) {
+    .navbar-custom {
+        padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+    }
+
+    body {
+        padding-top: calc(90px + env(safe-area-inset-top, 0px));
+    }
+}
+

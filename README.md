@@ -79,7 +79,11 @@ PHPUnit rebuilds separate test databases on every run (using `DB_ROOT_PASS`), so
 2. Open that address on a phone on the same network. Print QR labels afterwards, and again if the address changes.
 3. If the page does not load, allow inbound port 8080 in the firewall, on trusted networks only.
 
-**Installing the app on a phone** needs a secure address, and a plain network address is not one. Use a USB cable instead: enable USB debugging on the Android phone, open `chrome://inspect/#devices` in Chrome on the PC, add a port forward `8080` → `localhost:8080`, then open `http://localhost:8080` on the phone and choose **Install app**. Voice search also needs `localhost` or HTTPS.
+**Installing the app on a phone** needs a secure address, and a plain network address is not one.
+
+*iPhone or Android, over Wi-Fi:* run `pwsh bin/setup_https.ps1`, then follow the four steps it prints. It serves the site on port 8443 with a certificate the phone must be told to trust. The signing key is deleted straight away. When you have finished, remove the profile from the phone and run `pwsh bin/setup_https.ps1 -Remove`.
+
+*Android with a USB cable:* enable USB debugging on the Android phone, open `chrome://inspect/#devices` in Chrome on the PC, add a port forward `8080` → `localhost:8080`, then open `http://localhost:8080` on the phone and choose **Install app**. Voice search also needs `localhost` or HTTPS.
 
 With `APP_DEBUG=true`, error details are visible to anyone on the network. In Docker, visitors may all appear to come from one address, which affects the assistant limit and duplicate-scan count during development.
 

@@ -11,9 +11,20 @@ class Auth
     private const MAX_ATTEMPTS = 5;
     private const LOCKOUT_MINUTES = 15;
 
+    /**
+     * HTTPS gets its own cookie name. Browsers do not let a plain-HTTP page
+     * replace a Secure cookie, so sharing one name would stop a device that had
+     * visited over HTTPS from signing in over HTTP on the same host.
+     */
+    public static function sessionName(array $server): string
+    {
+        return ($server['HTTPS'] ?? '') === 'on' ? 'SUWODA_SECURE' : 'PHPSESSID';
+    }
+
     public static function initSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            session_name(self::sessionName($_SERVER));
             // Set secure session cookie parameters
             $params = session_get_cookie_params();
             session_set_cookie_params([

@@ -11,7 +11,7 @@ $pageTitle = $pageTitle ?? t('app_name');
 <html lang="<?= e($currentLang) ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="<?= e(Csrf::getToken()) ?>">
     <title><?= e($pageTitle) ?> - Suwoda HerbHub</title>
     <!-- Bootstrap 5.3 & Icons -->
@@ -21,8 +21,11 @@ $pageTitle = $pageTitle ?? t('app_name');
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <meta name="theme-color" content="#198754">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Suwoda">
     <!-- Custom Theme -->
-    <link rel="stylesheet" href="/assets/css/style.css?v=8">
+    <link rel="stylesheet" href="/assets/css/style.css?v=9">
 </head>
 <body>
 <a class="skip-link" href="#content"><?= e(t('skip_to_content')) ?></a>
@@ -125,6 +128,9 @@ $pageTitle = $pageTitle ?? t('app_name');
                                 </li>
                             </ul>
                         </div>
+                    <?php elseif (Auth::isAdmin()): ?>
+                        <!-- Icon only where the bar is narrowest (xl), so it never wraps -->
+                        <a href="/admin/dashboard" class="btn btn-light btn-sm text-nowrap" title="<?= e(t('admin_dashboard')) ?>" aria-label="<?= e(t('admin_dashboard')) ?>"><i class="bi bi-speedometer2"></i><span class="ms-1 d-xl-none d-xxl-inline"><?= e(t('admin_dashboard')) ?></span></a>
                     <?php else: ?>
                         <a href="/login" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i><?= e(t('nav_login')) ?></a>
                     <?php endif; ?>
