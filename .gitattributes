@@ -1,0 +1,5 @@
+# Files used on a Linux server must keep Unix line endings
+*.sh text eol=lf
+docker/prod/* text eol=lf
+docker-compose.prod.yml text eol=lf
+.env.production.example text eol=lf
