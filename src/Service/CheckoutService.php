@@ -9,6 +9,7 @@ use App\Payment\PaymentGateway;
 use App\Payment\StripeGateway;
 use App\Payment\CodGateway;
 use App\Payment\BankTransferGateway;
+use App\Payment\PayHereGateway;
 use PDO;
 use Throwable;
 use Stripe\Stripe;
@@ -17,11 +18,31 @@ use Stripe\Checkout\Session as StripeSession;
 
 class CheckoutService
 {
+    /** Payment methods a customer can choose now; online ones need their keys in .env. */
+    public static function availableMethods(): array
+    {
+        $methods = ['cod', 'bank_transfer'];
+        if (PayHereService::isConfigured()) {
+            $methods[] = 'payhere';
+        }
+        if (self::stripeConfigured()) {
+            $methods[] = 'card';
+        }
+        return $methods;
+    }
+
+    private static function stripeConfigured(): bool
+    {
+        $secret = (string)Env::get('STRIPE_SECRET', '');
+        return $secret !== '' && !str_starts_with($secret, 'sk_test_placeholder');
+    }
+
     public static function getGateway(string $paymentMethod): PaymentGateway
     {
         return match ($paymentMethod) {
             'cod' => new CodGateway(),
             'bank_transfer' => new BankTransferGateway(),
+            'payhere' => new PayHereGateway(),
             default => new StripeGateway(),
         };
     }
@@ -299,7 +320,7 @@ class CheckoutService
             $pdo->commit();
 
             // A cash order was announced when it was placed
-            if ($order['payment_method'] === 'card') {
+            if (in_array($order['payment_method'], ['card', 'payhere'], true)) {
                 OrderService::sendPlacedEmail($orderId);
             }
 
@@ -323,7 +344,7 @@ class CheckoutService
     public static function createStripeSession(int $orderId, float $totalPrice, string $customerEmail): array
     {
         $stripeSecret = Env::get('STRIPE_SECRET');
-        if (empty($stripeSecret) || str_starts_with($stripeSecret, 'sk_test_placeholder')) {
+        if (!self::stripeConfigured()) {
             return ['ok' => false, 'error' => t('err_stripe_unconfigured')];
         }
 

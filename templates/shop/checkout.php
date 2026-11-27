@@ -76,12 +76,17 @@ $safety = \App\Service\SafetyService::currentResult($productIds);
                     <input type="file" class="form-control form-control-sm" id="bank_slip" name="bank_slip" accept=".jpg,.jpeg,.png,.webp">
                 </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="payment_method" id="pm_card" value="card" onchange="toggleBankSlipBox()">
-                    <label class="form-check-label fw-semibold" for="pm_card">
-                        <i class="bi bi-credit-card text-dark me-1"></i> <?= e(t('pay_card')) ?>
-                    </label>
-                </div>
+                <?php $methods = \App\Service\CheckoutService::availableMethods(); ?>
+                <?php foreach (['payhere' => ['pay_payhere', 'bi-phone'], 'card' => ['pay_card', 'bi-credit-card']] as $code => [$label, $icon]): ?>
+                    <?php if (in_array($code, $methods, true)): ?>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="payment_method" id="pm_<?= $code ?>" value="<?= $code ?>" onchange="toggleBankSlipBox()">
+                            <label class="form-check-label fw-semibold" for="pm_<?= $code ?>">
+                                <i class="bi <?= $icon ?> text-success me-1"></i> <?= e(t($label)) ?>
+                            </label>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             </div>
         </div>
 

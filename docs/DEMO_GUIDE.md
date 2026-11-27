@@ -38,7 +38,7 @@ Examiner කෙනෙක් අහන්න පෙර අපිම කීම හ
 - Herb විස්තර සහ safety warnings **නියැදි පෙළ** (`DEMO TEXT`, `SAMPLE`). Practitioner review එක තවම නැත්නම් "reviewed" කියා **නොකියන්න**. Sinhala review එකටත් එසේමය.
 - Orders, customers, sales සහ forecast **demo data** මත පදනම් වේ.
 - Recommender evaluation ([recommender_eval.md](../ml/reports/recommender_eval.md)): popularity baseline precision@5 **0.027**, recall@5 **0.136**; hybrid **0.083**, **0.417**. මේවා **synthetic data** වලින් ලැබුණු අගයන්; සැබෑ customers සඳහා ක්‍රියාකාරිත්වය ඔප්පු නොකරයි. එක් hidden product එකක් සඳහා precision@5 උපරිමය 0.200 කි.
-- Card payment (Stripe) configure කර නැත. Demo එකේදී **Card තෝරන්න එපා**.
+- **PayHere** තේරීම පෙනෙන්නේ [.env](../.env) හි keys තියෙනවා නම් පමණි (sandbox: සැබෑ මුදල් අය නොවේ). `localhost` එකේදී ගෙවීමෙන් පසුවත් order එක **paid** නොවේ, ඒ නිසා demo step 6 සඳහා **Cash on Delivery** තෝරන්න. Card (Stripe) configure කර නැති නිසා නොපෙනේ.
 - Singlish පිළිතුරු වල භාෂාව අස්වාභාවික විය හැක. සිංහල හෝ ඉංග්‍රීසි ප්‍රශ්න අසන්න.
 
 ## 4. යමක් වැරදුණොත්

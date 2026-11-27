@@ -48,6 +48,7 @@ use App\Service\SafetyService;
 use App\Service\SearchService;
 use App\Service\PasswordResetService;
 use App\Service\CheckoutService;
+use App\Service\PayHereService;
 use App\Service\DeliveryZoneService;
 use App\Service\CouponService;
 use App\Service\OrderService;
@@ -606,8 +607,16 @@ if ($requestUri === '/checkout') {
         }
 
         $paymentMethod = (string)($_POST['payment_method'] ?? 'cod');
-        if (!in_array($paymentMethod, ['cod', 'bank_transfer', 'card'], true)) {
-            $paymentMethod = 'cod';
+        // Refuse before an order exists, so no half-made order is left behind
+        if (!in_array($paymentMethod, CheckoutService::availableMethods(), true)) {
+            echo View::render('shop/checkout', [
+                'error' => t('err_payment_unavailable'),
+                'cartItems' => $cartItems,
+                'subtotal' => $subtotal,
+                'zones' => DeliveryZoneService::getAllZones(),
+                'old' => $_POST
+            ]);
+            exit;
         }
 
         // An "avoid" safety match must be acknowledged before paying (nothing is stored)
@@ -724,6 +733,29 @@ if (preg_match('#^/orders/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET'
         'order' => $order,
         'flash' => $flash,
         'error' => $err
+    ]);
+    exit;
+}
+
+// Hands the customer over to PayHere to pay for one of their own orders
+if (preg_match('#^/orders/(\d+)/pay$#', $requestUri, $m) && $requestMethod === 'GET') {
+    Auth::requireUser();
+    $order = OrderService::getOrderDetails((int)$m[1]);
+    if (!$order || (int)$order['user_id'] !== Auth::id()) {
+        http_response_code(404);
+        exit(e(t('err_order_404')));
+    }
+    if (!PayHereService::isConfigured() || !PayHereService::canPay($order)) {
+        header('Location: /orders/' . (int)$m[1]);
+        exit;
+    }
+    header('Cache-Control: no-store');
+    echo View::render('shop/payhere', [
+        'pageTitle' => t('payhere_title'),
+        'order' => $order,
+        'action' => PayHereService::checkoutUrl(),
+        'sandbox' => PayHereService::isSandbox(),
+        'fields' => PayHereService::checkoutFields($order, (string)(Auth::user()['email'] ?? '')),
     ]);
     exit;
 }
@@ -1098,6 +1130,15 @@ if (str_starts_with($requestUri, '/admin/')) {
 // ----------------------------------------------------
 // STRIPE WEBHOOK
 // ----------------------------------------------------
+if ($requestUri === '/payments/payhere/notify' && $requestMethod === 'POST') {
+    $result = PayHereService::handleNotification($_POST);
+    if (!$result['ok']) {
+        error_log('PayHere notification refused: ' . $result['error']);
+        json_response(['ok' => false, 'error' => $result['error']], 400);
+    }
+    json_response(['ok' => true]);
+}
+
 if ($requestUri === '/webhooks/stripe' && $requestMethod === 'POST') {
     $payload = @file_get_contents('php://input');
     $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';

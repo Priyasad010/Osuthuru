@@ -123,6 +123,14 @@ Where each price came from, and how sure we are, is listed in [docs/PRICE_SOURCE
 
 The shop was renamed to Osuthuru. A new install needs nothing special. For an older database: back it up, import the dump into a new database called `osuthuru`, set `DB_NAME=osuthuru` and the new `ADMIN_EMAIL` in `.env`, restart, run `bin/grant_ml_user.php`, and change the e-mail address of the existing row in the `admin` table. Logo and app icons are built from `docs/branding/` with `php bin/make_icons.php`.
 
+## PayHere payments
+
+1. Create a free account at [sandbox.payhere.lk](https://sandbox.payhere.lk). Copy the Merchant ID, and add your domain under the integrations settings to get its Merchant Secret.
+2. Put `PAYHERE_MERCHANT_ID` and `PAYHERE_SECRET` in `.env` (never in git or in a chat). Keep `PAYHERE_SANDBOX=true` for testing.
+3. Checkout then offers PayHere. Test cards are listed in PayHere's documentation.
+
+An order becomes **paid** only when PayHere's signed notification reaches `/payments/payhere/notify`; returning to the shop proves nothing. PayHere cannot reach `localhost`, so on a development PC the payment page works but the order stays unpaid. Test the whole flow on a public HTTPS address (`APP_URL`, or `PAYHERE_NOTIFY_URL`). If an order is paid after its stock ran out, or is charged back, the order timeline says so and an administrator must act. Refunds are made in the PayHere portal.
+
 ## Security notes
 
 Folder listing is off. Bank slips cannot be opened by their address: an administrator views them through the application. Keep it that way if you move to another web server (Nginx ignores `.htaccess`).

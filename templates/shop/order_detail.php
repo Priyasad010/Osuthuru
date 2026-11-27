@@ -90,6 +90,23 @@
             </div>
         </div>
 
+        <?php if (\App\Service\PayHereService::canPay($order)): ?>
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <h5 class="fw-bold text-success mb-2"><i class="bi bi-phone me-2"></i><?= e(t('payhere_title')) ?></h5>
+                <?php $returned = (string)($_GET['payment'] ?? ''); ?>
+                <?php if ($returned === 'return'): ?>
+                    <div class="alert alert-info small py-2" role="status"><?= e(t('payhere_waiting')) ?></div>
+                <?php elseif ($returned === 'cancelled' || $order['payment_status'] === 'failed'): ?>
+                    <div class="alert alert-warning small py-2" role="status"><?= e(t('payhere_not_paid')) ?></div>
+                <?php endif; ?>
+                <?php if (\App\Service\PayHereService::isConfigured()): ?>
+                    <div><a href="/orders/<?= (int)$order['order_id'] ?>/pay" class="btn btn-brand"><?= e(t('payhere_pay_now')) ?></a></div>
+                <?php else: ?>
+                    <p class="small text-muted mb-0"><?= e(t('err_payment_unavailable')) ?></p>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Bank Transfer Slip Upload (if applicable) -->
         <?php if ($order['payment_method'] === 'bank_transfer' && $order['payment_status'] === 'unpaid' && $order['status'] !== 'Cancelled'): ?>
             <div class="card border-0 shadow-sm p-4 mb-4 border-start border-4 border-primary">
@@ -119,6 +136,9 @@
             <p class="small mb-3"><strong><?= e(t('address_label')) ?></strong> <?= e($order['shipping_address'] ?? '-') ?></p>
             <hr>
             <p class="small mb-1"><strong><?= e(t('method_label')) ?></strong> <?= e(t_or('method_', $order['payment_method'])) ?></p>
+            <?php if (!empty($order['payment_reference'])): ?>
+                <p class="small mb-1"><strong><?= e(t('payment_reference_label')) ?></strong> <?= e($order['payment_reference']) ?></p>
+            <?php endif; ?>
             <p class="small mb-0">
                 <strong><?= e(t('payment_status_label')) ?></strong>
                 <span class="badge <?= $order['payment_status'] === 'paid' ? 'bg-success' : 'bg-warning text-dark' ?>">
