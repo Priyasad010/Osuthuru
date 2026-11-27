@@ -59,15 +59,15 @@
             <input type="hidden" name="id" value="<?= $qid ?>">
             <div class="col-md-1">
                 <label class="form-label small"><?= e(t('admin_order')) ?></label>
-                <input type="number" name="sort_order" value="<?= (int)$q['sort_order'] ?>" class="form-control form-control-sm">
+                <input aria-label="<?= e(t('admin_order')) ?>" type="number" name="sort_order" value="<?= (int)$q['sort_order'] ?>" class="form-control form-control-sm">
             </div>
             <div class="col-md-5">
                 <label class="form-label small"><?= e(t('admin_question_en')) ?></label>
-                <input type="text" name="text_en" value="<?= e($q['text_en']) ?>" class="form-control form-control-sm" maxlength="255" required>
+                <input aria-label="<?= e(t('admin_question_en')) ?>" type="text" name="text_en" value="<?= e($q['text_en']) ?>" class="form-control form-control-sm" maxlength="255" required>
             </div>
             <div class="col-md-5">
                 <label class="form-label small"><?= e(t('admin_question_si')) ?></label>
-                <input type="text" name="text_si" value="<?= e($q['text_si']) ?>" class="form-control form-control-sm" maxlength="255">
+                <input aria-label="<?= e(t('admin_question_si')) ?>" type="text" name="text_si" value="<?= e($q['text_si']) ?>" class="form-control form-control-sm" maxlength="255">
             </div>
             <div class="col-md-1"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
         </form>
@@ -81,8 +81,8 @@
                         <?= csrf_field() ?>
                         <input type="hidden" name="id" value="<?= (int)($o['option_id'] ?? 0) ?>">
                         <input type="hidden" name="question_id" value="<?= $qid ?>">
-                        <div class="col-md-4"><input type="text" name="text_en" value="<?= e($o['text_en'] ?? '') ?>" class="form-control form-control-sm" placeholder="<?= e($o ? t('admin_option_en') : t('admin_new_option')) ?>" aria-label="<?= e(t('admin_option_en')) ?>" maxlength="255" required></div>
-                        <div class="col-md-4"><input type="text" name="text_si" value="<?= e($o['text_si'] ?? '') ?>" class="form-control form-control-sm" placeholder="<?= e(t('admin_option_si')) ?>" aria-label="<?= e(t('admin_option_si')) ?>" maxlength="255"></div>
+                        <div class="col-md-4"><input aria-label="<?= e(t('admin_question_en')) ?>" type="text" name="text_en" value="<?= e($o['text_en'] ?? '') ?>" class="form-control form-control-sm" placeholder="<?= e($o ? t('admin_option_en') : t('admin_new_option')) ?>" aria-label="<?= e(t('admin_option_en')) ?>" maxlength="255" required></div>
+                        <div class="col-md-4"><input aria-label="<?= e(t('admin_question_si')) ?>" type="text" name="text_si" value="<?= e($o['text_si'] ?? '') ?>" class="form-control form-control-sm" placeholder="<?= e(t('admin_option_si')) ?>" aria-label="<?= e(t('admin_option_si')) ?>" maxlength="255"></div>
                         <?php foreach (DoshaService::DOSHAS as $dosha): ?>
                             <div class="col-md-1">
                                 <input type="number" name="<?= e($dosha) ?>" value="<?= (int)($o[$dosha] ?? 0) ?>" min="0" max="5" class="form-control form-control-sm" title="<?= e(t('dosha_' . $dosha)) ?>" aria-label="<?= e(t('dosha_' . $dosha)) ?>">
@@ -116,11 +116,11 @@
     <input type="hidden" name="sort_order" value="<?= count($questions) + 1 ?>">
     <div class="col-md-5">
         <label class="form-label small"><?= e(t('admin_question_en')) ?></label>
-        <input type="text" name="text_en" class="form-control form-control-sm" maxlength="255" required>
+        <input aria-label="<?= e(t('admin_question_en')) ?>" type="text" name="text_en" class="form-control form-control-sm" maxlength="255" required>
     </div>
     <div class="col-md-5">
         <label class="form-label small"><?= e(t('admin_question_si')) ?></label>
-        <input type="text" name="text_si" class="form-control form-control-sm" maxlength="255">
+        <input aria-label="<?= e(t('admin_question_si')) ?>" type="text" name="text_si" class="form-control form-control-sm" maxlength="255">
     </div>
     <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('admin_add_question')) ?></button></div>
 </form>

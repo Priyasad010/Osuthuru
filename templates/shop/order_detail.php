@@ -102,7 +102,7 @@
                 <?php endif; ?>
                 <form method="POST" action="/orders/<?= (int)$order['order_id'] ?>/upload-slip" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
                     <?= csrf_field() ?>
-                    <input type="file" name="bank_slip" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" required>
+                    <input aria-label="<?= e(t('bank_slip_title')) ?>" type="file" name="bank_slip" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" required>
                     <button type="submit" class="btn btn-primary btn-sm text-nowrap"><?= e(t('upload_slip')) ?></button>
                 </form>
             </div>

@@ -61,7 +61,7 @@
                     <form method="POST" action="/cart/add" class="d-flex gap-2 align-items-center">
                         <?= csrf_field() ?>
                         <input type="hidden" name="product_id" value="<?= (int)$product['product_id'] ?>">
-                        <input type="number" name="quantity" value="1" min="1" max="<?= (int)$product['quantity'] ?>" class="form-control" style="width: 80px;">
+                        <input type="number" name="quantity" value="1" min="1" max="<?= (int)$product['quantity'] ?>" class="form-control" style="width: 80px;" aria-label="<?= e(t('col_qty')) ?>">
                         <button type="submit" class="btn btn-suwoda px-4 py-2 fw-semibold">
                             <i class="bi bi-cart-plus me-1"></i> <?= e(t('add_to_cart')) ?>
                         </button>

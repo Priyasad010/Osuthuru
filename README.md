@@ -1,115 +1,136 @@
 # Suwoda HerbHub V2
 
-> Herbal and Ayurvedic E-commerce platform for Sri Lanka.
-> Built phase-by-phase following the Antigravity V2 Build Roadmap.
+> Herbal and Ayurvedic e-commerce platform for Sri Lanka, in English and Sinhala.
+> *Know your body → Find the right herb → Verify it is genuine → Buy safely*
 
-## Stack
-- **Web App**: PHP 8.3 (Apache, PSR-4 classes in `src/`, vanilla JS, Bootstrap 5.3)
-- **Database**: MySQL 8.0 via PDO (utf8mb4, native prepared statements)
-- **Intelligence**: Python 3.12 FastAPI (uvicorn) in `ml/`
-- **Mail Testing**: Mailpit (Web UI on port 8025, SMTP on port 1025)
-- **Containerization**: Docker Compose
+![Home page](docs/screenshots/home.jpg)
 
-## Quick Start
+## Features
+| Area | What it does |
+|---|---|
+| Shop | Catalogue, cart, cash on delivery, bank transfer and card payment, delivery fees by district, coupons, order timeline and emails, invoices, wishlist and back-in-stock alerts |
+| Herb knowledge | Bilingual herb dictionary, health topics, search with autocomplete, "did you mean" and voice search |
+| Dosha quiz and safety checker | Prakriti quiz with product suggestions; warnings before payment. Safety answers are never stored |
+| Traceability | Product batches, QR labels and a public Genuine / Expired / Recalled page |
+| Assistant | Chat that answers only from the shop's own data, with a fallback when no AI key is set |
+| Recommendations and forecasts | Python service with a PHP fallback; 30-day sales forecast and days to stock-out |
+| Admin | Dashboard, CSV/PDF reports, orders, customers, catalogue, reviews, blog, seasonal picks |
+| Installable app | Works as a PWA with an offline herb dictionary |
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repo-url> suwoda-herbhub-v2
-   cd suwoda-herbhub-v2
-   ```
+| | |
+|---|---|
+| ![Products](docs/screenshots/products.jpg) | ![Admin dashboard](docs/screenshots/admin-dashboard.jpg) |
+| ![Sales reports](docs/screenshots/admin-reports.jpg) | <img src="docs/screenshots/verify-phone.jpg" width="240" alt="Verify page on a phone"> <img src="docs/screenshots/quiz-phone.jpg" width="240" alt="Quiz on a phone"> |
 
-2. **Setup Environment**:
-   ```bash
-   cp .env.example .env
-   ```
+Screenshots show demonstration data.
 
-3. **Start Docker Services**:
-   ```bash
-   docker compose up -d --build
-   ```
+## Architecture
+```mermaid
+flowchart LR
+    B[Browser / installed app] -->|HTTP| W[PHP 8.3 + Apache]
+    W -->|PDO| D[(MySQL 8)]
+    W -->|JSON, 3 s limit, fallback| M[Python FastAPI]
+    M -->|read-only user| D
+    W -->|server side only| L[Gemini API]
+    W --> S[Stripe]
+    W --> E[SMTP / Mailpit]
+```
+- **Web app**: PHP 8.3 without a framework, PSR-4 classes in `src/`, routes in `public/index.php` and `routes/`, templates in `templates/`
+- **Database**: MySQL 8, numbered migrations in `database/migrations/` ([ER diagram](docs/ERD.md))
+- **Intelligence**: Python 3.12 FastAPI in `ml/`
+- **Front end**: Bootstrap 5.3, vanilla JavaScript, Chart.js
 
-4. **Install Composer Dependencies & Run Migrations**:
-   ```bash
-   docker compose exec web composer install
-   docker compose exec web php bin/migrate.php
-   docker compose exec web php bin/seed.php
-   docker compose exec web php bin/grant_ml_user.php
-   docker compose exec web php bin/create_admin.php
-   ```
-   `seed.php` loads the demo catalogue and is safe to run again. `create_admin.php` uses `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env`.
+## Quick start
+```bash
+git clone <repo-url> suwoda-herbhub-v2
+cd suwoda-herbhub-v2
+cp .env.example .env
+docker compose up -d --build
+docker compose exec web composer install
+docker compose exec web php bin/migrate.php
+docker compose exec web php bin/seed.php --demo
+docker compose exec web php bin/grant_ml_user.php
+docker compose exec web php bin/create_admin.php
+```
+Open http://localhost:8080. The admin area is at `/admin/login`; `create_admin.php` uses `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env` (change the password).
 
-5. **Run Tests**:
-   ```bash
-   # Run PHPUnit tests
-   docker compose exec web composer test
+- `seed.php` loads the catalogue. Add `--demo` for demonstration customers, 30 days of orders, batches, quiz, safety samples and reviews. It refuses to load demo data when `APP_ENV=production`.
+- Demo customers: `nimali@demo.invalid`, `kasun@demo.invalid`, `fathima@demo.invalid`, password `DemoPass123!`.
+- **All health, safety and dosha text in the demo data is placeholder text marked DEMO or SAMPLE. It is not medical information.**
 
-   # Run Python ML tests
-   docker compose exec ml pytest
-   ```
-   PHPUnit rebuilds a separate `suwoda_test` database on every run (using `DB_ROOT_PASS`), so development data is not touched. Test emails still appear in Mailpit.
+| Service | Address |
+|---|---|
+| Website | http://localhost:8080 (also reachable from your network) |
+| Mail inbox (Mailpit) | http://localhost:8025 |
+| ML service | http://localhost:8000/health |
+| MySQL | `localhost:3306`, user `app`, database `suwoda` |
 
-## Services & Ports
-- Web Application: [http://localhost:8080](http://localhost:8080)
-- PHP API Health: [http://localhost:8080/api/health](http://localhost:8080/api/health)
-- ML Service Health: [http://localhost:8000/health](http://localhost:8000/health)
-- Mailpit Web UI: [http://localhost:8025](http://localhost:8025)
-- MySQL Database: `localhost:3306` (user: `app`, database: `suwoda`)
+Only the website is reachable from the network; the others listen on `127.0.0.1`.
 
-## Dosha quiz and safety checker
-- The quiz ships as an **unpublished draft** (12 questions). Review it, then publish at `/admin/quiz`. Administrators can preview it at `/quiz`.
-- Enter result descriptions and tips at `/admin/quiz`, and match products to doshas (strength 1 to 3) at `/admin/dosha`. Recommendations stay empty until products are matched.
-- Safety data is managed at `/admin/safety`. Only **published** entries are shown, and publishing requires a warning and its source. `bin/seed.php` adds three unpublished `SAMPLE` entries that are not medical information.
-- Safety answers are kept in the visitor's session only (and in the browser's `localStorage` if they ask). They are never written to the database. An `avoid` match must be acknowledged at checkout.
-- Quiz answers are not stored; signed-in users can save their percentage scores.
-
-## QR traceability
-- Create batches at `/admin/batches` (dates, source, supplier, packs, PDF lab report up to 2 MB), then download a label sheet. Each QR opens `/verify?t=...`, which shows **Genuine**, **Expired** or **Recalled**.
-- A code scanned from more than 50 different addresses shows a possible-duplicate warning. Scans store salted hashes only.
-- Confirmed orders take packs from the batch that expires first; cancelling returns them.
-
-## Shop assistant
-- Put your key in `.env` (`LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3.8-flash`, `LLM_API_KEY=...`), then check it with `docker compose exec web php bin/test_llm.php`.
-- Without a key, or when the call fails, it answers with matching catalogue items.
-- The model receives only catalogue data and **published** safety notes. Limits: 500 characters, 20 questions per hour per address, last 6 turns, 24-hour cache, 15-second timeout.
-- Chat is deleted after 30 days (during assistant use, on the admin page, or with `php bin/purge_chat.php`).
-- Review unmatched questions and edit topic words at `/admin/assistant`.
+## Tests
+```bash
+docker compose exec web composer test     # PHPUnit
+docker compose exec ml pytest             # ML service
+```
+PHPUnit rebuilds separate test databases on every run (using `DB_ROOT_PASS`), so development data is not touched. GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the PHP syntax check, PHPUnit, a fresh install with demo data, and pytest.
 
 ## Using a phone
 1. In PowerShell run `pwsh bin/set_lan_url.ps1`. It sets `APP_URL` to this PC's network address (add `-Local` to undo).
 2. Open that address on a phone on the same network. Print QR labels afterwards, and again if the address changes.
 3. If the page does not load, allow inbound port 8080 in the firewall, on trusted networks only.
 
-Only the website is reachable from the network. MySQL, Mailpit and the ML service listen on `127.0.0.1`. With `APP_DEBUG=true`, error details are visible to anyone on the network. Voice search needs `localhost` or HTTPS, so its button is hidden on a phone over plain HTTP. In Docker, visitors may all appear to come from one address, which affects the assistant limit and duplicate-scan count during development.
+**Installing the app on a phone** needs a secure address, and a plain network address is not one. Use a USB cable instead: enable USB debugging on the Android phone, open `chrome://inspect/#devices` in Chrome on the PC, add a port forward `8080` → `localhost:8080`, then open `http://localhost:8080` on the phone and choose **Install app**. Voice search also needs `localhost` or HTTPS.
 
-## Recommendations and forecasts (Python service)
-- The `ml/` service serves hybrid recommendations (product text, products bought together, popularity, chosen categories, dosha) and sales and stock forecasts. It is reachable only from this computer and the app containers.
-- If it is stopped or slow (3-second limit), PHP uses simple SQL results, so the shop keeps working.
-- Customers choose preferred categories under **My Interests**. The service reloads catalogue and sales data every 15 minutes; a customer's own choices apply immediately.
-- Its database user reads only the tables and columns it needs (`php bin/grant_ml_user.php`; run it again after adding tables it must read).
-- Evaluation (uses a separate database of **synthetic** orders):
+With `APP_DEBUG=true`, error details are visible to anyone on the network. In Docker, visitors may all appear to come from one address, which affects the assistant limit and duplicate-scan count during development.
+
+## Using the features
+
+### Dosha quiz and safety checker
+- The quiz ships as an **unpublished draft**. Have it reviewed, then publish at `/admin/quiz`. Enter descriptions and tips there, and match products (strength 1 to 3) at `/admin/dosha`.
+- Safety data is managed at `/admin/safety`. Only **published** entries are shown, and publishing requires a warning and its source.
+- Safety answers stay in the visitor's session (and in the browser's `localStorage` if they ask). An `avoid` match must be acknowledged at checkout. Signed-in users can save quiz scores, not answers.
+
+### QR traceability
+- Create batches at `/admin/batches` and download label sheets. Each QR opens `/verify?t=...`.
+- More than 50 different scanning addresses raise a duplicate warning. Confirmed orders take packs from the batch that expires first.
+
+### Shop assistant
+- Set `LLM_PROVIDER=gemini`, `LLM_MODEL=gemini-3.8-flash` and `LLM_API_KEY` in `.env`, then check with `docker compose exec web php bin/test_llm.php`.
+- The model receives only catalogue data and published safety notes. Limits: 500 characters, 20 questions per hour per address, 6 turns, 24-hour cache, 15-second timeout. Chat is deleted after 30 days.
+- Review unmatched questions and topic words at `/admin/assistant`.
+
+### Recommendations and forecasts
+- The ML service reloads data every 15 minutes. If it is stopped or slow, PHP shows simpler SQL results.
+- Its database user reads only the tables and columns it needs (`php bin/grant_ml_user.php`).
+- Offline evaluation, on a separate database of **synthetic** orders ([results](ml/reports/recommender_eval.md)):
   ```bash
   docker compose exec web php bin/build_eval_db.php
   docker compose exec ml python -m app.evaluate --database suwoda_eval
   ```
-  Results: [ml/reports/recommender_eval.md](ml/reports/recommender_eval.md).
-- PHP packages are kept in the `vendor_data` Docker volume. Run `docker compose exec web composer install` after cloning or changing `composer.lock`.
 
 ## Behaviour to know about
-- **Email verification**: new accounts cannot log in until the emailed link is opened (see Mailpit in development). Logging in with the correct password sends the link again.
-- **Login lockout**: based on the connecting IP address. Behind a reverse proxy, configure the web server to set `REMOTE_ADDR` from that trusted proxy.
-- **Cancelled orders**: stock returns once, only if it had been taken. Cancelled is final, delivered orders cannot be cancelled, and a paid order that is cancelled must be refunded manually.
-- **Herb text**: no health text is seeded. Enter practitioner-reviewed text at `/admin/herbs`; empty entries show "awaiting review".
-- **Languages**: shop pages, admin pages and emails are in English and Sinhala; emails use the customer's last chosen language.
-- **Invoices**: English downloads as PDF. Sinhala opens as a printable page (print or save as PDF), because the PDF library cannot shape Sinhala script.
-- **Sinhala review**: `docker compose exec web php bin/export_translations.php` writes `docs/translation_review.csv` for a native speaker. Apply corrections in `lang/si.php`.
-- **Catalogue text**: seeded descriptions make no health claims. Admins can edit English and Sinhala descriptions under Manage Products.
+- **Time**: the application and database work in Asia/Colombo.
+- **Accounts**: email verification is required; five failed logins lock an email and address for 15 minutes; blocking a customer ends their access at once.
+- **Orders**: stock returns once when an order is cancelled. Cancelled is final, delivered orders cannot be cancelled, and a paid cancelled order must be refunded manually. A product with orders cannot be deleted.
+- **Reviews**: a customer reviews a product once, after delivery.
+- **Languages**: shop, admin and emails are in English and Sinhala. PDF files (invoice, labels, reports) are English because the PDF library cannot shape Sinhala; the Sinhala invoice is a printable page.
+- **PHP packages** live in the `vendor_data` Docker volume; run `composer install` after changing `composer.lock`.
 
-## Project Phases
-- [x] **Phase 0: Foundation** (Docker, DB baseline migration, Core PSR-4 classes, base layout)
-- [x] **Phase 1: Security and core fixes** (Safe auth, admin guards, token reset, checkout correctness)
-- [x] **Phase 2: Commerce for Sri Lanka** (COD, bank transfer, delivery zones, invoices, wishlist)
-- [x] **Phase 3: Herbal knowledge and bilingual search** (Sinhala/English, concern pages, voice)
-- [x] **Phase 4: Novelty A** (Dosha quiz, safety checker)
-- [x] **Phase 5: Novelty B** (QR batch traceability, AI Assistant)
-- [x] **Phase 6: Python intelligence service** (FastAPI recommender & sales forecast)
-- [ ] **Phase 7: Admin analytics, PWA, quality & polish**
+## Before real use
+- A qualified practitioner must review health content: `php bin/export_review_pack.php` writes `docs/review/practitioner_review.csv`.
+- A native speaker must review Sinhala text: `docs/review/sinhala_content.csv` and, from `php bin/export_translations.php`, `docs/translation_review.csv`.
+- Set real secrets, `APP_ENV=production` and `APP_DEBUG=false`, serve over HTTPS, and do not load demo data.
+
+## Project phases
+- [x] Phase 0: Foundation
+- [x] Phase 1: Security and core fixes
+- [x] Phase 2: Commerce for Sri Lanka
+- [x] Phase 3: Herbal knowledge and bilingual search
+- [x] Phase 4: Dosha quiz and safety checker
+- [x] Phase 5: QR traceability and assistant
+- [x] Phase 6: Python intelligence service
+- [x] Phase 7: Admin analytics, PWA and quality
+
+Not built (stretch items in the roadmap): PayHere, leaf identification, review summaries, loyalty points and the recommendation click log.
+
+The full plan is in [docs/ROADMAP.md](docs/ROADMAP.md).

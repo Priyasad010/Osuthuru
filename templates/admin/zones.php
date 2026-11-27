@@ -15,15 +15,15 @@
         <?= csrf_field() ?>
         <div class="col-md-4">
             <label class="form-label small fw-semibold"><?= e(t('district')) ?></label>
-            <input type="text" name="district" class="form-control form-control-sm" required placeholder="<?= e(t('admin_zone_example')) ?>">
+            <input aria-label="<?= e(t('district')) ?>" type="text" name="district" class="form-control form-control-sm" required placeholder="<?= e(t('admin_zone_example')) ?>">
         </div>
         <div class="col-md-3">
             <label class="form-label small fw-semibold"><?= e(t('admin_delivery_fee')) ?></label>
-            <input type="number" step="0.01" name="fee" class="form-control form-control-sm" required>
+            <input aria-label="<?= e(t('admin_delivery_fee')) ?>" type="number" step="0.01" name="fee" class="form-control form-control-sm" required>
         </div>
         <div class="col-md-3">
             <label class="form-label small fw-semibold"><?= e(t('admin_free_over')) ?></label>
-            <input type="number" step="0.01" name="free_over" class="form-control form-control-sm" required>
+            <input aria-label="<?= e(t('admin_free_over')) ?>" type="number" step="0.01" name="free_over" class="form-control form-control-sm" required>
         </div>
         <div class="col-md-2 d-flex align-items-end">
             <button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('admin_save_zone')) ?></button>
@@ -52,7 +52,7 @@
                             <form method="POST" action="/admin/zones/delete" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_zone_confirm'))) ?>);">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="zone_id" value="<?= (int)$z['zone_id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="<?= e(t('remove')) ?>"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>

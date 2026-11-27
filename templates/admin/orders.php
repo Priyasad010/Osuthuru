@@ -25,7 +25,7 @@
     </div>
     <div class="col-6 col-md-3">
         <label class="form-label small" for="status"><?= e(t('col_status')) ?></label>
-        <select class="form-select form-select-sm" id="status" name="status">
+        <select aria-label="<?= e(t('admin_update_status')) ?>" class="form-select form-select-sm" id="status" name="status">
             <option value=""><?= e(t('filter_all')) ?></option>
             <?php foreach (OrderService::STATUSES as $st): ?>
                 <option value="<?= e($st) ?>" <?= ($filters['status'] ?? '') === $st ? 'selected' : '' ?>><?= e(t_or('status_', $st)) ?></option>
@@ -79,12 +79,12 @@
                             <form method="POST" action="/admin/orders/status" class="d-flex gap-1">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id'] ?>">
-                                <select name="status" class="form-select form-select-sm" style="width:140px;">
+                                <select aria-label="<?= e(t('admin_update_status')) ?>" name="status" class="form-select form-select-sm" style="width:140px;">
                                     <?php foreach (OrderService::STATUSES as $st): ?>
                                         <option value="<?= e($st) ?>" <?= $o['status'] === $st ? 'selected' : '' ?>><?= e(t_or('status_', $st)) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <input type="text" name="note" class="form-control form-control-sm" placeholder="<?= e(t('admin_note_placeholder')) ?>" style="width:130px;">
+                                <input aria-label="<?= e(t('admin_note_placeholder')) ?>" type="text" name="note" class="form-control form-control-sm" placeholder="<?= e(t('admin_note_placeholder')) ?>" style="width:130px;">
                                 <button type="submit" class="btn btn-sm btn-suwoda"><?= e(t('save')) ?></button>
                             </form>
                         </td>

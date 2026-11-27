@@ -18,30 +18,30 @@
         <?= csrf_field() ?>
         <div class="col-md-2">
             <label class="form-label small fw-semibold"><?= e(t('admin_code')) ?></label>
-            <input type="text" name="code" class="form-control form-control-sm" placeholder="AYUR10" required>
+            <input aria-label="<?= e(t('admin_code')) ?>" type="text" name="code" class="form-control form-control-sm" placeholder="AYUR10" required>
         </div>
         <div class="col-md-2">
             <label class="form-label small fw-semibold"><?= e(t('admin_type')) ?></label>
-            <select name="type" class="form-select form-select-sm">
+            <select aria-label="<?= e(t('admin_type')) ?>" name="type" class="form-select form-select-sm">
                 <option value="percent"><?= e(t('admin_percent')) ?></option>
                 <option value="fixed"><?= e(t('admin_fixed')) ?></option>
             </select>
         </div>
         <div class="col-md-2">
             <label class="form-label small fw-semibold"><?= e(t('admin_value')) ?></label>
-            <input type="number" step="0.01" name="value" class="form-control form-control-sm" required>
+            <input aria-label="<?= e(t('admin_value')) ?>" type="number" step="0.01" name="value" class="form-control form-control-sm" required>
         </div>
         <div class="col-md-2">
             <label class="form-label small fw-semibold"><?= e(t('admin_min_order')) ?></label>
-            <input type="number" step="0.01" name="min_order" value="0" class="form-control form-control-sm">
+            <input aria-label="<?= e(t('admin_min_order')) ?>" type="number" step="0.01" name="min_order" value="0" class="form-control form-control-sm">
         </div>
         <div class="col-md-1">
             <label class="form-label small fw-semibold"><?= e(t('admin_max_uses')) ?></label>
-            <input type="number" name="max_uses" value="100" class="form-control form-control-sm" required>
+            <input aria-label="<?= e(t('admin_max_uses')) ?>" type="number" name="max_uses" value="100" class="form-control form-control-sm" required>
         </div>
         <div class="col-md-3">
             <label class="form-label small fw-semibold"><?= e(t('admin_valid_until')) ?></label>
-            <input type="datetime-local" name="ends_at" class="form-control form-control-sm" required>
+            <input aria-label="<?= e(t('admin_valid_until')) ?>" type="datetime-local" name="ends_at" class="form-control form-control-sm" required>
         </div>
         <div class="col-12">
             <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('admin_add_coupon')) ?></button>
@@ -85,7 +85,7 @@
                             <form method="POST" action="/admin/coupons/delete" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_coupon_confirm'))) ?>);">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="coupon_id" value="<?= (int)$c['coupon_id'] ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="<?= e(t('remove')) ?>"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
