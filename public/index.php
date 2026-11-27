@@ -33,6 +33,7 @@ use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Validator;
+use App\Core\FormRules;
 use App\Core\Mailer;
 use App\Core\Upload;
 use App\Core\Request;
@@ -127,11 +128,8 @@ if ($requestUri === '/lang' && $requestMethod === 'POST') {
             RegistrationService::saveLanguage(Auth::id(), $lang);
         }
     }
-    $referer = $_SERVER['HTTP_REFERER'] ?? '/';
-    if (parse_url($referer, PHP_URL_PATH) === '/lang') {
-        $referer = '/';
-    }
-    header('Location: ' . $referer);
+    $back = back_path('/');
+    header('Location: ' . (str_starts_with($back, '/lang') ? '/' : $back));
     exit;
 }
 
@@ -154,7 +152,7 @@ require $rootDir . '/routes/admin.php';
 // SEARCH & AUTOCOMPLETE (PHASE 3)
 // ----------------------------------------------------
 if ($requestUri === '/search' && $requestMethod === 'GET') {
-    $q = trim((string)($_GET['q'] ?? ''));
+    $q = mb_substr(trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : ''), 0, 100);
     $results = SearchService::search($q);
     echo View::render('shop/search', [
         'pageTitle' => t('search_results_title', ['query' => $q]),
@@ -165,7 +163,7 @@ if ($requestUri === '/search' && $requestMethod === 'GET') {
 }
 
 if ($requestUri === '/api/search/suggest' && $requestMethod === 'GET') {
-    $q = trim((string)($_GET['q'] ?? ''));
+    $q = mb_substr(trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : ''), 0, 100);
     $res = SearchService::suggest($q);
     json_response($res);
 }
@@ -188,6 +186,11 @@ if ($requestUri === '/login') {
 
         $email = (string)($_POST['email'] ?? '');
         $password = (string)($_POST['password'] ?? '');
+
+        if (!FormRules::isEmail($email) || $password === '') {
+            echo View::render('auth/login', ['error' => t('err_login_fields'), 'email' => $email]);
+            exit;
+        }
 
         $result = Auth::attemptUser($email, $password, $clientIp);
         if ($result['ok']) {
@@ -240,25 +243,22 @@ if ($requestUri === '/register') {
             exit;
         }
 
-        $validator = Validator::make($_POST, [
-            'name' => 'required|min:2|max:100',
-            'email' => 'required|email|max:100',
-            'password' => 'required|min:8|matches:password_confirmation',
-        ]);
-
-        if ($validator->fails()) {
-            echo View::render('auth/register', [
-                'error' => $validator->first('name') ?? $validator->first('email') ?? $validator->first('password'),
-                'old' => $_POST
-            ]);
+        $errors = FormRules::registration($_POST);
+        if ($errors === [] && Auth::isLockedOut('register', $clientIp)) {
+            $errors['email'] = t('err_too_many');
+        }
+        if ($errors !== []) {
+            echo View::render('auth/register', ['error' => implode(' ', $errors), 'old' => $_POST]);
             exit;
         }
+        // At most a few new accounts (and verification e-mails) from one address at a time
+        Auth::recordAttempt('register', $clientIp, false);
 
         $res = RegistrationService::register(
             (string)$_POST['name'],
             (string)$_POST['email'],
             (string)$_POST['password'],
-            (string)($_POST['phone'] ?? '')
+            (string)(FormRules::phone((string)($_POST['phone'] ?? '')) ?? '')
         );
 
         if (!$res['ok']) {
@@ -289,6 +289,16 @@ if ($requestUri === '/forgot-password') {
         }
 
         $email = (string)($_POST['email'] ?? '');
+        if (!FormRules::isEmail($email)) {
+            echo View::render('auth/forgot_password', ['error' => t('val_email')]);
+            exit;
+        }
+        // Reset e-mails cannot be sent without limit
+        if (Auth::isLockedOut('password-reset', $clientIp)) {
+            echo View::render('auth/forgot_password', ['error' => t('err_too_many')]);
+            exit;
+        }
+        Auth::recordAttempt('password-reset', $clientIp, false);
         $res = PasswordResetService::requestReset($email);
 
         echo View::render('auth/forgot_password', [
@@ -314,8 +324,8 @@ if ($requestUri === '/reset-password') {
         $password = (string)($_POST['password'] ?? '');
         $confirm = (string)($_POST['password_confirmation'] ?? '');
 
-        if (strlen($password) < 8) {
-            echo View::render('auth/reset_password', ['error' => t('err_password_short'), 'token' => $token]);
+        if ($problem = FormRules::passwordProblem($password)) {
+            echo View::render('auth/reset_password', ['error' => $problem, 'token' => $token]);
             exit;
         }
 
@@ -364,9 +374,11 @@ if ($requestUri === '/products' && $requestMethod === 'GET') {
     $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
 
     $flash = $_SESSION['flash_success'] ?? null;
-    unset($_SESSION['flash_success']);
+    $problem = $_SESSION['flash_error'] ?? null;
+    unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
     echo View::render('shop/products', [
+        'error' => $problem,
         'pageTitle' => t('nav_products'),
         'products' => $products,
         'categories' => $categories,
@@ -382,7 +394,7 @@ if (preg_match('#^/products/(\d+)$#', $requestUri, $m) && $requestMethod === 'GE
     $product = ProductRepo::findById($productId);
     if (!$product) {
         http_response_code(404);
-        echo '<h1>' . e(t('err_product_404')) . '</h1>';
+        echo View::render('not_found', ['pageTitle' => t('err_product_404'), 'message' => t('err_product_404')]);
         exit;
     }
     $wishlistIds = Auth::check() ? WishlistAndAlertService::getUserWishlistIds(Auth::id()) : [];
@@ -419,7 +431,7 @@ if (preg_match('#^/herb/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET') 
     $herb = HerbRepo::findById($herbId);
     if (!$herb) {
         http_response_code(404);
-        echo '<h1>' . e(t('err_herb_404')) . '</h1>';
+        echo View::render('not_found', ['pageTitle' => t('err_herb_404'), 'message' => t('err_herb_404')]);
         exit;
     }
     $products = HerbRepo::getProductsByHerb($herbId);
@@ -438,7 +450,7 @@ if (preg_match('#^/concern/([a-z0-9-]+)$#', $requestUri, $m) && $requestMethod =
     $concern = HerbRepo::getConcernBySlug($slug);
     if (!$concern) {
         http_response_code(404);
-        echo '<h1>' . e(t('err_concern_404')) . '</h1>';
+        echo View::render('not_found', ['pageTitle' => t('err_concern_404'), 'message' => t('err_concern_404')]);
         exit;
     }
     $herbs = HerbRepo::getHerbsByConcern((int)$concern['concern_id']);
@@ -506,27 +518,33 @@ if ($requestUri === '/cart/add' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
 
     $pid = (int)($_POST['product_id'] ?? 0);
-    $qty = max(1, (int)($_POST['quantity'] ?? 1));
+    $quantity = is_string($_POST['quantity'] ?? null) ? $_POST['quantity'] : '1';
     $pdo = Database::getConnection();
 
     $check = $pdo->prepare("SELECT cart_id, quantity FROM cart WHERE user_id = :uid AND product_id = :pid");
     $check->execute([':uid' => Auth::id(), ':pid' => $pid]);
     $existing = $check->fetch(PDO::FETCH_ASSOC);
 
+    if ($problem = FormRules::cartProblem($pid, $quantity, (int)($existing['quantity'] ?? 0))) {
+        $_SESSION['flash_error'] = $problem;
+        header('Location: ' . back_path('/cart'));
+        exit;
+    }
+
     if ($existing) {
         $upd = $pdo->prepare("UPDATE cart SET quantity = quantity + :qty WHERE cart_id = :cid");
-        $upd->execute([':qty' => $qty, ':cid' => $existing['cart_id']]);
+        $upd->execute([':qty' => (int)$quantity, ':cid' => $existing['cart_id']]);
     } else {
         $ins = $pdo->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (:uid, :pid, :qty)");
-        $ins->execute([':uid' => Auth::id(), ':pid' => $pid, ':qty' => $qty]);
+        $ins->execute([':uid' => Auth::id(), ':pid' => $pid, ':qty' => (int)$quantity]);
     }
 
     $_SESSION['flash_success'] = t('flash_cart_added');
-    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/cart'));
+    header('Location: ' . back_path('/cart'));
     exit;
 }
 
@@ -534,13 +552,17 @@ if ($requestUri === '/cart/update' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
     $pid = (int)($_POST['product_id'] ?? 0);
-    $qty = max(1, (int)($_POST['quantity'] ?? 1));
-    $pdo = Database::getConnection();
-    $upd = $pdo->prepare("UPDATE cart SET quantity = :qty WHERE user_id = :uid AND product_id = :pid");
-    $upd->execute([':qty' => $qty, ':uid' => Auth::id(), ':pid' => $pid]);
+    $quantity = is_string($_POST['quantity'] ?? null) ? $_POST['quantity'] : '';
+    if ($problem = FormRules::cartProblem($pid, $quantity)) {
+        $_SESSION['flash_error'] = $problem;
+    } else {
+        $pdo = Database::getConnection();
+        $upd = $pdo->prepare("UPDATE cart SET quantity = :qty WHERE user_id = :uid AND product_id = :pid");
+        $upd->execute([':qty' => (int)$quantity, ':uid' => Auth::id(), ':pid' => $pid]);
+    }
     header('Location: /cart');
     exit;
 }
@@ -549,7 +571,7 @@ if ($requestUri === '/cart/remove' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
     $pid = (int)($_POST['product_id'] ?? 0);
     $pdo = Database::getConnection();
@@ -631,6 +653,18 @@ if ($requestUri === '/checkout') {
             exit;
         }
 
+        $shippingErrors = FormRules::shipping($_POST);
+        if ($shippingErrors !== []) {
+            echo View::render('shop/checkout', [
+                'error' => implode(' ', $shippingErrors),
+                'cartItems' => $cartItems,
+                'subtotal' => $subtotal,
+                'zones' => DeliveryZoneService::getAllZones(),
+                'old' => $_POST
+            ]);
+            exit;
+        }
+
         $slipPath = null;
         if ($paymentMethod === 'bank_transfer' && !empty($_FILES['bank_slip']['name'])) {
             $uploadRes = Upload::process($_FILES['bank_slip'], 'slips');
@@ -654,7 +688,7 @@ if ($requestUri === '/checkout') {
             null,
             [
                 'shipping_name' => trim((string)($_POST['shipping_name'] ?? '')),
-                'shipping_phone' => trim((string)($_POST['shipping_phone'] ?? '')),
+                'shipping_phone' => FormRules::phone((string)($_POST['shipping_phone'] ?? '')),
                 'shipping_address' => trim((string)($_POST['shipping_address'] ?? '')),
                 'district' => trim((string)($_POST['district'] ?? '')),
                 'coupon_code' => trim((string)($_POST['coupon_code'] ?? '')),
@@ -720,7 +754,7 @@ if (preg_match('#^/orders/(\d+)$#', $requestUri, $m) && $requestMethod === 'GET'
     $order = OrderService::getOrderDetails((int)$m[1]);
     if (!$order || (int)$order['user_id'] !== Auth::id()) {
         http_response_code(404);
-        echo '<h1>' . e(t('err_order_404')) . '</h1>';
+        echo View::render('not_found', ['pageTitle' => t('err_order_404'), 'message' => t('err_order_404')]);
         exit;
     }
 
@@ -784,7 +818,7 @@ if (preg_match('#^/orders/(\d+)/cancel$#', $requestUri, $m) && $requestMethod ==
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
     $res = OrderService::cancelByCustomer((int)$m[1], Auth::id());
     if ($res['ok']) {
@@ -800,7 +834,7 @@ if (preg_match('#^/orders/(\d+)/upload-slip$#', $requestUri, $m) && $requestMeth
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
     $orderId = (int)$m[1];
     $order = OrderService::getOrderDetails($orderId);
@@ -841,12 +875,17 @@ if ($requestUri === '/wishlist/toggle' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
     $pid = (int)($_POST['product_id'] ?? 0);
+    if (!ProductRepo::findById($pid)) {
+        $_SESSION['flash_error'] = t('err_product_404');
+        header('Location: /products');
+        exit;
+    }
     $added = WishlistAndAlertService::toggleWishlist(Auth::id(), $pid);
     $_SESSION['flash_success'] = $added ? t('flash_wishlist_added') : t('flash_wishlist_removed');
-    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/products'));
+    header('Location: ' . back_path('/products'));
     exit;
 }
 
@@ -854,12 +893,17 @@ if ($requestUri === '/stock-alert' && $requestMethod === 'POST') {
     Auth::requireUser();
     if (!Csrf::validateRequest()) {
         http_response_code(403);
-        exit('Invalid CSRF token');
+        exit(e(t('err_csrf')));
     }
     $pid = (int)($_POST['product_id'] ?? 0);
+    if (!ProductRepo::findById($pid)) {
+        $_SESSION['flash_error'] = t('err_product_404');
+        header('Location: /products');
+        exit;
+    }
     WishlistAndAlertService::subscribeStockAlert(Auth::id(), $pid);
     $_SESSION['flash_success'] = t('flash_stock_alert');
-    header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/products'));
+    header('Location: ' . back_path('/products'));
     exit;
 }
 
@@ -881,6 +925,11 @@ if ($requestUri === '/admin/login') {
 
         $email = (string)($_POST['email'] ?? '');
         $password = (string)($_POST['password'] ?? '');
+
+        if (!FormRules::isEmail($email) || $password === '') {
+            echo View::render('auth/admin_login', ['error' => t('err_login_fields'), 'email' => $email]);
+            exit;
+        }
 
         $res = Auth::attemptAdmin($email, $password, $clientIp);
         if ($res['ok']) {
@@ -914,11 +963,11 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/orders/status' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
         }
         $orderId = (int)($_POST['order_id'] ?? 0);
         $status = (string)($_POST['status'] ?? '');
-        $note = trim((string)($_POST['note'] ?? ''));
+        $note = mb_substr(trim((string)($_POST['note'] ?? '')), 0, 255);
         $adminId = Auth::admin()['admin_id'] ?? null;
 
         $res = OrderService::updateStatus($orderId, $status, $note !== '' ? $note : null, $adminId);
@@ -951,7 +1000,13 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/coupons/create' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
+        }
+        $couponErrors = FormRules::coupon($_POST);
+        if ($couponErrors !== []) {
+            $_SESSION['flash_error'] = implode(' ', $couponErrors);
+            header('Location: /admin/coupons');
+            exit;
         }
         try {
             CouponService::create([
@@ -975,7 +1030,7 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/coupons/toggle' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
         }
         CouponService::toggleActive((int)($_POST['coupon_id'] ?? 0));
         header('Location: /admin/coupons');
@@ -985,7 +1040,7 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/coupons/delete' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
         }
         CouponService::delete((int)($_POST['coupon_id'] ?? 0));
         $_SESSION['flash_success'] = t('admin_coupon_deleted');
@@ -995,8 +1050,10 @@ if (str_starts_with($requestUri, '/admin/')) {
 
     if ($requestUri === '/admin/zones' && $requestMethod === 'GET') {
         $flash = $_SESSION['flash_success'] ?? null;
-        unset($_SESSION['flash_success']);
+        $zoneError = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
         echo View::render('admin/zones', [
+            'error' => $zoneError,
             'pageTitle' => t('admin_zones'),
             'zones' => DeliveryZoneService::getAllZones(),
             'flash' => $flash
@@ -1007,7 +1064,13 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/zones/save' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
+        }
+        $zoneErrors = FormRules::deliveryZone($_POST);
+        if ($zoneErrors !== []) {
+            $_SESSION['flash_error'] = implode(' ', $zoneErrors);
+            header('Location: /admin/zones');
+            exit;
         }
         DeliveryZoneService::upsertZone(
             (string)($_POST['district'] ?? ''),
@@ -1022,7 +1085,7 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/zones/delete' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
         }
         DeliveryZoneService::deleteZone((int)($_POST['zone_id'] ?? 0));
         $_SESSION['flash_success'] = t('admin_zone_deleted');
@@ -1073,7 +1136,7 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/bank-slips/review' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
         }
         $slipId = (int)($_POST['slip_id'] ?? 0);
         $action = (string)($_POST['action'] ?? '');
@@ -1111,10 +1174,15 @@ if (str_starts_with($requestUri, '/admin/')) {
     if ($requestUri === '/admin/products/stock' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
-            exit('Invalid CSRF token');
+            exit(e(t('err_csrf')));
         }
         $pid = (int)($_POST['product_id'] ?? 0);
-        $qty = max(0, (int)($_POST['quantity'] ?? 0));
+        $qty = FormRules::whole((string)($_POST['quantity'] ?? ''), 0, 100000);
+        if ($qty === null || !ProductRepo::findById($pid)) {
+            $_SESSION['flash_error'] = t('err_whole', ['min' => 0, 'max' => 100000]);
+            header('Location: /admin/products');
+            exit;
+        }
         $res = WishlistAndAlertService::updateProductStock($pid, $qty);
         $msg = t('admin_stock_updated', ['id' => $pid, 'qty' => $qty]);
         if (($res['notified_count'] ?? 0) > 0) {

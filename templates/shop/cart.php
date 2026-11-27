@@ -1,3 +1,9 @@
+<?php foreach (['flash_error' => 'danger', 'flash_success' => 'success'] as $key => $tone): ?>
+    <?php if (!empty($_SESSION[$key])): ?>
+        <div class="alert alert-<?= $tone ?> py-2 small" role="<?= $tone === 'danger' ? 'alert' : 'status' ?>"><?= e($_SESSION[$key]) ?></div>
+        <?php unset($_SESSION[$key]); ?>
+    <?php endif; ?>
+<?php endforeach; ?>
 <h2 class="fw-bold text-success mb-4"><i class="bi bi-cart3 me-2"></i><?= e(t('nav_cart')) ?></h2>
 
 <?php if (!empty($error)): ?>

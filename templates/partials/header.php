@@ -28,7 +28,7 @@ $pageTitle = $pageTitle ?? t('app_name');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap">
     <!-- Custom Theme -->
-    <link rel="stylesheet" href="/assets/css/style.css?v=12">
+    <link rel="stylesheet" href="/assets/css/style.css?v=14">
 </head>
 <body>
 <a class="skip-link" href="#content"><?= e(t('skip_to_content')) ?></a>

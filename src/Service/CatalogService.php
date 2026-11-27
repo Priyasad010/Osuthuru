@@ -44,7 +44,8 @@ class CatalogService
         $category = (int)($data['category_id'] ?? 0);
         $price = is_numeric($data['price'] ?? null) ? round((float)$data['price'], 2) : 0.0;
 
-        if ($name === '' || $price <= 0 || $price > 10000000
+        $quantity = $data['quantity'] ?? '0';
+        if ($name === '' || $price <= 0 || $price > 10000000 || (int)$quantity < 0 || (int)$quantity > 100000
             || !self::value('SELECT 1 FROM category WHERE category_id = :id', [':id' => $category])) {
             return self::fail('catalog_err_product');
         }

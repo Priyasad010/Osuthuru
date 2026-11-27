@@ -90,7 +90,7 @@ class QuizRepo
     /** Create (id 0) or update a question. */
     public static function saveQuestion(int $id, string $textEn, string $textSi, int $sortOrder): bool
     {
-        if (trim($textEn) === '') {
+        if (trim($textEn) === '' || mb_strlen(trim($textEn)) > 255 || mb_strlen(trim($textSi)) > 255) {
             return false;
         }
 
@@ -115,7 +115,7 @@ class QuizRepo
     /** Create (id 0) or update an option. */
     public static function saveOption(int $id, int $questionId, string $textEn, string $textSi, array $points): bool
     {
-        if (trim($textEn) === '') {
+        if (trim($textEn) === '' || mb_strlen(trim($textEn)) > 255 || mb_strlen(trim($textSi)) > 255) {
             return false;
         }
 
@@ -173,7 +173,7 @@ class QuizRepo
 
         $values = [':dosha' => $dosha];
         foreach (['description_en', 'description_si', 'tips_en', 'tips_si'] as $field) {
-            $text = trim((string)($data[$field] ?? ''));
+            $text = mb_substr(trim((string)($data[$field] ?? '')), 0, 5000);
             $values[":{$field}"] = $text !== '' ? $text : null;
         }
 

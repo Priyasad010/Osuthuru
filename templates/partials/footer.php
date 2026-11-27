@@ -45,6 +45,14 @@
 
 <!-- Bootstrap JS Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php
+$formMessages = [];
+foreach (['required', 'choose', 'tick', 'email', 'short', 'long', 'min', 'max', 'whole', 'number', 'date', 'pattern', 'name', 'phone', 'password', 'match', 'future', 'notfuture', 'after', 'notbefore', 'monthday', 'files', 'filetype', 'filesize'] as $formKey) {
+    $formMessages[$formKey] = t('form_' . $formKey);
+}
+?>
+<script type="application/json" id="formMessages"><?= json_encode($formMessages, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<script src="/assets/js/forms.js?v=1"></script>
 <script src="/assets/js/search.js?v=3"></script>
 <script src="/assets/js/pwa.js?v=2" defer></script>
 </body>

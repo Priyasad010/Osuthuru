@@ -131,6 +131,10 @@ The shop was renamed to Osuthuru. A new install needs nothing special. For an ol
 
 An order becomes **paid** only when PayHere's signed notification reaches `/payments/payhere/notify`; returning to the shop proves nothing. PayHere cannot reach `localhost`, so on a development PC the payment page works but the order stays unpaid. Test the whole flow on a public HTTPS address (`APP_URL`, or `PAYHERE_NOTIFY_URL`). If an order is paid after its stock ran out, or is charged back, the order timeline says so and an administrator must act. Refunds are made in the PayHere portal.
 
+## Form checks
+
+`src/Core/FormRules.php` and the services decide what is accepted. `public/assets/js/forms.js` shows the same rules next to each field in English or Sinhala; add a new form's fields to its `rules` list. Phone numbers are Sri Lankan (stored as `0XXXXXXXXX`), and new passwords need 8 to 72 characters with a letter and a number.
+
 ## Security notes
 
 Folder listing is off. Bank slips cannot be opened by their address: an administrator views them through the application. Keep it that way if you move to another web server (Nginx ignores `.htaccess`).

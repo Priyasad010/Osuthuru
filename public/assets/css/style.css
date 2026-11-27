@@ -170,6 +170,30 @@ main .card > .bg-light:first-child, main .card > .position-relative:first-child 
     background-color: var(--lotus) !important;
 }
 
+/* the two lines of the Sinhala name need room */
+:lang(si) .navbar-brand .lh-1 {
+    line-height: 1.45 !important;
+}
+
+/* ---------- form messages ---------- */
+.field-error {
+    flex: 0 0 100%;
+    width: 100%;
+    color: #a51d4a;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.form-control.is-invalid, .form-select.is-invalid, .form-check-input.is-invalid {
+    border-color: #c92a66;
+}
+
+[type="submit"][aria-disabled="true"] {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
 /* ---------- header ---------- */
 .navbar-custom {
     background: rgba(4, 48, 43, 0.97);

@@ -5,6 +5,9 @@
     </div>
 </div>
 
+<?php if (!empty($error)): ?>
+    <div class="alert alert-danger py-2 small" role="alert"><?= e($error) ?></div>
+<?php endif; ?>
 <?php if (!empty($flash)): ?>
     <div class="alert alert-success py-2 small"><?= e($flash) ?></div>
 <?php endif; ?>

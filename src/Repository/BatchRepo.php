@@ -79,6 +79,9 @@ class BatchRepo
         if ($code === '' || mb_strlen($code) > 60 || !$made || !$expires || !ProductRepo::findById($productId)) {
             return ['ok' => false, 'error' => t('batch_err_required')];
         }
+        if ($made > self::today()->format('Y-m-d')) {
+            return ['ok' => false, 'error' => t('batch_err_made_future')];
+        }
         if ($expires < $made) {
             return ['ok' => false, 'error' => t('batch_err_dates')];
         }

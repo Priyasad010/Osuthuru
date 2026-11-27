@@ -25,7 +25,7 @@ class SafetyRepo
     /** Create (id 0) or rename a flag. The code of an existing flag never changes. */
     public static function saveFlag(int $id, string $code, string $nameEn, string $nameSi): array
     {
-        if (trim($nameEn) === '') {
+        if (trim($nameEn) === '' || mb_strlen(trim($nameEn)) > 150 || mb_strlen(trim($nameSi)) > 150) {
             return ['ok' => false, 'error' => t('safety_err_name')];
         }
 

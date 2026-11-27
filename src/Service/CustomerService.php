@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\FormRules;
 use PDO;
 
 class CustomerService
@@ -56,8 +57,11 @@ class CustomerService
         $name = $field('name');
         $phone = $field('phone');
 
-        if (mb_strlen($name) < 2 || mb_strlen($name) > 100 || mb_strlen($phone) > 20 || mb_strlen($field('address')) > 1000) {
+        if (!FormRules::isPersonName($name) || mb_strlen($field('address')) > 1000) {
             return ['ok' => false, 'error' => t('profile_err_invalid')];
+        }
+        if ($phone !== '' && ($phone = FormRules::phone($phone)) === null) {
+            return ['ok' => false, 'error' => t('err_phone_invalid')];
         }
         $stmt = Database::getConnection()->prepare('UPDATE `user` SET name = :name, phone = :phone, address = :address WHERE user_id = :id');
         $stmt->execute([':name' => $name, ':phone' => $phone, ':address' => $field('address'), ':id' => $userId]);
@@ -75,8 +79,8 @@ class CustomerService
         if (!password_verify($current, $hash)) {
             return ['ok' => false, 'error' => t('profile_err_current')];
         }
-        if (strlen($new) < 8) {
-            return ['ok' => false, 'error' => t('err_password_short')];
+        if ($problem = FormRules::passwordProblem($new)) {
+            return ['ok' => false, 'error' => $problem];
         }
         if ($new !== $confirm) {
             return ['ok' => false, 'error' => t('err_password_mismatch')];

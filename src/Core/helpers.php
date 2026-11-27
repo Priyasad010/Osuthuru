@@ -41,6 +41,23 @@ if (!function_exists('picture')) {
     }
 }
 
+if (!function_exists('back_path')) {
+    /**
+     * The page the visitor came from, as a path on this site. The Referer header
+     * is chosen by the client, so another site's address is never followed.
+     */
+    function back_path(string $fallback): string
+    {
+        $parts = parse_url((string)($_SERVER['HTTP_REFERER'] ?? ''));
+        $host = ($parts['host'] ?? '') . (isset($parts['port']) ? ':' . $parts['port'] : '');
+        $path = $parts['path'] ?? '';
+        if ($host === '' || $host !== ($_SERVER['HTTP_HOST'] ?? '') || !preg_match('#^/(?![/\\\\])[^\r\n]*$#', $path)) {
+            return $fallback;
+        }
+        return $path . (isset($parts['query']) ? '?' . $parts['query'] : '');
+    }
+}
+
 if (!function_exists('t_or')) {
     /** Translate a stored code (status, payment method...), showing the raw value if unknown. */
     function t_or(string $prefix, ?string $value): string
