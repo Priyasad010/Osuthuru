@@ -12,7 +12,7 @@ class PasswordResetTest extends TestCase
 {
     private PDO $pdo;
     private int $testUserId;
-    private string $testEmail = 'resettest@suwoda.lk';
+    private string $testEmail = 'resettest@osuthuru.lk';
 
     protected function setUp(): void
     {

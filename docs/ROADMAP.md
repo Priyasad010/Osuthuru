@@ -1,5 +1,5 @@
 # BUILD ROADMAP · FOR GOOGLE ANTIGRAVITY
-# Suwoda HerbHub V2
+# Osuthuru
 ## Novelty features + modern stack, built phase by phase
 
 *Know your body → Find the right herb → Verify it is genuine → Buy safely*
@@ -10,7 +10,7 @@ November 2026 · Planning document, adjust phases to your own deadline
 
 | | |
 |---|---|
-| **Project** | Suwoda HerbHub: herbal and Ayurvedic e-commerce site for Sri Lanka (V1 was a 4-member university project) |
+| **Project** | Osuthuru: herbal and Ayurvedic e-commerce site for Sri Lanka (V1 was a 4-member university project) |
 | **This document** | A build plan for V2: a new, separate build that keeps what V1 does, fixes its weak points, and adds novelty features and newer technologies |
 | **Core stack** | PHP 8.3 + MySQL 8 + Bootstrap 5 + JavaScript (fetch, Chart.js), packaged with Docker Compose |
 | **Added technologies** | Python FastAPI service (recommender, forecast, optional leaf identification), LLM API (assistant), QR codes, PDF invoices, PWA |
@@ -602,7 +602,7 @@ A demo that follows the core idea is easier to follow than a list of features. A
 Save this as `AGENTS.md` in the repo root. Antigravity reads workspace rules from `AGENTS.md`, `GEMINI.md` or `.agents/rules/*.md`; keep it short and update it when you add a convention.
 
 ```
-# AGENTS.md - Suwoda HerbHub V2
+# AGENTS.md - Osuthuru
 ## Project
 E-commerce site for Sri Lankan herbal / Ayurvedic products. Roles: guest, customer, admin.
 Bilingual (English + Sinhala). Work from docs/ROADMAP.md, ONE phase at a time.

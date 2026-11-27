@@ -26,7 +26,7 @@
             <input aria-label="<?= e(t('admin_free_over')) ?>" type="number" step="0.01" name="free_over" class="form-control form-control-sm" required>
         </div>
         <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('admin_save_zone')) ?></button>
+            <button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('admin_save_zone')) ?></button>
         </div>
     </form>
 </div>

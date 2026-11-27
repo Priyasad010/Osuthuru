@@ -6,12 +6,12 @@
 <!-- A-Z Alphabet Filter -->
 <div class="card border-0 shadow-sm p-3 mb-4">
     <div class="d-flex flex-wrap justify-content-center gap-1">
-        <a href="/dictionary" class="btn btn-sm <?= empty($selectedLetter) ? 'btn-suwoda' : 'btn-outline-secondary' ?>">
+        <a href="/dictionary" class="btn btn-sm <?= empty($selectedLetter) ? 'btn-brand' : 'btn-outline-secondary' ?>">
             <?= e(t('filter_all')) ?>
         </a>
         <?php foreach (range('A', 'Z') as $char): ?>
             <a href="/dictionary?letter=<?= $char ?>"
-               class="btn btn-sm <?= ($selectedLetter ?? '') === $char ? 'btn-suwoda' : 'btn-outline-secondary' ?>"
+               class="btn btn-sm <?= ($selectedLetter ?? '') === $char ? 'btn-brand' : 'btn-outline-secondary' ?>"
                style="width: 32px; padding: 4px 0;">
                 <?= $char ?>
             </a>

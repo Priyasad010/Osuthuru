@@ -255,7 +255,7 @@ class Phase7AdminTest extends TestCase
     public function testHttpsUsesItsOwnSessionCookie(): void
     {
         $this->assertSame('PHPSESSID', \App\Core\Auth::sessionName([]));
-        $this->assertSame('SUWODA_SECURE', \App\Core\Auth::sessionName(['HTTPS' => 'on']));
+        $this->assertSame('OSUTHURU_SECURE', \App\Core\Auth::sessionName(['HTTPS' => 'on']));
     }
 
     public function testOnlyServedUploadsAreShownAsPictures(): void

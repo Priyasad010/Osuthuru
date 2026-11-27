@@ -34,7 +34,7 @@
                             <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
                         </div>
 
-                        <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('update_password')) ?></button>
+                        <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold"><?= e(t('update_password')) ?></button>
                     </form>
                 <?php endif; ?>
             </div>

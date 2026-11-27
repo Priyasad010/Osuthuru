@@ -73,7 +73,7 @@ $forms = array_merge([null], $entries);
                     <label class="form-check-label small" for="pub<?= $id ?>"><?= e(t('admin_published')) ?></label>
                 </div>
             </div>
-            <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
+            <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('save')) ?></button></div>
         </form>
         <?php if ($s): ?>
             <form method="POST" action="/admin/safety/entry/delete" class="text-end mt-1" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_confirm'))) ?>);">

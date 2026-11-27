@@ -1,27 +1,32 @@
 <?php
 
-/** Build the app icons from the logo:  php bin/make_icons.php */
+/**
+ * Build the logo and app icons from the artwork in docs/branding:
+ *   php bin/make_icons.php
+ */
 
 $root = dirname(__DIR__);
-$logo = imagecreatefromjpeg($root . '/public/assets/images/Logo.jpg');
-if (!$logo) {
-    fwrite(STDERR, "Cannot read the logo.\n");
-    exit(1);
-}
-
-$width = imagesx($logo);
-$height = imagesy($logo);
-$side = max($width, $height);
 @mkdir($root . '/public/assets/icons', 0755, true);
 
-foreach ([192, 512] as $size) {
-    $icon = imagecreatetruecolor($size, $size);
-    imagefill($icon, 0, 0, imagecolorallocate($icon, 255, 255, 255));
-    // Margin keeps the logo inside the safe area of rounded ("maskable") icons
-    $scale = $size * 0.8 / $side;
-    $w = (int)round($width * $scale);
-    $h = (int)round($height * $scale);
-    imagecopyresampled($icon, $logo, intdiv($size - $w, 2), intdiv($size - $h, 2), 0, 0, $w, $h, $width, $height);
-    imagepng($icon, "{$root}/public/assets/icons/icon-{$size}.png", 9);
+// source file => [target => size]
+$jobs = [
+    'osuthuru-icon.png' => ['images/logo.png' => 256, 'icons/icon-192.png' => 192, 'icons/icon-512.png' => 512],
+    // square to the edges, for phones that cut their own shape
+    'osuthuru-icon-maskable.png' => ['icons/maskable-192.png' => 192, 'icons/maskable-512.png' => 512],
+];
+
+foreach ($jobs as $source => $targets) {
+    $image = imagecreatefrompng("{$root}/docs/branding/{$source}");
+    if (!$image) {
+        fwrite(STDERR, "Cannot read {$source}.\n");
+        exit(1);
+    }
+    foreach ($targets as $target => $size) {
+        $icon = imagecreatetruecolor($size, $size);
+        imagealphablending($icon, false);
+        imagesavealpha($icon, true);
+        imagecopyresampled($icon, $image, 0, 0, 0, 0, $size, $size, imagesx($image), imagesy($image));
+        imagepng($icon, "{$root}/public/assets/{$target}", 9);
+    }
 }
-echo "Icons written to public/assets/icons/\n";
+echo "Logo and icons written to public/assets/\n";

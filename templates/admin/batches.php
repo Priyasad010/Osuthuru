@@ -91,7 +91,7 @@ $forms = array_merge([null], $batches);
                 <label class="form-label small" for="n<?= $id ?>"><?= e(t('admin_batch_notes')) ?></label>
                 <textarea class="form-control form-control-sm" id="n<?= $id ?>" name="notes" rows="1"><?= e($b['notes'] ?? '') ?></textarea>
             </div>
-            <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
+            <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('save')) ?></button></div>
         </form>
 
         <?php if ($b): ?>

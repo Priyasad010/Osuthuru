@@ -9,7 +9,7 @@
         return;
     }
 
-    const STORAGE_KEY = 'suwoda_safety_flags';
+    const STORAGE_KEY = 'osuthuru_safety_flags';
     const results = document.getElementById('safetyResults');
     const remember = document.getElementById('safetyRemember');
     const clearButton = document.getElementById('safetyClear');

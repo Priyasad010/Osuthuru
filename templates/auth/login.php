@@ -3,7 +3,7 @@
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
                 <div class="text-center mb-4">
-                    <img src="/assets/images/Logo.jpg" alt="Suwoda Logo" width="56" height="56" class="rounded-circle mb-2">
+                    <img src="/assets/images/logo.png" alt="Osuthuru Logo" width="56" height="56" class="rounded-circle mb-2">
                     <h3 class="fw-bold text-success"><?= e(t('nav_login')) ?></h3>
                     <p class="text-muted small"><?= e(t('login_subtitle')) ?></p>
                 </div>
@@ -32,7 +32,7 @@
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
 
-                    <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('nav_login')) ?></button>
+                    <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold"><?= e(t('nav_login')) ?></button>
                 </form>
 
                 <div class="text-center mt-4 pt-2 border-top small text-muted">

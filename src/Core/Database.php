@@ -14,7 +14,7 @@ class Database
         if (self::$instance === null) {
             $host = Env::get('DB_HOST', '127.0.0.1');
             $port = Env::get('DB_PORT', 3306);
-            $dbName = Env::get('DB_NAME', 'suwoda');
+            $dbName = Env::get('DB_NAME', 'osuthuru');
             $user = Env::get('DB_USER', 'app');
             $pass = Env::get('DB_PASS', 'app_secret');
             $charset = 'utf8mb4';
@@ -52,7 +52,7 @@ class Database
             'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
             Env::get('DB_HOST', '127.0.0.1'),
             Env::get('DB_PORT', 3306),
-            Env::get('DB_NAME', 'suwoda')
+            Env::get('DB_NAME', 'osuthuru')
         );
 
         return new PDO($dsn, (string)Env::get('DB_USER', 'app'), (string)Env::get('DB_PASS', 'app_secret'), [

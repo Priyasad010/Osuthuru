@@ -20,7 +20,7 @@
         <form method="POST" action="/admin/quiz/publish">
             <?= csrf_field() ?>
             <input type="hidden" name="published" value="<?= $published ? '0' : '1' ?>">
-            <button type="submit" class="btn btn-sm <?= $published ? 'btn-outline-danger' : 'btn-suwoda' ?>">
+            <button type="submit" class="btn btn-sm <?= $published ? 'btn-outline-danger' : 'btn-brand' ?>">
                 <?= e($published ? t('admin_unpublish') : t('admin_publish')) ?>
             </button>
         </form>
@@ -45,7 +45,7 @@
                 </div>
             <?php endforeach; ?>
         </div>
-        <div class="text-end mt-2"><button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('save')) ?></button></div>
+        <div class="text-end mt-2"><button type="submit" class="btn btn-brand btn-sm"><?= e(t('save')) ?></button></div>
     </form>
 <?php endforeach; ?>
 
@@ -69,7 +69,7 @@
                 <label class="form-label small"><?= e(t('admin_question_si')) ?></label>
                 <input aria-label="<?= e(t('admin_question_si')) ?>" type="text" name="text_si" value="<?= e($q['text_si']) ?>" class="form-control form-control-sm" maxlength="255">
             </div>
-            <div class="col-md-1"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
+            <div class="col-md-1"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('save')) ?></button></div>
         </form>
 
         <?php // Existing options, then a blank row for a new one ?>
@@ -122,5 +122,5 @@
         <label class="form-label small"><?= e(t('admin_question_si')) ?></label>
         <input aria-label="<?= e(t('admin_question_si')) ?>" type="text" name="text_si" class="form-control form-control-sm" maxlength="255">
     </div>
-    <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('admin_add_question')) ?></button></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('admin_add_question')) ?></button></div>
 </form>

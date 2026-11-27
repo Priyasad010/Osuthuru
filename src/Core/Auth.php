@@ -18,7 +18,7 @@ class Auth
      */
     public static function sessionName(array $server): string
     {
-        return ($server['HTTPS'] ?? '') === 'on' ? 'SUWODA_SECURE' : 'PHPSESSID';
+        return ($server['HTTPS'] ?? '') === 'on' ? 'OSUTHURU_SECURE' : 'PHPSESSID';
     }
 
     public static function initSession(): void
@@ -41,7 +41,7 @@ class Auth
 
     public static function hashIp(string $ip): string
     {
-        $salt = Env::get('APP_KEY', 'suwoda_herbhub_salt_2026');
+        $salt = Env::get('APP_KEY', 'osuthuru_herbhub_salt_2026');
         return hash('sha256', $ip . $salt);
     }
 

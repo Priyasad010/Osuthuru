@@ -1,13 +1,13 @@
 /**
- * Suwoda HerbHub service worker.
+ * Osuthuru service worker.
  *
  * Only public things are stored: the app's files, herb pictures and ANONYMOUS
  * copies of the herb dictionary (fetched without cookies), so that nothing
  * about a signed-in customer is ever cached.
  */
-const VERSION = 'v4';
-const SHELL = `suwoda-shell-${VERSION}`;
-const DICTIONARY = `suwoda-dictionary-${VERSION}`;
+const VERSION = 'v5';
+const SHELL = `osuthuru-shell-${VERSION}`;
+const DICTIONARY = `osuthuru-dictionary-${VERSION}`;
 const LANGUAGES = ['en', 'si'];
 
 const SHELL_FILES = [
@@ -20,7 +20,7 @@ const SHELL_FILES = [
     '/assets/js/assistant.js',
     '/assets/js/shelf.js',
     'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap',
-    '/assets/images/Logo.jpg',
+    '/assets/images/logo.png',
     '/assets/icons/icon-192.png',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
@@ -73,7 +73,7 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
     event.waitUntil((async () => {
         const keys = await caches.keys();
-        await Promise.all(keys.filter(k => k.startsWith('suwoda-') && k !== SHELL && k !== DICTIONARY).map(k => caches.delete(k)));
+        await Promise.all(keys.filter(k => /^(osuthuru|suwoda)-/.test(k) && k !== SHELL && k !== DICTIONARY).map(k => caches.delete(k)));
         await self.clients.claim();
     })());
 });

@@ -1,4 +1,4 @@
-/* Suwoda HerbHub V2 Theme: deep forest, emerald, saffron and lotus */
+/* Osuthuru Theme: deep forest, emerald, saffron and lotus */
 
 :root {
     --ink: #10231d;
@@ -82,7 +82,7 @@ main h1.text-success, main h2.text-success, main h3.text-success, main h4.text-s
     --bs-btn-border-radius: 999px;
 }
 
-.btn-suwoda, .btn-success {
+.btn-brand, .btn-success {
     --bs-btn-bg: var(--emerald);
     --bs-btn-border-color: var(--emerald);
     --bs-btn-color: #fff;

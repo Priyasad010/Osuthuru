@@ -15,7 +15,7 @@ class Lang
         }
 
         // Language resolution: query param > session > cookie > default 'en'
-        $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? $_COOKIE['suwoda_lang'] ?? 'en';
+        $lang = $_GET['lang'] ?? $_SESSION['lang'] ?? $_COOKIE['osuthuru_lang'] ?? 'en';
         self::setLocale($lang);
     }
 
@@ -33,7 +33,7 @@ class Lang
         }
 
         if (!headers_sent()) {
-            setcookie('suwoda_lang', $lang, [
+            setcookie('osuthuru_lang', $lang, [
                 'expires' => time() + (86400 * 30),
                 'path' => '/',
                 'httponly' => false,

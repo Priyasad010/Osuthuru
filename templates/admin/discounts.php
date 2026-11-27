@@ -33,7 +33,7 @@ $local = fn(?string $v) => $v ? str_replace(' ', 'T', substr($v, 0, 16)) : '';
                     <label class="form-label small mb-0" for="de<?= $id ?>"><?= e(t('report_to')) ?></label>
                     <input type="datetime-local" name="end_date" id="de<?= $id ?>" class="form-control form-control-sm" value="<?= e($local($d['end_date'] ?? null)) ?>" required>
                 </div>
-                <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t($d ? 'save' : 'admin_add')) ?></button></div>
+                <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t($d ? 'save' : 'admin_add')) ?></button></div>
             </form>
             <?php if ($d): ?>
                 <form method="POST" action="/admin/discounts/delete" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_confirm'))) ?>);">

@@ -44,7 +44,7 @@ def make_engine(database: str | None = None):
         password=os.getenv("DB_ML_RO_PASS", "ml_ro_secret"),
         host=os.getenv("DB_HOST", "db"),
         port=int(os.getenv("DB_PORT", "3306")),
-        database=database or os.getenv("DB_NAME", "suwoda"),
+        database=database or os.getenv("DB_NAME", "osuthuru"),
         query={"charset": "utf8mb4"},
     )
     return create_engine(url, pool_pre_ping=True, pool_recycle=600, connect_args={"connect_timeout": 2})

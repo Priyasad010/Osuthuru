@@ -95,7 +95,7 @@ class InvoiceService
         <body>
             {$printButton}
             <div class='header'>
-                <h1>Suwoda HerbHub - {$l['title']}</h1>
+                <h1>Osuthuru - {$l['title']}</h1>
                 <div>{$l['number']} #INV-{$orderId} | {$l['date']}: {$orderDate}</div>
             </div>
 
@@ -144,7 +144,7 @@ class InvoiceService
             </table>
 
             <div class='footer'>
-                {$l['thanks']} support@suwoda.lk
+                {$l['thanks']} support@osuthuru.lk
             </div>
         </body>
         </html>

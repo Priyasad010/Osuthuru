@@ -23,7 +23,7 @@ class ValidatorTest extends TestCase
 
     public function testEmailRulePasses(): void
     {
-        $v = Validator::make(['email' => 'test@suwoda.lk'], ['email' => 'required|email']);
+        $v = Validator::make(['email' => 'test@osuthuru.lk'], ['email' => 'required|email']);
         $this->assertTrue($v->passes());
     }
 

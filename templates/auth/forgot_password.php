@@ -24,7 +24,7 @@
                         <input type="email" class="form-control" id="email" name="email" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('send_reset_link')) ?></button>
+                    <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold"><?= e(t('send_reset_link')) ?></button>
                 </form>
 
                 <div class="text-center mt-4 pt-2 border-top small text-muted">

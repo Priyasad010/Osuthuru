@@ -1,4 +1,4 @@
-"""Suwoda HerbHub ML service. Internal only: the PHP application is its sole client."""
+"""Osuthuru ML service. Internal only: the PHP application is its sole client."""
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -11,9 +11,9 @@ from . import forecast as forecasting
 from .data import UserProfile
 from .store import ModelStore
 
-log = logging.getLogger("suwoda-ml")
+log = logging.getLogger("osuthuru-ml")
 
-app = FastAPI(title="Suwoda HerbHub ML Service", version="2.0.0")
+app = FastAPI(title="Osuthuru ML Service", version="2.0.0")
 app.state.store = ModelStore()
 
 
@@ -41,7 +41,7 @@ def database_error(_: Request, exc: SQLAlchemyError):
 
 @app.get("/health")
 def health_check():
-    return {"ok": True, "service": "suwoda-ml"}
+    return {"ok": True, "service": "osuthuru-ml"}
 
 
 @app.get("/recommend/user/{user_id}")

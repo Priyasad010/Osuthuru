@@ -47,7 +47,7 @@ $concerns = $concerns ?? [];
                 <label class="form-label small mb-0" for="img<?= $hid ?>"><?= e(t('admin_image')) ?></label>
                 <input type="file" class="form-control form-control-sm" id="img<?= $hid ?>" name="image_file" accept=".jpg,.jpeg,.png,.webp">
             </div>
-            <div class="col-md-4 d-flex align-items-end"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t($h ? 'save' : 'admin_add')) ?></button></div>
+            <div class="col-md-4 d-flex align-items-end"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t($h ? 'save' : 'admin_add')) ?></button></div>
         </form>
         <?php if ($h): ?>
             <form method="POST" action="/admin/herbs/delete" class="text-end mt-1" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_herb_confirm'))) ?>);">
@@ -68,7 +68,7 @@ $concerns = $concerns ?? [];
             <input type="hidden" name="id" value="<?= $cid ?>">
             <div class="col-md-5"><input type="text" class="form-control form-control-sm" name="name_en" maxlength="150" value="<?= e($c['name_en']) ?>" aria-label="<?= e(t('admin_flag_en')) ?>" required></div>
             <div class="col-md-5"><input type="text" class="form-control form-control-sm" name="name_si" maxlength="150" value="<?= e($c['name_si']) ?>" aria-label="<?= e(t('admin_flag_si')) ?>" required></div>
-            <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('save')) ?></button></div>
         </form>
     <?php endforeach; ?>
 <?php endif; ?>

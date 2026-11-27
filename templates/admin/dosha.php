@@ -25,7 +25,7 @@
                     </select>
                 </div>
             <?php endforeach; ?>
-            <div class="col-md-1"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('save')) ?></button></div>
+            <div class="col-md-1"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('save')) ?></button></div>
         </div>
     </form>
 <?php endforeach; ?>

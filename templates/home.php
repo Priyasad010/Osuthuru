@@ -117,7 +117,7 @@ $ranges = ProductRepo::getAllCategories(null, true);
             <h3 class="mb-1"><a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="text-decoration-none text-reset"><?= e($herbOfTheDay['display_name']) ?></a></h3>
             <p class="text-muted fst-italic small mb-2"><?= e($herbOfTheDay['scientific_name']) ?></p>
             <p class="mb-3"><?= e(mb_strimwidth((string)($herbOfTheDay['display_uses'] ?: t('uses_pending')), 0, 180, '...')) ?></p>
-            <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="btn btn-suwoda"><?= e(t('read_herb_profile')) ?></a>
+            <a href="/herb/<?= (int)$herbOfTheDay['herb_id'] ?>" class="btn btn-brand"><?= e(t('read_herb_profile')) ?></a>
         </div>
     </div>
 <?php endif; ?>

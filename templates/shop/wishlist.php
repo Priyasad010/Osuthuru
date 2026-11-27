@@ -9,7 +9,7 @@
         <h5><?= e(t('wishlist_empty')) ?></h5>
         <p class="text-muted small"><?= e(t('wishlist_empty_hint')) ?></p>
         <div>
-            <a href="/products" class="btn btn-suwoda"><?= e(t('browse_products')) ?></a>
+            <a href="/products" class="btn btn-brand"><?= e(t('browse_products')) ?></a>
         </div>
     </div>
 <?php else: ?>
@@ -31,7 +31,7 @@
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>">
                                 <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('add_to_cart')) ?></button>
+                                <button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('add_to_cart')) ?></button>
                             </form>
                         <?php else: ?>
                             <form method="POST" action="/stock-alert" class="flex-grow-1">

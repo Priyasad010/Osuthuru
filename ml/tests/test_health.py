@@ -8,4 +8,4 @@ def test_health_check():
     assert response.status_code == 200
     data = response.json()
     assert data.get("ok") is True
-    assert data.get("service") == "suwoda-ml"
+    assert data.get("service") == "osuthuru-ml"

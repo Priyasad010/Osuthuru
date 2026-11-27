@@ -44,7 +44,7 @@
             <input aria-label="<?= e(t('admin_valid_until')) ?>" type="datetime-local" name="ends_at" class="form-control form-control-sm" required>
         </div>
         <div class="col-12">
-            <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('admin_add_coupon')) ?></button>
+            <button type="submit" class="btn btn-brand btn-sm"><?= e(t('admin_add_coupon')) ?></button>
         </div>
     </form>
 </div>

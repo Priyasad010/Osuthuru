@@ -128,7 +128,7 @@ $safety = \App\Service\SafetyService::currentResult($productIds);
                     </div>
                 <?php endif; ?>
 
-                <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold">
+                <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold">
                     <i class="bi bi-lock-fill me-1"></i> <?= e(t('place_order')) ?>
                 </button>
             </div>

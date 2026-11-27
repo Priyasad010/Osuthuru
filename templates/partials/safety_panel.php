@@ -44,7 +44,7 @@ $severityClass = ['avoid' => 'alert-danger', 'caution' => 'alert-warning', 'info
             <label class="form-check-label small text-muted" for="safetyRemember"><?= e(t('safety_remember')) ?></label>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('safety_check')) ?></button>
+            <button type="submit" class="btn btn-brand btn-sm"><?= e(t('safety_check')) ?></button>
             <button type="submit" class="btn btn-outline-secondary btn-sm" formaction="/safety/clear" id="safetyClear"><?= e(t('safety_clear')) ?></button>
         </div>
     </form>

@@ -1,7 +1,7 @@
 """Offline leave-one-out evaluation of the recommender against a popularity baseline.
 
     docker compose exec web php bin/build_eval_db.php
-    docker compose exec ml python -m app.evaluate --database suwoda_eval
+    docker compose exec ml python -m app.evaluate --database osuthuru_eval
 """
 import argparse
 from dataclasses import replace
@@ -98,7 +98,7 @@ def report(result: dict, database: str, dataset: shop.Dataset) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--database", default="suwoda_eval")
+    parser.add_argument("--database", default="osuthuru_eval")
     parser.add_argument("--output", default=str(REPORT))
     args = parser.parse_args()
 

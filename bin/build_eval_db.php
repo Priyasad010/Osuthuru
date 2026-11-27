@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Build the separate "suwoda_eval" database with SYNTHETIC customers and orders
+ * Build the separate "osuthuru_eval" database with SYNTHETIC customers and orders
  * for the recommender evaluation. The shop's own database is not touched.
  * The data is generated from a fixed seed, so every run gives the same result.
  */
@@ -13,7 +13,7 @@ use App\Core\Database;
 use App\Core\Migrator;
 use App\Core\MlGrants;
 
-const EVAL_DATABASE = 'suwoda_eval';
+const EVAL_DATABASE = 'osuthuru_eval';
 
 Env::load(dirname(__DIR__));
 $root = dirname(__DIR__);

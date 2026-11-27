@@ -1,4 +1,4 @@
-# AGENTS.md - Suwoda HerbHub V2
+# AGENTS.md - Osuthuru
 ## Project
 E-commerce site for Sri Lankan herbal / Ayurvedic products. Roles: guest, customer, admin.
 Bilingual (English + Sinhala). Work from docs/ROADMAP.md, ONE phase at a time.

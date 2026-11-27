@@ -19,7 +19,7 @@ class SmokeTest extends TestCase
     {
         $appName = Env::get('APP_NAME');
         $this->assertNotEmpty($appName);
-        $this->assertEquals('Suwoda HerbHub V2', $appName);
+        $this->assertEquals('Osuthuru', $appName);
     }
 
     public function testCsrfTokenGenerationAndValidation(): void
@@ -41,10 +41,10 @@ class SmokeTest extends TestCase
     public function testMultiLanguageTranslations(): void
     {
         Lang::setLocale('en');
-        $this->assertEquals('Suwoda HerbHub', t('app_name'));
+        $this->assertEquals('Osuthuru', t('app_name'));
 
         Lang::setLocale('si');
-        $this->assertEquals('සුවෝදා හර්බ්හබ්', t('app_name'));
+        $this->assertEquals('ඔසුතුරු', t('app_name'));
 
         // Reset to English
         Lang::setLocale('en');
@@ -53,7 +53,7 @@ class SmokeTest extends TestCase
     public function testHomeViewRendersWithDisclaimer(): void
     {
         $html = View::render('home', ['pageTitle' => 'Test Title']);
-        $this->assertStringContainsString('Suwoda HerbHub', $html);
+        $this->assertStringContainsString('Osuthuru', $html);
         $this->assertStringContainsString('Disclaimer:', $html);
         $this->assertStringContainsString('Herb of the Day', $html);
     }

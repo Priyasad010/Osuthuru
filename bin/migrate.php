@@ -10,7 +10,7 @@ use App\Core\Migrator;
 Env::load(dirname(__DIR__));
 
 echo "==========================================\n";
-echo "Suwoda HerbHub V2 - Database Migration\n";
+echo "Osuthuru - Database Migration\n";
 echo "==========================================\n";
 
 try {

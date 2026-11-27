@@ -339,7 +339,7 @@ class CheckoutService
                     'price_data' => [
                         'currency' => 'lkr',
                         'product_data' => [
-                            'name' => "Suwoda HerbHub Order #{$orderId}",
+                            'name' => "Osuthuru Order #{$orderId}",
                         ],
                         'unit_amount' => (int)round($totalPrice * 100), // In cents
                     ],

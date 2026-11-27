@@ -2,9 +2,9 @@
 
 <?php if (!empty($tags)): ?>
     <div class="d-flex flex-wrap gap-2 mb-3">
-        <a href="/blogs" class="btn btn-sm <?= empty($selectedTag) ? 'btn-suwoda' : 'btn-outline-success' ?>"><?= e(t('filter_all')) ?></a>
+        <a href="/blogs" class="btn btn-sm <?= empty($selectedTag) ? 'btn-brand' : 'btn-outline-success' ?>"><?= e(t('filter_all')) ?></a>
         <?php foreach ($tags as $tag): ?>
-            <a href="/blogs?tag=<?= (int)$tag['tag_id'] ?>" class="btn btn-sm <?= ($selectedTag ?? 0) === (int)$tag['tag_id'] ? 'btn-suwoda' : 'btn-outline-success' ?>"><?= e($tag['display_name']) ?></a>
+            <a href="/blogs?tag=<?= (int)$tag['tag_id'] ?>" class="btn btn-sm <?= ($selectedTag ?? 0) === (int)$tag['tag_id'] ? 'btn-brand' : 'btn-outline-success' ?>"><?= e($tag['display_name']) ?></a>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>

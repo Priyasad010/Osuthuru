@@ -28,7 +28,7 @@ $categories = $categories ?? [];
                     <input type="hidden" name="product_id" value="<?= $pid ?>">
                     <label class="small" for="q<?= $pid ?>"><?= e(t('admin_stock')) ?></label>
                     <input type="number" id="q<?= $pid ?>" name="quantity" value="<?= (int)$p['quantity'] ?>" min="0" class="form-control form-control-sm" style="width: 90px;">
-                    <button type="submit" class="btn btn-sm btn-suwoda" title="<?= e(t('admin_update_stock')) ?>"><?= e(t('save')) ?></button>
+                    <button type="submit" class="btn btn-sm btn-brand" title="<?= e(t('admin_update_stock')) ?>"><?= e(t('save')) ?></button>
                 </form>
             <?php else: ?>
                 <strong class="text-success"><?= e(t('admin_new_product')) ?></strong>
@@ -87,7 +87,7 @@ $categories = $categories ?? [];
                         </div>
                     <?php endforeach; ?>
                 </fieldset>
-                <div class="col-12"><button type="submit" class="btn btn-suwoda btn-sm"><?= e(t($p ? 'admin_save_changes' : 'admin_add')) ?></button></div>
+                <div class="col-12"><button type="submit" class="btn btn-brand btn-sm"><?= e(t($p ? 'admin_save_changes' : 'admin_add')) ?></button></div>
             </form>
             <?php if ($p): ?>
                 <form method="POST" action="/admin/products/delete" class="text-end" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_confirm'))) ?>);">

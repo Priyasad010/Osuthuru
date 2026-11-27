@@ -5,7 +5,7 @@
          colors="true"
          cacheDirectory=".phpunit.cache">
     <testsuites>
-        <testsuite name="Suwoda Test Suite">
+        <testsuite name="Osuthuru Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

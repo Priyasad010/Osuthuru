@@ -30,7 +30,7 @@ class CatalogueAndLocaleTest extends TestCase
 
     public function testTestsRunAgainstTheTestDatabase(): void
     {
-        $this->assertSame('suwoda_test', Database::getConnection()->query('SELECT DATABASE()')->fetchColumn());
+        $this->assertSame('osuthuru_test', Database::getConnection()->query('SELECT DATABASE()')->fetchColumn());
     }
 
     public function testScriptErrorsAfterTheFirstStatementAreReported(): void

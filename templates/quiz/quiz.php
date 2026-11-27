@@ -34,7 +34,7 @@
                         <?php endforeach; ?>
                     </fieldset>
                 <?php endforeach; ?>
-                <button type="submit" class="btn btn-suwoda w-100 py-2 fw-semibold"><?= e(t('quiz_submit')) ?></button>
+                <button type="submit" class="btn btn-brand w-100 py-2 fw-semibold"><?= e(t('quiz_submit')) ?></button>
             </form>
             <script src="/assets/js/quiz.js" defer></script>
         <?php endif; ?>

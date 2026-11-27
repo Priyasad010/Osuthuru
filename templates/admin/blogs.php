@@ -18,7 +18,7 @@
         <?= csrf_field() ?>
         <div class="col-md-5"><input type="text" name="name_en" class="form-control form-control-sm" maxlength="80" placeholder="<?= e(t('admin_flag_en')) ?>" aria-label="<?= e(t('admin_flag_en')) ?>" required></div>
         <div class="col-md-5"><input type="text" name="name_si" class="form-control form-control-sm" maxlength="80" placeholder="<?= e(t('admin_flag_si')) ?>" aria-label="<?= e(t('admin_flag_si')) ?>"></div>
-        <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('admin_add')) ?></button></div>
+        <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('admin_add')) ?></button></div>
     </form>
 </div>
 
@@ -66,7 +66,7 @@
                 <label class="form-label small mb-0" for="bimg<?= $id ?>"><?= e(t('admin_image')) ?></label>
                 <input type="file" class="form-control form-control-sm" id="bimg<?= $id ?>" name="image_file" accept=".jpg,.jpeg,.png,.webp">
             </div>
-            <div class="col-md-4 d-flex align-items-end"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t($post ? 'save' : 'admin_add')) ?></button></div>
+            <div class="col-md-4 d-flex align-items-end"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t($post ? 'save' : 'admin_add')) ?></button></div>
         </form>
         <?php if ($post): ?>
             <form method="POST" action="/admin/blogs/delete" class="text-end mt-1" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_confirm'))) ?>);">

@@ -227,7 +227,7 @@ def test_evaluation_hides_one_product_and_writes_numbers():
     assert result["users"] == 3
     for scores in result["scores"].values():
         assert 0 <= scores["precision"] <= 0.2 and 0 <= scores["recall"] <= 1
-    text = evaluate.report(result, "suwoda_eval", data)
+    text = evaluate.report(result, "osuthuru_eval", data)
     assert "Synthetic data" in text and "Popularity baseline" in text and "Hybrid" in text
 
 

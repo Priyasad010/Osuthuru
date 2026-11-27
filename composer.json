@@ -1,6 +1,6 @@
 {
-  "name": "suwoda/herbhub-v2",
-  "description": "Suwoda HerbHub V2 - Herbal and Ayurvedic E-commerce",
+  "name": "osuthuru/herbhub-v2",
+  "description": "Osuthuru - Herbal and Ayurvedic E-commerce",
   "type": "project",
   "license": "proprietary",
   "autoload": {

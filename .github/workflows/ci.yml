@@ -13,7 +13,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root_secret
-          MYSQL_DATABASE: suwoda
+          MYSQL_DATABASE: osuthuru
           MYSQL_USER: app
           MYSQL_PASSWORD: app_secret
         ports:

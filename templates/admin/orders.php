@@ -41,7 +41,7 @@
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('report_show')) ?></button></div>
+    <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t('report_show')) ?></button></div>
 </form>
 
 <div class="card border-0 shadow-sm">
@@ -85,7 +85,7 @@
                                     <?php endforeach; ?>
                                 </select>
                                 <input aria-label="<?= e(t('admin_note_placeholder')) ?>" type="text" name="note" class="form-control form-control-sm" placeholder="<?= e(t('admin_note_placeholder')) ?>" style="width:130px;">
-                                <button type="submit" class="btn btn-sm btn-suwoda"><?= e(t('save')) ?></button>
+                                <button type="submit" class="btn btn-sm btn-brand"><?= e(t('save')) ?></button>
                             </form>
                         </td>
                     </tr>

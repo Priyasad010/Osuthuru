@@ -25,7 +25,7 @@
                 <small class="text-muted"><?= e($sc['name_en']) ?> / <?= e($sc['name_si']) ?></small>
             </div>
         </div>
-        <a href="<?= e($sc['url']) ?>" class="btn btn-suwoda btn-sm text-nowrap ms-3">
+        <a href="<?= e($sc['url']) ?>" class="btn btn-brand btn-sm text-nowrap ms-3">
             <?= e(t('explore_guide')) ?> <i class="bi bi-arrow-right ms-1"></i>
         </a>
     </div>

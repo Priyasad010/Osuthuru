@@ -11,7 +11,7 @@
         <div class="row g-4 text-start">
             <div class="col-12 col-md-4">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <img src="/assets/images/Logo.jpg" alt="Logo" width="35" height="35" class="rounded-circle">
+                    <img src="/assets/images/logo.png" alt="Logo" width="35" height="35" class="rounded-circle">
                     <span class="fw-bold fs-6 text-white"><?= e(t('app_name')) ?></span>
                 </div>
                 <p class="text-white-50 small mb-0"><?= e(t('tagline')) ?></p>
@@ -30,7 +30,7 @@
             <div class="col-6 col-md-4">
                 <h6 class="text-white mb-2"><?= e(t('contact_title')) ?></h6>
                 <p class="text-white-50 small mb-1"><i class="bi bi-geo-alt me-1"></i> <?= e(t('contact_city')) ?></p>
-                <p class="text-white-50 small mb-0"><i class="bi bi-envelope me-1"></i> support@suwoda.lk</p>
+                <p class="text-white-50 small mb-0"><i class="bi bi-envelope me-1"></i> support@osuthuru.lk</p>
             </div>
         </div>
 

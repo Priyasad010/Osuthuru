@@ -27,7 +27,7 @@ $stars = fn(int $n) => str_repeat('★', $n) . str_repeat('☆', 5 - $n);
             <textarea class="form-control mb-2" id="comment" name="comment" rows="3" maxlength="2000" required></textarea>
             <label class="form-label small fw-semibold" for="photos"><?= e(t('review_photos', ['max' => ReviewService::MAX_PHOTOS])) ?></label>
             <input type="file" class="form-control form-control-sm mb-3" id="photos" name="photos[]" accept=".jpg,.jpeg,.png,.webp" multiple>
-            <button type="submit" class="btn btn-suwoda btn-sm align-self-start"><?= e(t('review_submit')) ?></button>
+            <button type="submit" class="btn btn-brand btn-sm align-self-start"><?= e(t('review_submit')) ?></button>
         </form>
     <?php endif; ?>
 

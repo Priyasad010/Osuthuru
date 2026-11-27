@@ -24,7 +24,7 @@ if ($Remove) {
     Remove-Item $certs -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item $publicCa -Force -ErrorAction SilentlyContinue
     Invoke-Compose restart web
-    Write-Host 'HTTPS is off. Also delete the "Suwoda local" profile on the phone.'
+    Write-Host 'HTTPS is off. Also delete the "Osuthuru local" profile on the phone.'
     return
 }
 
@@ -44,7 +44,7 @@ mkdir -p docker/certs
 cd docker/certs
 umask 077
 openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 397 -keyout ca.key -out ca.crt \
-  -subj "/CN=Suwoda local __IP__" \
+  -subj "/CN=Osuthuru local __IP__" \
   -addext "basicConstraints=critical,CA:TRUE,pathlen:0" -addext "keyUsage=critical,keyCertSign,cRLSign" 2>/dev/null
 openssl req -newkey rsa:2048 -nodes -sha256 -keyout server.key -out server.csr -subj "/CN=__IP__" 2>/dev/null
 printf '%s\n' "basicConstraints=CA:FALSE" "keyUsage=critical,digitalSignature,keyEncipherment" \
@@ -69,7 +69,7 @@ Write-Host "HTTPS is ready: https://${ip}:8443"
 Write-Host ''
 Write-Host 'On the iPhone (same Wi-Fi), once:'
 Write-Host "  1. Safari: open http://${ip}:8080/lan-ca.crt and allow the download."
-Write-Host '  2. Settings > General > VPN & Device Management > install the "Suwoda local" profile.'
-Write-Host '  3. Settings > General > About > Certificate Trust Settings > switch "Suwoda local" on.'
+Write-Host '  2. Settings > General > VPN & Device Management > install the "Osuthuru local" profile.'
+Write-Host '  3. Settings > General > About > Certificate Trust Settings > switch "Osuthuru local" on.'
 Write-Host "  4. Safari: open https://${ip}:8443 , then Share > Add to Home Screen."
 Write-Host 'Run this again if the PC changes network.'

@@ -10,7 +10,7 @@
         <h5><?= e(t('cart_empty')) ?></h5>
         <p class="text-muted small"><?= e(t('cart_empty_hint')) ?></p>
         <div>
-            <a href="/products" class="btn btn-suwoda"><?= e(t('browse_products')) ?></a>
+            <a href="/products" class="btn btn-brand"><?= e(t('browse_products')) ?></a>
         </div>
     </div>
 <?php else: ?>
@@ -94,7 +94,7 @@
                     <span id="estTotalText" class="text-nowrap"><?= e(format_price($subtotal)) ?></span>
                 </div>
 
-                <a href="/checkout" class="btn btn-suwoda w-100 py-2 fw-semibold">
+                <a href="/checkout" class="btn btn-brand w-100 py-2 fw-semibold">
                     <?= e(t('proceed_checkout')) ?> <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>

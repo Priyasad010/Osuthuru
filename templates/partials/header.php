@@ -13,22 +13,22 @@ $pageTitle = $pageTitle ?? t('app_name');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="<?= e(Csrf::getToken()) ?>">
-    <title><?= e($pageTitle) ?> - Suwoda HerbHub</title>
+    <title><?= e($pageTitle) ?> - Osuthuru</title>
     <!-- Bootstrap 5.3 & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="icon" type="image/jpeg" href="/assets/images/Logo.jpg">
+    <link rel="icon" type="image/png" href="/assets/images/logo.png">
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/maskable-192.png">
     <meta name="theme-color" content="#04302b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Suwoda">
+    <meta name="apple-mobile-web-app-title" content="Osuthuru">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap">
     <!-- Custom Theme -->
-    <link rel="stylesheet" href="/assets/css/style.css?v=11">
+    <link rel="stylesheet" href="/assets/css/style.css?v=12">
 </head>
 <body>
 <a class="skip-link" href="#content"><?= e(t('skip_to_content')) ?></a>
@@ -38,7 +38,7 @@ $pageTitle = $pageTitle ?? t('app_name');
         <div class="container-fluid px-3 px-xxl-5">
             <!-- Brand -->
             <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-                <img src="/assets/images/Logo.jpg" alt="Suwoda Logo" width="45" height="45" class="rounded-circle">
+                <img src="/assets/images/logo.png" alt="Osuthuru Logo" width="45" height="45" class="rounded-circle">
                 <div class="d-flex flex-column">
                     <span class="fw-bold fs-5 lh-1"><?= e(t('app_name')) ?></span>
                     <small class="text-white-50 fs-8 lh-1 d-none d-sm-inline d-xl-none"><?= e(t('tagline')) ?></small>
@@ -46,12 +46,12 @@ $pageTitle = $pageTitle ?? t('app_name');
             </a>
 
             <!-- Mobile Toggle -->
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#suwodaNavbar" aria-controls="suwodaNavbar" aria-label="<?= e(t('nav_menu')) ?>">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-label="<?= e(t('nav_menu')) ?>">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <!-- Nav Items -->
-            <div class="collapse navbar-collapse" id="suwodaNavbar">
+            <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav me-auto mb-2 mb-xl-0">
                     <li class="nav-item">
                         <a class="nav-link" href="/"><i class="bi bi-house-door nav-icon me-1"></i><?= e(t('nav_home')) ?></a>

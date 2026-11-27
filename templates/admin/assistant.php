@@ -52,7 +52,7 @@
             <?= csrf_field() ?>
             <input type="hidden" name="concern_id" value="<?= (int)$c['concern_id'] ?>">
             <input type="text" name="keyword" class="form-control form-control-sm" maxlength="100" minlength="2" placeholder="<?= e(t('admin_new_keyword')) ?>" aria-label="<?= e(t('admin_new_keyword')) ?>" required>
-            <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('save')) ?></button>
+            <button type="submit" class="btn btn-brand btn-sm"><?= e(t('save')) ?></button>
         </form>
     </div>
 <?php endforeach; ?>

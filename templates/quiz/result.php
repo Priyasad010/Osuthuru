@@ -42,7 +42,7 @@ foreach (DoshaService::DOSHAS as $dosha) {
                     <?php else: ?>
                         <form method="POST" action="/quiz/save">
                             <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('quiz_save')) ?></button>
+                            <button type="submit" class="btn btn-brand btn-sm"><?= e(t('quiz_save')) ?></button>
                         </form>
                     <?php endif; ?>
                 <?php else: ?>

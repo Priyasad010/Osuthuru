@@ -6,7 +6,7 @@
 > patterns. They are **not** evidence of how well it works for real customers.
 
 - Date: 2026-11-27
-- Database: `suwoda_eval`
+- Database: `osuthuru_eval`
 - Products: 57, orders: 708, customers tested: 199
 - Method: leave-one-out. One product from each customer's latest order is hidden; each model
   suggests 5 products the customer has not bought.

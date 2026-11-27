@@ -231,9 +231,9 @@ class Phase6RecommendationTest extends TestCase
 
     public function testMlUserCannotReadCustomerData(): void
     {
-        MlGrants::apply(MlGrants::rootConnection(), 'suwoda_test');
+        MlGrants::apply(MlGrants::rootConnection(), 'osuthuru_test');
         $ml = new PDO(
-            sprintf('mysql:host=%s;port=%s;dbname=suwoda_test;charset=utf8mb4', Env::get('DB_HOST', 'db'), Env::get('DB_PORT', 3306)),
+            sprintf('mysql:host=%s;port=%s;dbname=osuthuru_test;charset=utf8mb4', Env::get('DB_HOST', 'db'), Env::get('DB_PORT', 3306)),
             (string)Env::get('DB_ML_RO_USER', 'ml_ro'),
             (string)Env::get('DB_ML_RO_PASS', 'ml_ro_secret'),
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]

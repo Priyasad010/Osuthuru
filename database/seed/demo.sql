@@ -1,4 +1,4 @@
--- Suwoda HerbHub V2 - DEMONSTRATION DATA. Never load this into a real shop.
+-- Osuthuru - DEMONSTRATION DATA. Never load this into a real shop.
 --   docker compose exec web php bin/seed.php --demo
 --
 -- All health, safety and dosha text here is placeholder text marked DEMO or

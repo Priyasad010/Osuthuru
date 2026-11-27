@@ -17,8 +17,8 @@ class Mailer
             $port = (int)Env::get('MAIL_PORT', 1025);
             $user = Env::get('MAIL_USER', '');
             $pass = Env::get('MAIL_PASS', '');
-            $from = Env::get('MAIL_FROM', 'no-reply@suwoda.lk');
-            $fromName = Env::get('MAIL_FROM_NAME', 'Suwoda HerbHub');
+            $from = Env::get('MAIL_FROM', 'no-reply@osuthuru.lk');
+            $fromName = Env::get('MAIL_FROM_NAME', 'Osuthuru');
 
             $mail->isSMTP();
             $mail->Host = $host;
@@ -100,7 +100,7 @@ class Mailer
         return "
             <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
                 <div style='background-color: #198754; color: white; padding: 15px 20px; text-align: center;'>
-                    <h2 style='margin: 0;'>Suwoda HerbHub</h2>
+                    <h2 style='margin: 0;'>Osuthuru</h2>
                 </div>
                 <div style='padding: 20px; border: 1px solid #e0e0e0;'>
                     <p>" . e(t('mail_hello', ['name' => $name])) . "</p>

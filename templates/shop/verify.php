@@ -5,7 +5,7 @@
         <?php if (!$batch): ?>
             <div class="alert alert-danger" role="alert">
                 <h4 class="alert-heading"><i class="bi bi-x-octagon me-2"></i><?= e(t('verify_unknown')) ?></h4>
-                <p class="mb-0"><?= e(t('verify_unknown_help')) ?> <a href="mailto:support@suwoda.lk">support@suwoda.lk</a></p>
+                <p class="mb-0"><?= e(t('verify_unknown_help')) ?> <a href="mailto:support@osuthuru.lk">support@osuthuru.lk</a></p>
             </div>
         <?php else: ?>
             <?php
@@ -20,7 +20,7 @@
             <?php if ($duplicated): ?>
                 <div class="alert alert-danger" role="alert">
                     <i class="bi bi-copy me-2"></i><strong><?= e(t('verify_duplicate')) ?></strong>
-                    <a href="mailto:support@suwoda.lk">support@suwoda.lk</a>
+                    <a href="mailto:support@osuthuru.lk">support@osuthuru.lk</a>
                 </div>
             <?php endif; ?>
 
@@ -50,7 +50,7 @@
                             <i class="bi bi-file-earmark-pdf me-1"></i><?= e(t('batch_lab_report')) ?>
                         </a>
                     <?php endif; ?>
-                    <a href="/products/<?= (int)$batch['product_id'] ?>" class="btn btn-suwoda"><?= e(t('view_product')) ?></a>
+                    <a href="/products/<?= (int)$batch['product_id'] ?>" class="btn btn-brand"><?= e(t('view_product')) ?></a>
                 </div>
             </div>
         <?php endif; ?>

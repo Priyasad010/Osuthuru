@@ -13,7 +13,7 @@ use App\Core\MlGrants;
 Env::load(dirname(__DIR__));
 
 try {
-    MlGrants::apply(MlGrants::rootConnection(), (string)Env::get('DB_NAME', 'suwoda'));
+    MlGrants::apply(MlGrants::rootConnection(), (string)Env::get('DB_NAME', 'osuthuru'));
     echo "The ML database user can now read only the tables it needs.\n";
     exit(0);
 } catch (Throwable $e) {

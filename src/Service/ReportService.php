@@ -269,7 +269,7 @@ class ReportService
                 table { width: 100%; border-collapse: collapse; }
                 th, td { border: 1px solid #bbb; padding: 3px 5px; text-align: left; }
                 th { background: #f1f5f3; }
-            </style></head><body><h1>Suwoda HerbHub - " . e(t('admin_reports')) . '</h1>' . $body . '</body></html>';
+            </style></head><body><h1>Osuthuru - " . e(t('admin_reports')) . '</h1>' . $body . '</body></html>';
         });
     }
 

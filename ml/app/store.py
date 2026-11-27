@@ -7,7 +7,7 @@ from . import data
 from .recommender import Recommender
 
 REFRESH_SECONDS = 15 * 60
-log = logging.getLogger("suwoda-ml")
+log = logging.getLogger("osuthuru-ml")
 
 
 class ModelStore:

@@ -29,7 +29,7 @@ $tables = [
         <input type="date" class="form-control form-control-sm" id="to" name="to" value="<?= e($report['to']) ?>">
     </div>
     <div class="col-md-6 d-flex flex-wrap gap-2">
-        <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('report_show')) ?></button>
+        <button type="submit" class="btn btn-brand btn-sm"><?= e(t('report_show')) ?></button>
         <a class="btn btn-outline-dark btn-sm" href="/admin/reports/export?<?= e($query) ?>&amp;format=csv"><i class="bi bi-filetype-csv me-1"></i>CSV</a>
         <a class="btn btn-outline-dark btn-sm" href="/admin/reports/export?<?= e($query) ?>&amp;format=pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
     </div>

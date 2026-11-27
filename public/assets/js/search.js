@@ -1,5 +1,5 @@
 /**
- * Suwoda HerbHub - Client-side Search, Autocomplete & Voice Search
+ * Osuthuru - Client-side Search, Autocomplete & Voice Search
  */
 document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('globalSearchInput');

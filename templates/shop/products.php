@@ -17,10 +17,10 @@
 
 <!-- Category Filter -->
 <div class="mb-4 d-flex flex-wrap gap-2">
-    <a href="/products" class="btn btn-sm <?= empty($selectedCategory) ? 'btn-suwoda' : 'btn-outline-success' ?>"><?= e(t('filter_all')) ?></a>
+    <a href="/products" class="btn btn-sm <?= empty($selectedCategory) ? 'btn-brand' : 'btn-outline-success' ?>"><?= e(t('filter_all')) ?></a>
     <?php foreach ($categories as $cat): ?>
         <a href="/products?category=<?= (int)$cat['category_id'] ?>"
-           class="btn btn-sm <?= ($selectedCategory ?? 0) === (int)$cat['category_id'] ? 'btn-suwoda' : 'btn-outline-success' ?>">
+           class="btn btn-sm <?= ($selectedCategory ?? 0) === (int)$cat['category_id'] ? 'btn-brand' : 'btn-outline-success' ?>">
             <?= e($cat['display_name']) ?>
         </a>
     <?php endforeach; ?>
@@ -88,7 +88,7 @@
                             <?= csrf_field() ?>
                             <input type="hidden" name="product_id" value="<?= $pid ?>">
                             <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-suwoda btn-sm w-100">
+                            <button type="submit" class="btn btn-brand btn-sm w-100">
                                 <i class="bi bi-cart-plus me-1"></i> <?= e(t('add_to_cart')) ?>
                             </button>
                         </form>

@@ -14,7 +14,7 @@ use PDO;
  */
 class DemoSeedTest extends TestCase
 {
-    private const DATABASE = 'suwoda_demo_test';
+    private const DATABASE = 'osuthuru_demo_test';
 
     public function testFreshInstallWithDemoDataWorksAndCanBeRepeated(): void
     {

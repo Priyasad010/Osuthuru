@@ -24,7 +24,7 @@ $show = fn(?string $mmdd) => $mmdd ? substr($mmdd, 0, 2) . '-' . substr($mmdd, 2
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t($c ? 'save' : 'admin_add')) ?></button></div>
+            <div class="col-md-2"><button type="submit" class="btn btn-brand btn-sm w-100"><?= e(t($c ? 'save' : 'admin_add')) ?></button></div>
         </form>
         <?php if ($c): ?>
             <form method="POST" action="/admin/seasonal/delete" class="text-end" onsubmit="return confirm(<?= e(json_encode(t('admin_delete_confirm'))) ?>);">

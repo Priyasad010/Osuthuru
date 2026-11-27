@@ -72,7 +72,7 @@ class MlClient
 
     private function pauseFile(): string
     {
-        return sys_get_temp_dir() . '/suwoda_ml_down_' . md5($this->baseUrl);
+        return sys_get_temp_dir() . '/osuthuru_ml_down_' . md5($this->baseUrl);
     }
 
     private function isPaused(): bool

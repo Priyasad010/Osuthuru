@@ -17,7 +17,7 @@
                     <label class="form-check-label" for="interest<?= $cid ?>"><?= e($c['display_name']) ?></label>
                 </div>
             <?php endforeach; ?>
-            <button type="submit" class="btn btn-suwoda mt-3"><?= e(t('save')) ?></button>
+            <button type="submit" class="btn btn-brand mt-3"><?= e(t('save')) ?></button>
         </form>
     </div>
 </div>

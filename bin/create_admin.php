@@ -9,10 +9,10 @@ use App\Core\Database;
 Env::load(dirname(__DIR__));
 
 echo "==========================================\n";
-echo "Suwoda HerbHub V2 - Create Initial Admin\n";
+echo "Osuthuru - Create Initial Admin\n";
 echo "==========================================\n";
 
-$name = Env::get('ADMIN_NAME', 'Suwoda Administrator');
+$name = Env::get('ADMIN_NAME', 'Osuthuru Administrator');
 $email = Env::get('ADMIN_EMAIL');
 $password = Env::get('ADMIN_PASSWORD');
 

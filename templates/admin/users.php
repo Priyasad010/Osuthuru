@@ -3,7 +3,7 @@
 
 <form method="GET" action="/admin/users" class="d-flex gap-2 mb-3">
     <input type="search" name="q" class="form-control form-control-sm" value="<?= e($search ?? '') ?>" placeholder="<?= e(t('admin_user_search')) ?>" aria-label="<?= e(t('admin_user_search')) ?>">
-    <button type="submit" class="btn btn-suwoda btn-sm"><?= e(t('search_button')) ?></button>
+    <button type="submit" class="btn btn-brand btn-sm"><?= e(t('search_button')) ?></button>
 </form>
 
 <div class="card border-0 shadow-sm">

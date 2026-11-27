@@ -7,7 +7,7 @@
     <div class="card border-0 shadow-sm p-5 text-center">
         <i class="bi bi-bag text-muted fs-1 mb-3"></i>
         <h5><?= e(t('no_orders')) ?></h5>
-        <a href="/products" class="btn btn-suwoda mt-2"><?= e(t('browse_products')) ?></a>
+        <a href="/products" class="btn btn-brand mt-2"><?= e(t('browse_products')) ?></a>
     </div>
 <?php else: ?>
     <div class="card border-0 shadow-sm">

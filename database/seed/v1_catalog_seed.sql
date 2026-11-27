@@ -1,4 +1,4 @@
--- Suwoda HerbHub V2 - Demo Catalogue Seed (categories, products, discounts, blog)
+-- Osuthuru - Demo Catalogue Seed (categories, products, discounts, blog)
 -- Load after the migrations with:  docker compose exec web php bin/seed.php
 -- Herbs and health concerns come from the migrations.
 -- Product text states what an item is and contains. It makes no health claims;

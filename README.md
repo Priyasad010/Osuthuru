@@ -1,4 +1,4 @@
-# Suwoda HerbHub V2
+# Osuthuru
 
 > Herbal and Ayurvedic e-commerce platform for Sri Lanka, in English and Sinhala.
 > *Know your body → Find the right herb → Verify it is genuine → Buy safely*
@@ -63,7 +63,7 @@ Open http://localhost:8080. The admin area is at `/admin/login`; `create_admin.p
 | Website | http://localhost:8080 (also reachable from your network) |
 | Mail inbox (Mailpit) | http://localhost:8025 |
 | ML service | http://localhost:8000/health |
-| MySQL | `localhost:3306`, user `app`, database `suwoda` |
+| MySQL | `localhost:3306`, user `app`, database `osuthuru` |
 
 Only the website is reachable from the network; the others listen on `127.0.0.1`.
 
@@ -110,7 +110,7 @@ With `APP_DEBUG=true`, error details are visible to anyone on the network. In Do
 - Offline evaluation, on a separate database of **synthetic** orders ([results](ml/reports/recommender_eval.md)):
   ```bash
   docker compose exec web php bin/build_eval_db.php
-  docker compose exec ml python -m app.evaluate --database suwoda_eval
+  docker compose exec ml python -m app.evaluate --database osuthuru_eval
   ```
 
 ## Catalogue pictures and prices
@@ -118,6 +118,10 @@ With `APP_DEBUG=true`, error details are visible to anyone on the network. In Do
 Catalogue pictures are in `public/assets/images/catalog/`. Plant and background photographs come from Wikimedia Commons and are credited on `/credits`. Product pictures show the makers' packaging and were carried over from V1: **get the makers' or the photographer's permission before running a real shop.** Admin uploads still go to `public/uploads/` and replace the catalogue picture.
 
 Where each price came from, and how sure we are, is listed in [docs/PRICE_SOURCES.md](docs/PRICE_SOURCES.md). On an existing install run `bin/migrate.php` and then `bin/seed.php` to get the pictures and the new products.
+
+## Renaming an install made before November 2026
+
+The shop was renamed to Osuthuru. A new install needs nothing special. For an older database: back it up, import the dump into a new database called `osuthuru`, set `DB_NAME=osuthuru` and the new `ADMIN_EMAIL` in `.env`, restart, run `bin/grant_ml_user.php`, and change the e-mail address of the existing row in the `admin` table. Logo and app icons are built from `docs/branding/` with `php bin/make_icons.php`.
 
 ## Security notes
 

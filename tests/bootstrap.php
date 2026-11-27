@@ -12,7 +12,7 @@ use App\Core\Database;
 use App\Core\Env;
 use App\Core\Migrator;
 
-$testDatabase = 'suwoda_test';
+$testDatabase = 'osuthuru_test';
 
 // Set before .env is loaded; existing values are not overwritten by it
 putenv("DB_NAME={$testDatabase}");

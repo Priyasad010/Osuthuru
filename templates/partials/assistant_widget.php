@@ -1,5 +1,5 @@
 <?php use App\Service\AssistantService; ?>
-<button type="button" id="assistantToggle" class="assistant-toggle btn btn-suwoda shadow" aria-controls="assistantPanel" aria-expanded="false" title="<?= e(t('assistant_title')) ?>">
+<button type="button" id="assistantToggle" class="assistant-toggle btn btn-brand shadow" aria-controls="assistantPanel" aria-expanded="false" title="<?= e(t('assistant_title')) ?>">
     <i class="bi bi-chat-dots-fill"></i><span class="visually-hidden"><?= e(t('assistant_title')) ?></span>
 </button>
 
@@ -19,7 +19,7 @@
     <form id="assistantForm" class="card-footer bg-white d-flex gap-2">
         <input type="text" id="assistantInput" class="form-control" maxlength="<?= AssistantService::MAX_INPUT ?>" autocomplete="off"
             placeholder="<?= e(t('assistant_placeholder')) ?>" aria-label="<?= e(t('assistant_placeholder')) ?>" required>
-        <button type="submit" class="btn btn-suwoda" title="<?= e(t('assistant_send')) ?>"><i class="bi bi-send-fill"></i></button>
+        <button type="submit" class="btn btn-brand" title="<?= e(t('assistant_send')) ?>"><i class="bi bi-send-fill"></i></button>
     </form>
 </section>
 <script src="/assets/js/assistant.js" defer></script>
