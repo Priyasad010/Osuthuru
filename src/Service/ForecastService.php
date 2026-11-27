@@ -62,6 +62,46 @@ class ForecastService
         ];
     }
 
+    /**
+     * Current stock, expected daily demand and days of stock left for every product.
+     */
+    public static function stockOutlook(?MlClient $client = null): array
+    {
+        $pdo = Database::getConnection();
+        $data = ($client ?? MlClient::fromEnv())->get('/forecast/stock');
+        $demand = [];
+        if (is_array($data['products'] ?? null)) {
+            foreach ($data['products'] as $row) {
+                $demand[(int)($row['product_id'] ?? 0)] = (float)($row['daily_demand'] ?? 0);
+            }
+        } else {
+            $rows = $pdo->query("
+                SELECT i.product_id, SUM(i.quantity) AS units
+                FROM order_item i JOIN orders o ON o.order_id = i.order_id
+                WHERE " . self::SALE . "
+                  AND o.order_date >= CURDATE() - INTERVAL " . self::WINDOW_DAYS . " DAY AND o.order_date < CURDATE()
+                GROUP BY i.product_id
+            ")->fetchAll();
+            foreach ($rows as $row) {
+                $demand[(int)$row['product_id']] = (float)$row['units'] / self::WINDOW_DAYS;
+            }
+        }
+
+        $list = [];
+        foreach ($pdo->query("SELECT product_id, product_name, quantity FROM product ORDER BY product_id")->fetchAll() as $p) {
+            $stock = (int)$p['quantity'];
+            $daily = $demand[(int)$p['product_id']] ?? 0.0;
+            $list[] = [
+                'product_id' => (int)$p['product_id'],
+                'product_name' => $p['product_name'],
+                'stock' => $stock,
+                'daily_demand' => round($daily, 3),
+                'days_until_stockout' => $stock <= 0 ? 0 : ($daily < 0.01 ? null : (int)floor($stock / $daily)),
+            ];
+        }
+        return $list;
+    }
+
     /** Average per day over the last full week. $total is one of the fixed expressions above. */
     private static function dailyAverage(string $total, ?int $productId = null): float
     {

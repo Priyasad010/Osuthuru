@@ -257,6 +257,37 @@ class OrderService
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Admin order list; empty or invalid filters are ignored. */
+    public static function search(array $filters = []): array
+    {
+        $where = [];
+        $params = [];
+        foreach (['from' => 'o.order_date >= :from', 'to' => 'o.order_date < :to + INTERVAL 1 DAY'] as $key => $condition) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)($filters[$key] ?? ''))) {
+                $where[] = $condition;
+                $params[":{$key}"] = $filters[$key];
+            }
+        }
+        if (in_array($filters['status'] ?? '', self::STATUSES, true)) {
+            $where[] = 'o.status = :status';
+            $params[':status'] = $filters['status'];
+        }
+        if (in_array($filters['method'] ?? '', ['cod', 'bank_transfer', 'card', 'payhere'], true)) {
+            $where[] = 'o.payment_method = :method';
+            $params[':method'] = $filters['method'];
+        }
+
+        $stmt = Database::getConnection()->prepare("
+            SELECT o.*, u.name AS user_name
+            FROM orders o JOIN `user` u ON u.user_id = o.user_id
+            " . ($where ? 'WHERE ' . implode(' AND ', $where) : '') . "
+            ORDER BY o.order_date DESC, o.order_id DESC
+            LIMIT 500
+        ");
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function sendStatusEmail(string $email, string $name, int $orderId, string $status, ?string $note = null, string $lang = 'en'): bool
     {
         return Lang::runIn($lang, function () use ($email, $name, $orderId, $status, $note) {

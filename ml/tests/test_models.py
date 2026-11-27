@@ -229,3 +229,17 @@ def test_evaluation_hides_one_product_and_writes_numbers():
         assert 0 <= scores["precision"] <= 0.2 and 0 <= scores["recall"] <= 1
     text = evaluate.report(result, "suwoda_eval", data)
     assert "Synthetic data" in text and "Popularity baseline" in text and "Hybrid" in text
+
+
+def test_recent_demand_for_all_products():
+    rows = [(datetime(2026, 11, 25), 1, 6), (datetime(2026, 11, 26), 1, 4), (datetime(2026, 11, 27), 1, 99), (datetime(2026, 11, 25), 2, 1)]
+    sales = pd.DataFrame(rows, columns=["order_date", "product_id", "quantity"])
+    result = {r["product_id"]: r["daily_demand"] for r in forecast.recent_demand(sales, TODAY)}
+    assert result == {1: 5.0, 2: 0.5}  # two complete days; today is ignored
+    assert forecast.recent_demand(sales.iloc[0:0], TODAY) == []
+
+
+def test_stock_endpoint(client):
+    body = client.get("/forecast/stock").json()
+    assert body["ok"] and isinstance(body["data"]["products"], list)
+

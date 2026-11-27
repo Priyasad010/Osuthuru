@@ -77,6 +77,19 @@ def forecast(series: np.ndarray, horizon: int, today: date) -> dict:
     }
 
 
+def recent_demand(sales: pd.DataFrame, today: date, window: int = 28) -> list[dict]:
+    """Average daily units per product over the last complete days: quick enough for every product."""
+    if sales.empty:
+        return []
+    days = pd.to_datetime(sales["order_date"]).dt.normalize()
+    end = pd.Timestamp(today)
+    first = max(days.min(), end - pd.Timedelta(days=window))
+    recent = sales[(days >= first) & (days < end)]
+    span = max((end - first).days, 1)
+    totals = recent.groupby("product_id")["quantity"].sum()
+    return [{"product_id": int(p), "daily_demand": round(float(q) / span, 3)} for p, q in totals.items()]
+
+
 def stock_outlook(series: np.ndarray, stock: int, today: date, horizon: int = 30) -> dict:
     result = forecast(series, horizon, today)
     demand = sum(d["value"] for d in result["days"]) / horizon

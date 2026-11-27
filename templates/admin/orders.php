@@ -13,6 +13,37 @@
     <div class="alert alert-danger py-2 small"><?= e($error) ?></div>
 <?php endif; ?>
 
+<?php $filters = $filters ?? []; ?>
+<form method="GET" action="/admin/orders" class="card border-0 shadow-sm p-3 mb-3 row g-2 flex-row align-items-end">
+    <div class="col-6 col-md-2">
+        <label class="form-label small" for="from"><?= e(t('report_from')) ?></label>
+        <input type="date" class="form-control form-control-sm" id="from" name="from" value="<?= e($filters['from'] ?? '') ?>">
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label small" for="to"><?= e(t('report_to')) ?></label>
+        <input type="date" class="form-control form-control-sm" id="to" name="to" value="<?= e($filters['to'] ?? '') ?>">
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label small" for="status"><?= e(t('col_status')) ?></label>
+        <select class="form-select form-select-sm" id="status" name="status">
+            <option value=""><?= e(t('filter_all')) ?></option>
+            <?php foreach (OrderService::STATUSES as $st): ?>
+                <option value="<?= e($st) ?>" <?= ($filters['status'] ?? '') === $st ? 'selected' : '' ?>><?= e(t_or('status_', $st)) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label small" for="method"><?= e(t('col_method')) ?></label>
+        <select class="form-select form-select-sm" id="method" name="method">
+            <option value=""><?= e(t('filter_all')) ?></option>
+            <?php foreach (['cod', 'bank_transfer', 'card', 'payhere'] as $method): ?>
+                <option value="<?= $method ?>" <?= ($filters['method'] ?? '') === $method ? 'selected' : '' ?>><?= e(t_or('method_', $method)) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-suwoda btn-sm w-100"><?= e(t('report_show')) ?></button></div>
+</form>
+
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
         <table class="table align-middle mb-0 small">

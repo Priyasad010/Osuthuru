@@ -3,7 +3,7 @@
         <div class="col-sm-6 col-md-3">
             <div class="card h-100 shadow-sm border-0">
                 <div class="bg-light d-flex align-items-center justify-content-center" style="height: 140px;">
-                    <i class="bi bi-flower1 text-success opacity-25 fs-1"></i>
+                    <?= picture($p['image'] ?? null, $p['display_name']) ?>
                 </div>
                 <div class="card-body d-flex flex-column">
                     <small class="text-muted"><?= e($p['display_category_name'] ?? t('category_fallback')) ?></small>

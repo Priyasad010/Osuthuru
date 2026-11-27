@@ -135,6 +135,9 @@ require $rootDir . '/routes/phase5.php';
 // RECOMMENDATIONS & PREFERENCES (PHASE 6)
 require $rootDir . '/routes/phase6.php';
 
+// ADMIN ANALYTICS & CATALOGUE (PHASE 7)
+require $rootDir . '/routes/admin.php';
+
 // ----------------------------------------------------
 // SEARCH & AUTOCOMPLETE (PHASE 3)
 // ----------------------------------------------------
@@ -861,45 +864,6 @@ if ($requestUri === '/admin/logout' && $requestMethod === 'POST') {
 if (str_starts_with($requestUri, '/admin/')) {
     Auth::requireAdmin();
 
-    if ($requestUri === '/admin/dashboard' || $requestUri === '/admin/') {
-        $pdo = Database::getConnection();
-        $stats = [
-            'products' => (int)$pdo->query("SELECT COUNT(*) FROM `product`")->fetchColumn(),
-            'herbs'    => (int)$pdo->query("SELECT COUNT(*) FROM `herb`")->fetchColumn(),
-            'orders'   => (int)$pdo->query("SELECT COUNT(*) FROM `orders`")->fetchColumn(),
-            'users'    => (int)$pdo->query("SELECT COUNT(*) FROM `user`")->fetchColumn(),
-        ];
-
-        echo View::render('admin/dashboard', [
-            'pageTitle' => t('admin_dashboard'),
-            'stats' => $stats,
-            'expiring' => BatchRepo::expiringWithin(30)
-        ]);
-        exit;
-    }
-
-    if ($requestUri === '/admin/orders' && $requestMethod === 'GET') {
-        $pdo = Database::getConnection();
-        $orders = $pdo->query("
-            SELECT o.*, u.name AS user_name
-            FROM orders o
-            JOIN user u ON u.user_id = o.user_id
-            ORDER BY o.order_date DESC, o.order_id DESC
-        ")->fetchAll(PDO::FETCH_ASSOC);
-
-        $flash = $_SESSION['flash_success'] ?? null;
-        $err = $_SESSION['flash_error'] ?? null;
-        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
-
-        echo View::render('admin/orders', [
-            'pageTitle' => t('admin_orders'),
-            'orders' => $orders,
-            'error' => $err,
-            'flash' => $flash
-        ]);
-        exit;
-    }
-
     if ($requestUri === '/admin/orders/status' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
@@ -1080,49 +1044,6 @@ if (str_starts_with($requestUri, '/admin/')) {
         exit;
     }
 
-    if ($requestUri === '/admin/herbs' && $requestMethod === 'GET') {
-        $flash = $_SESSION['flash_success'] ?? null;
-        unset($_SESSION['flash_success']);
-
-        echo View::render('admin/herbs', [
-            'pageTitle' => t('admin_herbs'),
-            'herbs' => HerbRepo::findAll(null, 'en'),
-            'flash' => $flash
-        ]);
-        exit;
-    }
-
-    if ($requestUri === '/admin/herbs/update' && $requestMethod === 'POST') {
-        if (!Csrf::validateRequest()) {
-            http_response_code(403);
-            exit('Invalid CSRF token');
-        }
-        $hid = (int)($_POST['herb_id'] ?? 0);
-        HerbRepo::updateUses($hid, (string)($_POST['uses'] ?? ''), (string)($_POST['uses_si'] ?? ''));
-        $_SESSION['flash_success'] = t('admin_herb_saved', ['id' => $hid]);
-        header('Location: /admin/herbs');
-        exit;
-    }
-
-    if ($requestUri === '/admin/products' && $requestMethod === 'GET') {
-        $flash = $_SESSION['flash_success'] ?? null;
-        unset($_SESSION['flash_success']);
-
-        $products = ProductRepo::findAll();
-        foreach ($products as &$p) {
-            $p['herbs'] = HerbRepo::getHerbsByProduct((int)$p['product_id']);
-        }
-        unset($p);
-
-        echo View::render('admin/products', [
-            'pageTitle' => t('admin_products'),
-            'products' => $products,
-            'allHerbs' => HerbRepo::findAll(),
-            'flash' => $flash
-        ]);
-        exit;
-    }
-
     if ($requestUri === '/admin/products/stock' && $requestMethod === 'POST') {
         if (!Csrf::validateRequest()) {
             http_response_code(403);
@@ -1140,25 +1061,6 @@ if (str_starts_with($requestUri, '/admin/')) {
         exit;
     }
 
-    if ($requestUri === '/admin/products/update' && $requestMethod === 'POST') {
-        if (!Csrf::validateRequest()) {
-            http_response_code(403);
-            exit('Invalid CSRF token');
-        }
-        $pid = (int)($_POST['product_id'] ?? 0);
-        $herbIds = isset($_POST['herb_ids']) && is_array($_POST['herb_ids']) ? array_map('intval', $_POST['herb_ids']) : [];
-
-        ProductRepo::updateDetails($pid, [
-            'description' => $_POST['description'] ?? null,
-            'product_name_si' => $_POST['product_name_si'] ?? null,
-            'description_si' => $_POST['description_si'] ?? null,
-            'herb_ids' => $herbIds
-        ]);
-
-        $_SESSION['flash_success'] = t('admin_product_updated', ['id' => $pid]);
-        header('Location: /admin/products');
-        exit;
-    }
 }
 
 // ----------------------------------------------------

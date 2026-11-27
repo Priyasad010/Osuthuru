@@ -37,7 +37,7 @@
             <div class="card h-100 shadow-sm border-0">
                 <div class="position-relative">
                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px; overflow:hidden;">
-                        <i class="bi bi-flower1 text-success opacity-25" style="font-size: 4rem;"></i>
+                        <?= picture($p['image'] ?? null, $p['display_name']) ?>
                     </div>
                     <?php if ($p['has_discount']): ?>
                         <span class="badge bg-danger position-absolute top-0 start-0 m-2">

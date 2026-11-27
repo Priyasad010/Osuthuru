@@ -42,6 +42,9 @@ class Env
             }
         }
 
+        // Dates and times throughout the application are Sri Lanka time
+        date_default_timezone_set('Asia/Colombo');
+
         self::$loaded = true;
     }
 

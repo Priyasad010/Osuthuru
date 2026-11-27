@@ -163,7 +163,7 @@ class CatalogueAndLocaleTest extends TestCase
     public function testAdminPagesRenderInSinhala(): void
     {
         Lang::setLocale('si');
-        $html = View::render('admin/dashboard', ['stats' => []], false)
+        $html = View::render('admin/dashboard', [], false)
             . View::render('admin/orders', ['orders' => []], false)
             . View::render('admin/coupons', ['coupons' => []], false)
             . View::render('admin/zones', ['zones' => []], false)
@@ -172,7 +172,7 @@ class CatalogueAndLocaleTest extends TestCase
             . View::render('admin/herbs', ['herbs' => []], false)
             . View::render('auth/admin_login', [], false);
 
-        $visible = strip_tags($html);
+        $visible = strip_tags(preg_replace('/<script.*?<\/script>|\sdata-chart="[^"]*"/s', '', $html));
         foreach (['Dashboard', 'Manage', 'Coupon', 'Delivery', 'Bank', 'Status', 'Login', 'Save', 'Product', 'Stock', 'Herb'] as $word) {
             $this->assertStringNotContainsString($word, $visible);
         }

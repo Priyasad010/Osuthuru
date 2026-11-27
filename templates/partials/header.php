@@ -108,6 +108,7 @@ $pageTitle = $pageTitle ?? t('app_name');
                                 <i class="bi bi-person-circle me-1"></i><?= e(Auth::user()['name'] ?? t('user_fallback')) ?>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i><?= e(t('profile_title')) ?></a></li>
                                 <li><a class="dropdown-item" href="/orders"><i class="bi bi-receipt me-2"></i><?= e(t('my_orders')) ?></a></li>
                                 <li><a class="dropdown-item" href="/profile/categories"><i class="bi bi-stars me-2"></i><?= e(t('interests_title')) ?></a></li>
                                 <li><a class="dropdown-item" href="/wishlist"><i class="bi bi-heart me-2"></i><?= e(t('wishlist')) ?></a></li>

@@ -18,6 +18,28 @@ if (!function_exists('t')) {
     }
 }
 
+if (!function_exists('image_url')) {
+    /** Web path of an uploaded picture, or null if no such file is served. */
+    function image_url(?string $stored): ?string
+    {
+        if (!$stored || !str_starts_with($stored, '/uploads/') || str_contains($stored, '..')) {
+            return null;
+        }
+        return is_file(dirname(__DIR__, 2) . '/public' . $stored) ? $stored : null;
+    }
+}
+
+if (!function_exists('picture')) {
+    /** An uploaded picture filling its box, or the leaf icon. */
+    function picture(?string $stored, string $alt, string $iconClass = 'text-success opacity-25 fs-1'): string
+    {
+        $url = image_url($stored);
+        return $url !== null
+            ? '<img src="' . e($url) . '" alt="' . e($alt) . '" loading="lazy" style="width:100%;height:100%;object-fit:contain;">'
+            : '<i class="bi bi-flower1 ' . e($iconClass) . '" aria-hidden="true"></i>';
+    }
+}
+
 if (!function_exists('t_or')) {
     /** Translate a stored code (status, payment method...), showing the raw value if unknown. */
     function t_or(string $prefix, ?string $value): string

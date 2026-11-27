@@ -225,8 +225,20 @@ class Auth
         return $_SESSION['admin'] ?? null;
     }
 
+    /** False once an account has been blocked or removed, even mid-session. */
+    private static function stillAllowed(): bool
+    {
+        $stmt = Database::getConnection()->prepare("SELECT status FROM `user` WHERE user_id = :id");
+        $stmt->execute([':id' => self::id()]);
+        return $stmt->fetchColumn() === 'active';
+    }
+
     public static function requireUser(): void
     {
+        if (self::check() && !self::stillAllowed()) {
+            unset($_SESSION['user_id'], $_SESSION['user']);
+        }
+
         if (!self::check()) {
             if (self::isJsonRequest()) {
                 http_response_code(401);

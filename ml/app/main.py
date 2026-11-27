@@ -70,6 +70,12 @@ def forecast_sales(horizon: int = Query(30, ge=1, le=90), store: ModelStore = De
     return ok(forecasting.forecast(series, horizon, day))
 
 
+@app.get("/forecast/stock")
+def forecast_stock(store: ModelStore = Depends(get_store)):
+    data, _ = store.current()
+    return ok({"products": forecasting.recent_demand(data.sales, today())})
+
+
 @app.get("/forecast/product/{product_id}")
 def forecast_product(product_id: int, store: ModelStore = Depends(get_store)):
     data, _ = store.current()

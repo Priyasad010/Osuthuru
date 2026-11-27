@@ -13,7 +13,7 @@
     <div class="row g-4">
         <div class="col-md-5 text-center">
             <div class="bg-light p-4 rounded d-flex align-items-center justify-content-center" style="height: 300px;">
-                <i class="bi bi-flower1 text-success opacity-50" style="font-size: 7rem;"></i>
+                <?= picture($product['image'] ?? null, $product['display_name'], 'text-success opacity-50 display-1') ?>
             </div>
         </div>
         <div class="col-md-7">

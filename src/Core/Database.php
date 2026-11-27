@@ -26,7 +26,7 @@ class Database
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false, // native prepared statements
                 PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE utf8mb4_unicode_ci"
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset} COLLATE utf8mb4_unicode_ci, time_zone = '+05:30'"
             ];
 
             try {
@@ -60,7 +60,7 @@ class Database
             PDO::ATTR_EMULATE_PREPARES => true,
             PDO::MYSQL_ATTR_MULTI_STATEMENTS => true,
             PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci'
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci, time_zone = '+05:30'"
         ]);
     }
 
