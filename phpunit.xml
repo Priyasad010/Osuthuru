@@ -12,7 +12,6 @@
     <php>
         <env name="APP_ENV" value="testing"/>
         <!-- Tests never send real e-mail, whatever .env says -->
-        <env name="MAIL_HOST" value="mailpit" force="true"/>
         <env name="MAIL_PORT" value="1025" force="true"/>
         <env name="MAIL_USER" value="" force="true"/>
         <env name="MAIL_PASS" value="" force="true"/>

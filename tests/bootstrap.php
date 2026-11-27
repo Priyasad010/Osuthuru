@@ -19,6 +19,8 @@ putenv("DB_NAME={$testDatabase}");
 putenv('ML_URL=');
 $_ENV['ML_URL'] = $_SERVER['ML_URL'] = '';
 $_ENV['DB_NAME'] = $_SERVER['DB_NAME'] = $testDatabase;
+// Always the local test mail server, never the one in .env. CI reaches it at another address.
+$_ENV['MAIL_HOST'] = $_SERVER['MAIL_HOST'] = getenv('TEST_MAIL_HOST') ?: 'mailpit';
 Env::load($root);
 
 if (Env::get('DB_NAME') !== $testDatabase) {

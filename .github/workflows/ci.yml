@@ -43,6 +43,8 @@ jobs:
           find src templates lang bin routes public/index.php tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
       - name: PHPUnit
         run: vendor/bin/phpunit
+        env:
+          TEST_MAIL_HOST: 127.0.0.1
       - name: Fresh install with demo data
         run: |
           php bin/migrate.php

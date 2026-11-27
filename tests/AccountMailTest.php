@@ -75,6 +75,7 @@ class AccountMailTest extends TestCase
 
     public function testTestInboxIsPointedOutOnlyWhenMailStaysOnThisComputer(): void
     {
+        $_ENV['MAIL_HOST'] = 'mailpit';
         $this->assertSame('http://localhost:8025', Mailer::testInboxUrl());
         $this->assertStringContainsString(
             'http://localhost:8025',
